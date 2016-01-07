@@ -56,7 +56,30 @@ public class Entity {
 		}
 	}
 	
-//	public static void signalMessageLocation(RobotController rc, MapLocation loc) throws GameActionException{
-//		rc.broadcastMessageSignal(loc.x, loc.y, )
-//	}
+	public static void signalMessageLocation(RobotController rc, MapLocation loc) throws GameActionException {
+		rc.broadcastMessageSignal(loc.x, loc.y, 900);
+	}
+	
+	/*
+	 * listenForMessageLocation listens to the message queue, looking for location messages sent by the friendly team.
+	 * If it hears one, it returns the MapLocation described in the message
+	 * Otherwise, it returns the location of the current robot
+	 */
+	public static MapLocation listenForMessageLocation(RobotController rc) throws GameActionException {
+		Signal[] messages = rc.emptySignalQueue();
+		if (messages.length == 0){
+			return rc.getLocation();
+		} else {
+			for (Signal message : messages) {
+				if (message.getTeam() == rc.getTeam()){
+					int[] locMessage = messages[0].getMessage();
+					MapLocation loc = new MapLocation(locMessage[0], locMessage[1]);
+					return loc;
+				} 
+			}
+			return  rc.getLocation();
+		}
+	}
+	
+	
 }

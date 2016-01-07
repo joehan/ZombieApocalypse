@@ -19,16 +19,17 @@ public class Soldier {
 					rc.attackLocation(enemyLocation);
 					rc.setIndicatorString(1, "Attacking enemy");
 				} else {
-					MapLocation nearestDen = Entity.searchForDen(rc);
+					MapLocation aDen = Entity.listenForMessageLocation(rc);
 					//If no den is sensed
-					if (rc.getLocation().equals(nearestDen)){
+					if (rc.getLocation().equals(aDen)){
 						
 						Entity.moveInDirection(rc, randomDir);
+						randomDir = Entity.directions[rand.nextInt(8)];
 						rc.setIndicatorString(1, "Moving Random "+ randomDir.toString());
 					} else {//if we sense a den
 						
-						Entity.moveTowardLocation(rc, nearestDen);
-						rc.setIndicatorString(1, "Moving to den at " + nearestDen.x + ", " + nearestDen.y);
+						Entity.moveTowardLocation(rc, aDen);
+						rc.setIndicatorString(1, "Moving to den at " + aDen.x + ", " + aDen.y);
 					}
 				}
 			}
