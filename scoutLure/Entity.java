@@ -1,7 +1,6 @@
 package scoutLure;
 
 import battlecode.common.*;
-import scoutLure.ScoutJob.*;
 
 
 /*
@@ -9,70 +8,70 @@ import scoutLure.ScoutJob.*;
  */
 public class Entity {
 	
-	public static void receiveMessages(RobotController rc, BoardLimits boardLimits){
-		Signal[] signals = rc.emptySignalQueue();
-        for (Signal signal: signals){
-        	if (signal.getTeam() == rc.getTeam()){
-        		int[] messages = signal.getMessage();
-        		switch(messages[0]) {
-        		case 0:
-        			if ((boardLimits.maxHeight == (Integer) null)){
-        				boardLimits.maxHeight = messages[1];
-        			}
-        			break;
-        		
-        		case 1:
-        			if (boardLimits.minHeight == (Integer) null){
-        				boardLimits.minHeight = messages[1];
-        			}
-        			break;
-        		case 2:
-        			if (boardLimits.maxWidth == (Integer) null){
-        				boardLimits.maxWidth = messages[1];
-        			}
-        			break;
-        		case 3:
-        			if (boardLimits.minWidth == (Integer) null){
-        				boardLimits.minWidth = messages[1];
-        			}
-        			break;
-        		}
-        	}
-        }
+	public static int calculatePower(MapLocation robotLocation, int sensorRange, MapLocation targetLocation){
+		int distance = robotLocation.distanceSquaredTo(targetLocation);
+		return Math.max(10, (int) Math.ceil(((distance-2*sensorRange)/2)));
 	}
 	
-	public static void receiveMessages(RobotController rc, BoardLimits boardLimits, ScoutJob scoutAssign){
+	public static void moveTowards(RobotController rc, Direction dir){
+		if (rc.isCoreReady()){
+			try {
+				if (rc.canMove(dir)){
+					rc.move(dir);
+				}
+				else if (rc.canMove(dir.rotateLeft())){
+					rc.move(dir.rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateRight())){
+					rc.move(dir.rotateRight());
+				}
+				else if (rc.canMove(dir.rotateLeft().rotateLeft())){
+					rc.move(dir.rotateLeft().rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight());
+				}
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+
+			}
+		}
+	}
+	
+	public static void receiveMessages(RobotController rc, Brain brain){
 		Signal[] signals = rc.emptySignalQueue();
         for (Signal signal: signals){
         	if (signal.getTeam() == rc.getTeam()){
         		int[] messages = signal.getMessage();
         		switch(messages[0]) {
         		case 0:
-        			if ((boardLimits.maxHeight == (Integer) null)){
-        				boardLimits.maxHeight = messages[1];
+        			if ((brain.maxHeight == (Integer) null)){
+        				brain.maxHeight = messages[1];
         			}
         			break;
         		
         		case 1:
-        			if (boardLimits.minHeight == (Integer) null){
-        				boardLimits.minHeight = messages[1];
+        			if ((brain.minHeight == (Integer) null)){
+        				brain.minHeight = messages[1];
         			}
         			break;
         		case 2:
-        			if (boardLimits.maxWidth == (Integer) null){
-        				boardLimits.maxWidth = messages[1];
+        			if ((brain.maxWidth == (Integer) null)){
+        				brain.maxWidth = messages[1];
         			}
         			break;
         		case 3:
-        			if (boardLimits.minWidth == (Integer) null){
-        				boardLimits.minWidth = messages[1];
+        			if ((brain.minWidth == (Integer) null)){
+        				brain.minWidth = messages[1];
         			}
         			break;
         		case 4:
-        			scoutAssign.haveYScout = true;
+        			brain.haveYScout = true;
         			break;
         		case 5:
-        			scoutAssign.haveXScout = true;
+        			brain.haveXScout = true;
         			break;
         		}
         		
