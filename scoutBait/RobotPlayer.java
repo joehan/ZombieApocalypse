@@ -124,12 +124,6 @@ public class RobotPlayer {
                     		rc.broadcastMessageSignal(3, minWidth, 80);
                     	}
                     }
-                    /*if (signals.length > 0) {
-                        // Set an indicator string that can be viewed in the client
-                        rc.setIndicatorString(0, "I received a signal this turn!");
-                    } else {
-                        rc.setIndicatorString(0, "I don't any signal buddies");
-                    }*/
                     if (rc.isCoreReady()) {
                             RobotType typeToBuild = RobotType.SCOUT;
                             // Check for sufficient parts
