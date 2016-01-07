@@ -6,7 +6,7 @@ import battlecode.common.*;
 
 public class Turret {
 	
-	public static void run(RobotController rc) throws GameActionException{
+	public void run(RobotController rc, Brain brain) throws GameActionException{
 		if (rc.isCoreReady()) {
 			RobotInfo[] enemiesInAttackRange = Entity.enemiesInRange(rc, rc.getType().attackRadiusSquared);
 			if (enemiesInAttackRange.length > 0){

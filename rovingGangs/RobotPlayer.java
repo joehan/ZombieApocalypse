@@ -12,19 +12,26 @@ public class RobotPlayer {
 		while (true) {
 			try {
 				RobotType type = rc.getType();
+				Brain brain = new Brain();
 			    
 				if (type == RobotType.ARCHON) {
-					Archon.run(rc);
+					Archon archon = new Archon();
+					archon.run(rc, brain);
 				} else if (type == RobotType.GUARD){
-					Guard.run(rc);
+					Guard guard = new Guard();
+					Guard.run(rc, brain);
 				} else if (type == RobotType.SOLDIER){
-					Soldier.run(rc);
+					Soldier soldier = new Soldier();
+					soldier.run(rc, brain);
 				} else if (type == RobotType.SCOUT){
-					Scout.run(rc);
+					Scout scout = new Scout();
+					scout.run(rc, brain);
 				} else if (type == RobotType.TURRET){
-					Turret.run(rc);
+					Turret turret = new Turret();
+					turret.run(rc, brain);
 				} else if (type == RobotType.VIPER){
-					Viper.run(rc);
+					Viper viper = new Viper();
+					viper.run(rc, brain);
 				}
 				Clock.yield();
 			} catch(Exception e){
