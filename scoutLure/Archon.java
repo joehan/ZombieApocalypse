@@ -2,7 +2,6 @@ package scoutLure;
 
 import java.util.Random;
 
-import scoutLure.BoardLimits;
 import scoutLure.Entity.*;
 
 import battlecode.common.*;
@@ -10,13 +9,13 @@ import battlecode.common.*;
 public class Archon {
 	
 	public static void run(RobotController rc) throws GameActionException{
-		BoardLimits boardLimits = BoardLimits.getNew();
+		Brain brain = new Brain(rc.getLocation());
 
 		while (true){
 			try{
-				Entity.receiveMessages(rc, boardLimits);
+				Entity.receiveMessages(rc, brain);
 				if (rc.getRoundNum() % 10 == 0){
-					sendHeartbeat(rc, boardLimits);
+					sendHeartbeat(rc, brain);
 				}
 
 //				Random rand = new Random(rc.getID()+rc.getRoundNum());
@@ -36,20 +35,20 @@ public class Archon {
 
 	
 	
-	private static void sendHeartbeat(RobotController rc,  BoardLimits boardLimits) throws GameActionException{
-		if (boardLimits.maxHeight != (Integer) null){
-    		rc.broadcastMessageSignal(0, boardLimits.maxHeight, 80);
+	private static void sendHeartbeat(RobotController rc, Brain brain) throws GameActionException{
+		if (!(brain.maxHeight == (Integer) null)){
+    		rc.broadcastMessageSignal(0, brain.maxHeight, 80);
     	}
-    	if (boardLimits.minHeight != (Integer) null){
-    		rc.broadcastMessageSignal(1, boardLimits.minHeight, 80);
+    	if (!(brain.minHeight == (Integer) null)){
+    		rc.broadcastMessageSignal(1, brain.minHeight, 80);
     		rc.setIndicatorString(0, "sent message about min Height on round:" + rc.getRoundNum());
 
     	}
-    	if (boardLimits.maxWidth != (Integer) null){
-    		rc.broadcastMessageSignal(2, boardLimits.maxWidth, 80);
+    	if (!(brain.maxWidth == (Integer) null)){
+    		rc.broadcastMessageSignal(2, brain.maxWidth, 80);
     	}
-    	if (boardLimits.minWidth != (Integer) null){
-    		rc.broadcastMessageSignal(3, boardLimits.minWidth, 80);
+    	if (!(brain.minWidth == (Integer) null)){
+    		rc.broadcastMessageSignal(3, brain.minWidth, 80);
     	}
 	}
 	

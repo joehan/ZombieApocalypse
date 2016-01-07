@@ -1,4 +1,4 @@
-package rovingGangs;
+package scoutLure;
 
 import java.util.Random;
 
