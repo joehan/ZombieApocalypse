@@ -16,10 +16,11 @@ public class Scout {
 				//If no den is sensed
 				if (rc.getLocation().equals(nearestDen)){
 					Entity.moveInDirection(rc, randomDir);
+					randomDir = Entity.directions[rand.nextInt(8)];
 					rc.setIndicatorString(1, "Moving Random "+ randomDir.toString());
 				} else {//if we sense a den
 					
-					//Entity.moveTowardLocation(rc, nearestDen);
+					Entity.signalMessageLocation(rc, nearestDen);
 					rc.setIndicatorString(1, "Moving to den at " + nearestDen.x + ", " + nearestDen.y);
 				}
 				

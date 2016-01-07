@@ -10,11 +10,18 @@ public class Archon {
 		
 		Random rand = new Random(rc.getID()+rc.getRoundNum());
 		RobotType typeToBuild = RobotType.SOLDIER;
-		
-		if (rc.isCoreReady()) {
-			repairUnits(rc);
-			tryBuildUnitInEmptySpace(rc, typeToBuild, Direction.NORTH);
-			Clock.yield();
+		while (true) {
+			if (rc.isCoreReady()) {
+				int makeScout = rand.nextInt(10);
+				repairUnits(rc);
+				
+				if (makeScout > 8) {
+					tryBuildUnitInEmptySpace(rc, RobotType.SCOUT, Direction.NORTH);
+				} else {
+					tryBuildUnitInEmptySpace(rc, typeToBuild, Direction.NORTH);
+				}
+				Clock.yield();
+			}
 		}
 	}
 	
@@ -48,4 +55,6 @@ public class Archon {
 			}
 		}
 	}
+	
+	//private static void archonMove()
 }
