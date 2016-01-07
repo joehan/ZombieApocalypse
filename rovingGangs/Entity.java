@@ -80,4 +80,6 @@ public class Entity {
 			return  rc.getLocation();
 		}
 	}
+	
+	
 }
