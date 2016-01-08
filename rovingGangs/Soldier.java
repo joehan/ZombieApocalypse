@@ -31,7 +31,14 @@ public class Soldier {
 					rc.setIndicatorString(1, "Attacking enemy");
 				//Look for dens
 				} else if(dens.length > 0 ){
-					Entity.moveTowardLocation(rc, aDen);
+					Entity.moveTowardLocation(rc, dens[0]);
+					//is the den still there
+					if (rc.canSense(dens[0])){
+						RobotInfo maybeDen = rc.senseRobotAtLocation(dens[0]);
+						if (maybeDen == null || maybeDen.type != RobotType.ZOMBIEDEN){
+							brain.removeDenLocation(dens[0]);
+						}
+					}
 					rc.setIndicatorString(1, "Moving to den at " + aDen.x + ", " + aDen.y);
 				} else {
 					Entity.moveInDirection(rc, randomDir);
