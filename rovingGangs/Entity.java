@@ -34,26 +34,51 @@ public class Entity {
 	    return combined;
 	}
 	
+	/*
+	 * attackHostiles looks for hostile enemies within the current units attack range
+	 * and attacks one of them
+	 * It returns true if the robot attacked, and false otherwise
+	 */
+	public static Boolean attackHostiles(RobotController rc) throws GameActionException {
+		RobotInfo[] enemiesInAttackRange = Entity.enemiesInRange(rc, rc.getType().attackRadiusSquared);
+		Boolean attacked = false;
+		if (enemiesInAttackRange.length > 0){
+			if (rc.isWeaponReady()){
+				MapLocation enemyLocation = enemiesInAttackRange[0].location;
+				attacked = true;
+				rc.attackLocation(enemyLocation);
+			}
+		}
+		return attacked;
+	}
+	
 	public static void moveTowardLocation(RobotController rc, MapLocation loc) throws GameActionException{
 		Direction towardLoc = rc.getLocation().directionTo(loc);
 		moveInDirection(rc, towardLoc);
 	}
-	
-	public static void moveInDirection(RobotController rc, Direction dirToMove) throws GameActionException{
-		for (int i=0; i<8; i++){
-			if (rc.senseRubble(rc.getLocation().add(dirToMove)) >= GameConstants.RUBBLE_SLOW_THRESH) {
-	            rc.clearRubble(dirToMove);
-	            break;
-	        } else if (rc.canMove(dirToMove)) {
-	            rc.move(dirToMove);
-	            rc.setIndicatorString(2, "Moving in direction "+ dirToMove.toString());
-	            break;
-	        } else {
-//	        	dirToMove.rotateLeft();
-//	        	rc.setIndicatorString(2, "rotate "+ dirToMove.toString());
-	        	break;
-	        }
+	public static void moveInDirection(RobotController rc, Direction dir) throws GameActionException{
+		if (rc.canMove(dir)){
+			moveOrClear(rc, dir);
 		}
+		else if (rc.canMove(dir.rotateLeft())){
+			moveOrClear(rc, dir.rotateLeft());
+		}
+		else if (rc.canMove(dir.rotateRight())){
+			moveOrClear(rc, dir.rotateRight());
+		}
+		else if (rc.canMove(dir.rotateLeft().rotateLeft())){
+			moveOrClear(rc, dir.rotateLeft().rotateLeft());
+		}
+		else if (rc.canMove(dir.rotateRight().rotateRight())){
+			moveOrClear(rc, dir.rotateRight().rotateRight());
+		}
+	}
+	public static void moveOrClear(RobotController rc, Direction dirToMove) throws GameActionException{
+		if (rc.senseRubble(rc.getLocation().add(dirToMove)) >= GameConstants.RUBBLE_SLOW_THRESH) {
+            rc.clearRubble(dirToMove);
+        } else if (rc.canMove(dirToMove)) {
+            rc.move(dirToMove);
+        }
 	}
 	
 	public static void signalMessageLocation(RobotController rc, MapLocation loc) throws GameActionException {
