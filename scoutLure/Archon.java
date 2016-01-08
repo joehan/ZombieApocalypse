@@ -2,7 +2,7 @@ package scoutLure;
 
 import java.util.Random;
 
-import scoutLure.Entity.*;
+import scoutLure.Entity;
 
 import battlecode.common.*;
 
@@ -10,45 +10,51 @@ public class Archon {
 	
 	public static void run(RobotController rc) throws GameActionException{
 		Brain brain = new Brain(rc.getLocation());
+        Random rand = new Random(rc.getID());
+        tryBuildUnitInEmptySpace(rc, RobotType.SCOUT, Direction.NORTH);
 
 		while (true){
 			try{
 				Entity.receiveMessages(rc, brain);
+				if ((brain.enemyBase == null)){
+					brain.tryFindEnemyBase();
+				}
 				if (rc.getRoundNum() % 10 == 0){
 					sendHeartbeat(rc, brain);
 				}
-
-//				Random rand = new Random(rc.getID()+rc.getRoundNum());
 				RobotType typeToBuild = RobotType.SCOUT;
-
 				if (rc.isCoreReady()) {
 					repairUnits(rc);
-					tryBuildUnitInEmptySpace(rc, typeToBuild, Direction.NORTH);
+					if (rand.nextInt(1000) < 15){
+						tryBuildUnitInEmptySpace(rc, typeToBuild, Direction.NORTH);
+					}
 					Clock.yield();
 				}
+				Clock.yield();
 			}catch (Exception e){
 				System.out.println(e.getMessage());
 				e.printStackTrace();
 			}
 		}
 	}
-
 	
 	
 	private static void sendHeartbeat(RobotController rc, Brain brain) throws GameActionException{
+		int range = 2000;
 		if (!(brain.maxHeight == (Integer) null)){
-    		rc.broadcastMessageSignal(0, brain.maxHeight, 80);
+    		rc.broadcastMessageSignal(0, brain.maxHeight, range);
     	}
     	if (!(brain.minHeight == (Integer) null)){
-    		rc.broadcastMessageSignal(1, brain.minHeight, 80);
+    		rc.broadcastMessageSignal(1, brain.minHeight, range);
     		rc.setIndicatorString(0, "sent message about min Height on round:" + rc.getRoundNum());
 
     	}
     	if (!(brain.maxWidth == (Integer) null)){
-    		rc.broadcastMessageSignal(2, brain.maxWidth, 80);
+    		rc.broadcastMessageSignal(2, brain.maxWidth, range);
+    		rc.setIndicatorString(0, "send maxWidth heartbeat");
     	}
     	if (!(brain.minWidth == (Integer) null)){
-    		rc.broadcastMessageSignal(3, brain.minWidth, 80);
+    		rc.broadcastMessageSignal(3, brain.minWidth, range);
     	}
 	}
 	

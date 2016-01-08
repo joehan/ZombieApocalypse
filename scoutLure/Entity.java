@@ -8,9 +8,18 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+//	public static MapLocation flipLocation()
+	
+	public static MapLocation flipLocation(MapLocation loc, Brain brain){
+		MapLocation negLoc = loc.add(-brain.maxWidth - brain.maxWidth, -brain.maxHeight - brain.minHeight);
+		return new MapLocation(brain.maxWidth + brain.minWidth - loc.x, brain.maxHeight);
+	}
+	
 	public static int calculatePower(MapLocation robotLocation, int sensorRange, MapLocation targetLocation){
 		int distance = robotLocation.distanceSquaredTo(targetLocation);
-		return Math.max(10, (int) Math.ceil(((distance-2*sensorRange)/2)));
+//		System.out.println(distance);
+		int ret = Math.max(1, (int) Math.ceil(distance));
+		return ret;
 	}
 	
 	public static void moveTowards(RobotController rc, Direction dir){
@@ -35,7 +44,6 @@ public class Entity {
 			catch (Exception e) {
 				System.out.println(e.getMessage());
 				e.printStackTrace();
-
 			}
 		}
 	}
@@ -60,6 +68,7 @@ public class Entity {
         		case 2:
         			if ((brain.maxWidth == (Integer) null)){
         				brain.maxWidth = messages[1];
+        				rc.setIndicatorString(0, "received maxWidth data");
         			}
         			break;
         		case 3:

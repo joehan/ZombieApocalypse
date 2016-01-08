@@ -17,6 +17,11 @@ public class Brain {
 	public Integer maxHeight, minHeight, maxWidth, minWidth;
 	public boolean haveXScout, haveYScout;
 	public MapLocation startLocation;
+	public boolean scoutx;
+	public boolean scouty;
+	public boolean enemyBaseFound;
+	public MapLocation enemyBase;
+	
 	
 //	this.maxHeight = this.minHeight = this.maxWidth = this.minWidth = (Integer) null;
 	public Brain(MapLocation startingLocation){
@@ -24,7 +29,14 @@ public class Brain {
 		this.maxHeight = minHeight = maxWidth = minWidth = (Integer) null;
 		haveXScout = haveYScout = false;
 		startLocation = startingLocation;
-		
+		scoutx = scouty = false;
+		enemyBase = null;
+	}
+	
+	public void tryFindEnemyBase(){
+		if (!(this.maxHeight == null) && (this.minHeight == null) && (this.maxWidth == null) && (this.minWidth == null)){
+			
+		}
 	}
 
 	
