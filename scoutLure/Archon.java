@@ -68,7 +68,12 @@ public class Archon {
 			int signal = (int) (enemyLoc.x + enemyLoc.y*Math.pow(2, 16));
 			rc.broadcastMessageSignal(6, signal, range);
     		rc.setIndicatorString(0, "sent message about enemy base on round:" + rc.getRoundNum());
-
+    	}
+    	if (brain.denLocations.size() != 0){
+    		for (MapLocation denLocation: brain.denLocations){
+    			int signal = (int) (denLocation.x + denLocation.y*Math.pow(2, 16));
+    			rc.broadcastMessageSignal(7, signal, range);
+    		}
     	}
 	}
 	

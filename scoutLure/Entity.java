@@ -9,6 +9,10 @@ import battlecode.common.*;
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static MapLocation split(MapLocation loc1, MapLocation loc2){
+		return new MapLocation((loc1.x + loc2.x)/2, (loc1.y + loc2.y)/2);
+	}
 
 	public static Direction moveSemiRandom(RobotController rc, Direction currentDir) throws GameActionException{
 		if (rc.canMove(currentDir) && rc.isCoreReady()){
@@ -107,6 +111,9 @@ public class Entity {
         			int y = (int) (messages[1] / Math.pow(2, 16));
         			brain.enemyBase = new MapLocation(x, y);
         			break;
+        		case 7:
+        			MapLocation newLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+        			brain.denLocations.add(newLoc);
         		}
         	}
 		}

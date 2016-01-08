@@ -33,8 +33,11 @@ public class Scout {
 				}
 				RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
 				for (RobotInfo zombie : zombiesWithinRange){
-					if (zombie.type == RobotType.ZOMBIEDEN){
-						
+					if (zombie.type == RobotType.ZOMBIEDEN && !brain.denLocations.contains(zombie.location)){
+						MapLocation den = zombie.location;
+						brain.denLocations.add(den);
+						int signal = (int) (den.x + den.y*Math.pow(2, 16));
+						rc.broadcastMessageSignal(7, signal, 2000);
 					}
 				}
 
