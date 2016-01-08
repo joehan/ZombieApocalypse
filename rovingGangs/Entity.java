@@ -73,9 +73,11 @@ public class Entity {
 			for (Signal message : messages) {
 				if (message.getTeam() == rc.getTeam()){
 					int[] locMessage = messages[0].getMessage();
-					MapLocation loc = new MapLocation(locMessage[0], locMessage[1]);
-					return loc;
-				} 
+					if (!(locMessage==null)){
+						MapLocation loc = new MapLocation(locMessage[0], locMessage[1]);
+						return loc;
+					} 
+				}
 			}
 			return  rc.getLocation();
 		}
