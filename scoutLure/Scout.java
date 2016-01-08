@@ -16,84 +16,83 @@ public class Scout {
 		MapLocation startingLocation = rc.getLocation();
 
 		Brain brain = new Brain(startingLocation);
-		boolean scouty = false;
-		boolean scoutx = false;
 
 
 		while (true){
 			try{
 				Entity.receiveMessages(rc, brain); 
-				if (!brain.haveYScout && !scouty && !scoutx &&
+				if (!brain.haveYScout && !brain.scouty && !brain.scoutx &&
 						((brain.minHeight == (Integer) null) || (brain.maxHeight == (Integer) null))){
-                	scouty = true;
+                	brain.scouty = true;
                 	rc.broadcastMessageSignal(4, 0, 80);
                 	rc.setIndicatorString(0, "became y scout");
                 }
-                else if (!brain.haveXScout && !scoutx && !scouty && 
+                else if (!brain.haveXScout && !brain.scoutx && !brain.scouty && 
                 		((brain.minWidth == (Integer) null) || (brain.maxWidth == (Integer) null))){
                 	rc.broadcastMessageSignal(5, 0, 80);
                 	rc.setIndicatorString(0, "became x scout");
-
-                	scoutx = true;
+                	brain.scoutx = true;
                 }
-				scout(rc, brain, scoutx, scouty);
-				MapLocation currentLocation = rc.getLocation();
-				
-				boolean move = false;
-    			boolean stop = false;
-    			boolean archonClose = false;
-    			RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
-    			RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, enemyTeam);
-    			RobotInfo[] alliesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, myTeam);
+				if (brain.scouty || brain.scoutx){
+					scout(rc, brain);
+				}
+				else {
+					MapLocation currentLocation = rc.getLocation();
+					boolean move = false;
+					boolean stop = false;
+					boolean archonClose = false;
+					RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
+					RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, enemyTeam);
+					RobotInfo[] alliesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, myTeam);
 
-    			for (RobotInfo zombie : zombiesWithinRange){
-    				if (zombie.location.distanceSquaredTo(currentLocation) < 24){
-    					move = true;
-    				}
-    			}
-    			for (RobotInfo enemy : enemiesWithinRange){
-    				if (enemy.location.distanceSquaredTo(currentLocation) < 15){
-    					move = false;
-    					stop = true;
-    				}
-    			}
-    			for (RobotInfo ally : alliesWithinRange){
-    				if (ally.location.distanceSquaredTo(currentLocation) < 48 && ally.type == RobotType.ARCHON){
-    					archonClose = true;
-    				}
-    			}
-    			
-    			Direction moveDir = Direction.SOUTH_EAST;
-    			
-    			Entity.moveTowards(rc, moveDir);
+					for (RobotInfo zombie : zombiesWithinRange){
+						if (zombie.location.distanceSquaredTo(currentLocation) < 24){
+							move = true;
+						}
+					}
+					for (RobotInfo enemy : enemiesWithinRange){
+						if (enemy.location.distanceSquaredTo(currentLocation) < 15){
+							move = false;
+							stop = true;
+						}
+					}
+					for (RobotInfo ally : alliesWithinRange){
+						if (ally.location.distanceSquaredTo(currentLocation) < 48 && ally.type == RobotType.ARCHON){
+							archonClose = true;
+						}
+					}
 
-    			if (rc.isCoreReady() && move && ! stop ){
-    				Entity.moveTowards(rc, moveDir);
-    			}
-    			else if (rc.isCoreReady() && !stop && !archonClose){
-    				int fate = rand.nextInt(1000);
-    				Direction dirToMove = directions[fate%8];
-    				if (rc.canMove(dirToMove)){
-    					rc.move(dirToMove);
-    				}
-    			}
-    			if (stop && rc.isInfected()){
-    				rc.disintegrate();
-    			}
-				
+					Direction moveDir = Direction.SOUTH_EAST;
+					rc.setIndicatorString(0, "should be moving");
 
-				
+					Entity.moveTowards(rc, moveDir);
+
+					if (rc.isCoreReady() && move && ! stop ){
+						Entity.moveTowards(rc, moveDir);
+					}
+					else if (rc.isCoreReady() && !stop && !archonClose){
+						int fate = rand.nextInt(1000);
+						Direction dirToMove = directions[fate%8];
+						if (rc.canMove(dirToMove)){
+							rc.move(dirToMove);
+						}
+					}
+					if (stop && rc.isInfected()){
+						rc.disintegrate();
+					}
+				}
+				Clock.yield();
 			}catch (Exception e){
 				System.out.println(e.getMessage());
 				e.printStackTrace();
 			}
 		}
 	}
-	
-	private static void scout(RobotController rc, Brain brain, boolean scoutx, boolean scouty) throws GameActionException{
+
+	private static void scout(RobotController rc, Brain brain) throws GameActionException{
 		MapLocation currentLocation = rc.getLocation();
-		int power =  Entity.calculatePower(currentLocation, rc.getType().sensorRadiusSquared, brain.startLocation) + 1;
-		if (scoutx){
+		int power = currentLocation.distanceSquaredTo(brain.startLocation) + 100;
+		if (brain.scoutx){
 			if ((brain.maxWidth == (Integer) null)){
 				for (int i = 0; i < 8; i ++){
 					if (!rc.onTheMap(currentLocation.add(Direction.EAST, i))){
@@ -101,7 +100,7 @@ public class Scout {
 						rc.broadcastMessageSignal(2, brain.maxWidth, power);
 					}
 				}
-				if ((brain.maxWidth == (Integer) null) && rc.canMove(Direction.EAST) && rc.isCoreReady()){
+				if ((brain.maxWidth == (Integer) null) && rc.isCoreReady()){
 					Entity.moveTowards(rc, Direction.EAST);
 				}
 			}
@@ -112,15 +111,16 @@ public class Scout {
 						rc.broadcastMessageSignal(3, brain.minWidth, power);
 					}
 				}
-				if ((brain.minWidth == (Integer) null) && rc.canMove(Direction.WEST) && rc.isCoreReady()){
+				if ((brain.minWidth == (Integer) null) && rc.isCoreReady()){
 					Entity.moveTowards(rc, Direction.WEST);
 				}
 			}
 			else {
-				scoutx = false;
+				rc.setIndicatorString(0, "not scoutx");
+				brain.scoutx = false;
 			}
 		}
-		else if (scouty){
+		else if (brain.scouty){
 			if (brain.maxHeight == (Integer) null){
 				for (int i = 0; i < 8; i ++){
 					if (!rc.onTheMap(currentLocation.add(Direction.NORTH, i))){
@@ -129,7 +129,7 @@ public class Scout {
 						rc.broadcastMessageSignal(0, brain.maxHeight, power);
 					}
 				}
-				if ((brain.maxHeight == (Integer) null) && rc.canMove(Direction.NORTH) && rc.isCoreReady()){
+				if ((brain.maxHeight == (Integer) null) && rc.isCoreReady()){
 					Entity.moveTowards(rc, Direction.NORTH);
 				}
 			}
@@ -140,12 +140,13 @@ public class Scout {
 						rc.broadcastMessageSignal(1, brain.minHeight, power);
 					}
 				}
-				if ((brain.minHeight == (Integer) null) && rc.canMove(Direction.SOUTH) && rc.isCoreReady()){
+				if ((brain.minHeight == (Integer) null) && rc.isCoreReady()){
 					Entity.moveTowards(rc, Direction.SOUTH);
 				}
 			}
 			else{
-				scouty = false;
+				rc.setIndicatorString(0, "not scouty");
+				brain.scouty = false;
 			}
 		}
 	}
