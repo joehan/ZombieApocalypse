@@ -33,9 +33,25 @@ public class Brain {
 		enemyBase = null;
 	}
 	
+	/*
+	 * This gets the location on the map flipped about the 45 degree angle line from the bottom left
+	 * to the top right corner.
+	 */
+	public MapLocation flipLocation(MapLocation loc){
+		if (!(this.maxHeight == null) && !(this.minHeight == null) && !(this.maxWidth == null) && !(this.minWidth == null)){
+			return new MapLocation(minWidth + maxWidth - loc.x, minHeight + maxHeight - loc.y);
+		}
+		else {
+			return loc;
+		}
+	}
+	
+
 	public void tryFindEnemyBase(){
-		if (!(this.maxHeight == null) && (this.minHeight == null) && (this.maxWidth == null) && (this.minWidth == null)){
-			
+		MapLocation newLoc = flipLocation(startLocation);
+		if (newLoc != startLocation){
+			enemyBase = newLoc;
+			enemyBaseFound = true;
 		}
 	}
 

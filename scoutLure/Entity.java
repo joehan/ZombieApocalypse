@@ -1,5 +1,7 @@
 package scoutLure;
 
+import java.util.Random;
+
 import battlecode.common.*;
 
 
@@ -7,12 +9,29 @@ import battlecode.common.*;
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
-	
-//	public static MapLocation flipLocation()
-	
-	public static MapLocation flipLocation(MapLocation loc, Brain brain){
-		MapLocation negLoc = loc.add(-brain.maxWidth - brain.maxWidth, -brain.maxHeight - brain.minHeight);
-		return new MapLocation(brain.maxWidth + brain.minWidth - loc.x, brain.maxHeight);
+
+	public static Direction moveSemiRandom(RobotController rc, Direction currentDir) throws GameActionException{
+		if (rc.canMove(currentDir) && rc.isCoreReady()){
+			rc.move(currentDir);
+			return currentDir;
+		}
+		if (!rc.canMove(currentDir)){
+			Random rand = new Random(rc.getID()+ rc.getRoundNum());
+			int num = rand.nextInt(8);
+			Direction orig = directions[num];
+			num += 1;
+			Direction dirToMove = directions[num%8];
+
+			while (!rc.canMove(dirToMove) && dirToMove != orig){
+				num += 1;
+				dirToMove = directions[num%8];
+			}
+			if (rc.canMove(dirToMove) && rc.isCoreReady()){
+				rc.move(dirToMove);
+			}
+			currentDir = dirToMove;
+		}
+		return currentDir;      
 	}
 	
 	public static int calculatePower(MapLocation robotLocation, int sensorRange, MapLocation targetLocation){
@@ -82,10 +101,14 @@ public class Entity {
         		case 5:
         			brain.haveXScout = true;
         			break;
+        		case 6:
+        			brain.enemyBaseFound = true;
+        			int x = (int) (messages[1] % Math.pow(2, 16));
+        			int y = (int) (messages[1] / Math.pow(2, 16));
+        			brain.enemyBase = new MapLocation(x, y);
+        			break;
         		}
-        		
         	}
-		
 		}
 	}
 	

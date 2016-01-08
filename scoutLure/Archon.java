@@ -12,10 +12,19 @@ public class Archon {
 		Brain brain = new Brain(rc.getLocation());
         Random rand = new Random(rc.getID());
         tryBuildUnitInEmptySpace(rc, RobotType.SCOUT, Direction.NORTH);
+        int range = 2000;
 
 		while (true){
 			try{
 				Entity.receiveMessages(rc, brain);
+				if (!brain.enemyBaseFound){
+					brain.tryFindEnemyBase();
+					if (brain.enemyBaseFound){
+						MapLocation enemyLoc = brain.enemyBase;
+						int signal = (int) (enemyLoc.x + enemyLoc.y*Math.pow(2, 16));
+						rc.broadcastMessageSignal(6, signal, range);
+					}
+				}
 				if ((brain.enemyBase == null)){
 					brain.tryFindEnemyBase();
 				}
@@ -28,7 +37,6 @@ public class Archon {
 					if (rand.nextInt(1000) < 15){
 						tryBuildUnitInEmptySpace(rc, typeToBuild, Direction.NORTH);
 					}
-					Clock.yield();
 				}
 				Clock.yield();
 			}catch (Exception e){
@@ -40,13 +48,12 @@ public class Archon {
 	
 	
 	private static void sendHeartbeat(RobotController rc, Brain brain) throws GameActionException{
-		int range = 2000;
+		int range = 200;
 		if (!(brain.maxHeight == (Integer) null)){
     		rc.broadcastMessageSignal(0, brain.maxHeight, range);
     	}
     	if (!(brain.minHeight == (Integer) null)){
     		rc.broadcastMessageSignal(1, brain.minHeight, range);
-    		rc.setIndicatorString(0, "sent message about min Height on round:" + rc.getRoundNum());
 
     	}
     	if (!(brain.maxWidth == (Integer) null)){
@@ -55,6 +62,13 @@ public class Archon {
     	}
     	if (!(brain.minWidth == (Integer) null)){
     		rc.broadcastMessageSignal(3, brain.minWidth, range);
+    	}
+    	if (brain.enemyBaseFound){
+    		MapLocation enemyLoc = brain.enemyBase;
+			int signal = (int) (enemyLoc.x + enemyLoc.y*Math.pow(2, 16));
+			rc.broadcastMessageSignal(6, signal, range);
+    		rc.setIndicatorString(0, "sent message about enemy base on round:" + rc.getRoundNum());
+
     	}
 	}
 	
