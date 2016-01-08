@@ -20,6 +20,18 @@ public class Entity {
 		return rc.getLocation();
 	}
 	
+	public static MapLocation searchForArchon(RobotController rc) {
+		Team oppTeam = rc.getTeam().opponent();
+		RobotInfo[] otherTeamWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, oppTeam);
+		MapLocation target;
+		for (RobotInfo opp : otherTeamWithinRange) {
+			if (opp.type == RobotType.ARCHON) {
+				return opp.location;
+			}
+		}
+		return rc.getLocation();
+	}
+	
 	public static RobotInfo[] enemiesInRange(RobotController rc, int squaredRange) {
 		
 		RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(squaredRange, rc.getTeam().opponent());

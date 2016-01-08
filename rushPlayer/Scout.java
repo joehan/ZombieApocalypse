@@ -12,7 +12,7 @@ public class Scout {
 		
 		while (true) {
 			if (rc.isCoreReady()) {
-				MapLocation nearestArchon = Entity.searchForDen(rc);
+				MapLocation nearestArchon = Entity.searchForArchon(rc);
 				//If no Archon is sensed
 				if (rc.getLocation().equals(nearestArchon)){
 					Entity.moveInDirection(rc, randomDir);
