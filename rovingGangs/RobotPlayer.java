@@ -26,7 +26,7 @@ public class RobotPlayer {
 				} else if (type == RobotType.SCOUT){
 					Scout scout = new Scout();
 					scout.run(rc, brain);
-				} else if (type == RobotType.TURRET){
+				} else if (type == RobotType.TURRET || type == RobotType.TTM){
 					Turret turret = new Turret();
 					turret.run(rc, brain);
 				} else if (type == RobotType.VIPER){
