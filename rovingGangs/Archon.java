@@ -6,16 +6,18 @@ import battlecode.common.*;
 
 public class Archon {
 	
-	private static Random rand;
-	public static void run(RobotController rc) throws GameActionException{	
+	private Random rand;
+	public void run(RobotController rc, Brain brain) throws GameActionException{	
 		rand = new Random(rc.getID());
 		RobotType typeToBuild = RobotType.SOLDIER;
+		brain.initBuildHistory();
 		while (true) {
 			if (rc.isCoreReady()) {
 				//Decide what unit to make
 				int makeScout = rand.nextInt(10);
 				if (makeScout > 8) {
 					typeToBuild=RobotType.SCOUT;
+					
 				} else {
 					typeToBuild=RobotType.SOLDIER;
 				}
@@ -28,9 +30,10 @@ public class Archon {
 				
 				//Try to build a unit if you have the parts
 				if (rc.hasBuildRequirements(typeToBuild)) {
-					tryBuildUnitInEmptySpace(rc, typeToBuild,Direction.NORTH);
+					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 				//Otherwise, call out any dens if you see them
 				} else if (!(nearbyDen.equals(rc.getLocation()))) {
+					rc.setIndicatorString(3, "See den at" + nearbyDen.x + "," + nearbyDen.y);
 					Entity.signalMessageLocation(rc, nearbyDen);
 				//Otherwise, move
 				} else {
@@ -45,11 +48,12 @@ public class Archon {
 	 * tryBuildUniitInEmptySpace takes a type of robot to build and a direction to start trying to build in,
 	 * and, if the Archon is able, it will build a robot of that type in the nearest possible direction to dirTozBuild
 	 */
-	private static void tryBuildUnitInEmptySpace(RobotController rc, RobotType typeToBuild, Direction dirToBuild) throws GameActionException{
+	private void tryBuildUnitInEmptySpace(RobotController rc, Brain brain, RobotType typeToBuild, Direction dirToBuild) throws GameActionException{
         for (int i = 0; i < 8; i++) {
             // If possible, build in this direction
             if (rc.canBuild(dirToBuild, typeToBuild)) {
                 rc.build(dirToBuild, typeToBuild);
+                brain.iterateUnitInBuildHistory(typeToBuild);
                 break;
             } else {
                 // Rotate the direction to try
@@ -60,7 +64,7 @@ public class Archon {
 	/*
 	 * repairUnits looks for damaged, adjacent friendly units, and repairs the non-archon unit it sees
 	 */
-	private static void repairUnits(RobotController rc) throws GameActionException {
+	private void repairUnits(RobotController rc) throws GameActionException {
 		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(2, rc.getTeam());
 		for (RobotInfo friendly : adjacentFriendlies){
 			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON) {
@@ -70,7 +74,7 @@ public class Archon {
 		}
 	}
 	
-	private static void archonMove(RobotController rc) throws GameActionException {
+	private void archonMove(RobotController rc) throws GameActionException {
 		//Look for bad guys
 		RobotInfo[] nearbyHostiles = rc.senseHostileRobots(rc.getLocation(),  rc.getType().sensorRadiusSquared);
 		//If there are any bad guys, run away
