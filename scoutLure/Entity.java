@@ -1,14 +1,43 @@
 package scoutLure;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 import battlecode.common.*;
+
+import java.util.Comparator;
 
 
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static int convertMapToSignal(MapLocation loc){
+		return (int) (loc.x + loc.y*Math.pow(2, 16));
+	}
+	
+	public static MapLocation convertSignalToMap(int signal){
+		int x = (int) (signal % Math.pow(2, 16));
+		int y = (int) (signal / Math.pow(2, 16));
+		return new MapLocation(x, y);
+	}
+	
+	/*
+	 * returns an array with the closest n locations to the givenLoc
+	 * Note: this is untested code. Test before you use it
+	 */
+	public static MapLocation[] sortByDistance(final MapLocation loc, MapLocation[] otherLocs){
+		ArrayList<MapLocation> returnList = new ArrayList<MapLocation>(Arrays.asList(otherLocs));
+		Collections.sort(returnList, new Comparator<MapLocation>(){
+		     public int compare(MapLocation o1, MapLocation o2){
+		         return o1.distanceSquaredTo(loc) - o2.distanceSquaredTo(loc);
+		     }
+		});
+		return (MapLocation[]) returnList.toArray();
+	}
 	
 	public static MapLocation split(MapLocation loc1, MapLocation loc2){
 		return new MapLocation((loc1.x + loc2.x)/2, (loc1.y + loc2.y)/2);
@@ -114,6 +143,16 @@ public class Entity {
         		case 7:
         			MapLocation newLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
         			brain.denLocations.add(newLoc);
+        			break;
+        		//Guard zombie base
+        		case 8:
+        			MapLocation denLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+        			brain.denGuarded.add(denLoc);
+        			break;
+        		case 9:
+        			MapLocation denNotGuard = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+        			brain.denGuarded.remove(denNotGuard);
+        			break;
         		}
         	}
 		}

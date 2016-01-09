@@ -1,5 +1,6 @@
 package scoutLure;
 
+import java.util.Optional;
 import java.util.Random;
 import scoutLure.Entity;
 
@@ -15,7 +16,12 @@ public class Scout {
         Random rand = new Random(rc.getID());
 		MapLocation startingLocation = rc.getLocation();
 		int fate = rand.nextInt(1000);
+		Optional<MapLocation> guard = Optional.empty();
+		boolean baitingZombies = false;
+		boolean scoutingZombieDir = false;
 		Direction currentDir = directions[fate%8];
+
+
 		
 		Brain brain = new Brain(startingLocation);
 
@@ -27,17 +33,14 @@ public class Scout {
 				if (enemiesWithinRange.length > 5 && !brain.enemyBaseFound){
 					brain.enemyBaseFound = true;
 					brain.enemyBase = enemiesWithinRange[0].location;
-					MapLocation enemyLoc = brain.enemyBase;
-					int signal = (int) (enemyLoc.x + enemyLoc.y*Math.pow(2, 16));
-					rc.broadcastMessageSignal(6, signal, 2000);
+					rc.broadcastMessageSignal(6, Entity.convertMapToSignal(brain.enemyBase), 2000);
 				}
 				RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
 				for (RobotInfo zombie : zombiesWithinRange){
 					if (zombie.type == RobotType.ZOMBIEDEN && !brain.denLocations.contains(zombie.location)){
 						MapLocation den = zombie.location;
 						brain.denLocations.add(den);
-						int signal = (int) (den.x + den.y*Math.pow(2, 16));
-						rc.broadcastMessageSignal(7, signal, 2000);
+						rc.broadcastMessageSignal(7, Entity.convertMapToSignal(den), 2000);
 					}
 				}
 
@@ -59,6 +62,79 @@ public class Scout {
 				}
 				else {
 					
+					
+					MapLocation robotLocation = rc.getLocation();
+					if (scoutingZombieDir){
+						for (RobotInfo zombie : zombiesWithinRange){
+							if (zombie.type == RobotType.ZOMBIEDEN){
+								scoutingZombieDir = false;
+								baitingZombies = true;
+							}
+						}
+						Entity.moveTowards(rc, currentDir);
+					}
+					else if (baitingZombies){
+						Direction dirToMove;
+						if (brain.enemyBaseFound){
+							dirToMove = robotLocation.directionTo(brain.enemyBase);
+						}
+						else {
+							dirToMove = robotLocation.directionTo(startingLocation).opposite();
+						}
+						for (RobotInfo enemyInfo : zombiesWithinRange){
+							if (robotLocation.distanceSquaredTo(enemyInfo.location) < 8){
+								rc.setIndicatorString(0, "enemy nearby, should have moved");
+								Entity.moveTowards(rc, dirToMove);
+							}
+						}
+					}
+					else if (brain.denLocations.size() == brain.denGuarded.size()){
+						//Don't have an available den to go to: just sit and wait
+						if (zombiesWithinRange.length > 0 ){
+							rc.setIndicatorString(0, "scouting zombie dir");
+							scoutingZombieDir = true;
+							currentDir = robotLocation.directionTo(zombiesWithinRange[0].location);
+							Entity.moveTowards(rc, currentDir);
+						}
+							
+					}else if (!guard.isPresent() && !baitingZombies){
+						for (MapLocation denLoc : brain.denLocations){
+							if (!brain.denGuarded.contains(denLoc) && robotLocation.distanceSquaredTo(denLoc) < 900){
+								guard = Optional.of(denLoc);
+								rc.broadcastMessageSignal(8, Entity.convertMapToSignal(denLoc), 900);
+								rc.setIndicatorString(0, "going to guard");
+								brain.denGuarded.add(denLoc);
+							}
+						}
+					}
+					else if (guard.isPresent()){
+						for (RobotInfo enemyInfo : zombiesWithinRange){
+							if (robotLocation.distanceSquaredTo(enemyInfo.location) < 13){
+								//Now we need to start luring to enemy base
+								baitingZombies = true;
+								rc.broadcastMessageSignal(9, Entity.convertMapToSignal(guard.get()), 900);
+								guard = Optional.empty();
+								rc.setIndicatorString(0, "now baiting zombies");
+								break;
+							}
+						}
+						if (guard.isPresent() && robotLocation.distanceSquaredTo(guard.get()) > 13){
+							Entity.moveTowards(rc, robotLocation.directionTo(guard.get()));
+							rc.setIndicatorString(0, "should have just moved");
+							
+						}
+					}
+				}
+				Clock.yield();
+
+					
+					
+					
+					
+					
+					
+					
+					/*
 					MapLocation currentLocation = rc.getLocation();
 					boolean move = false;
 					boolean stop = false;
@@ -109,8 +185,7 @@ public class Scout {
 							}
 						}
 					}
-				}
-				Clock.yield();
+				}*/
 			}catch (Exception e){
 				System.out.println(e.getMessage());
 					e.printStackTrace();
