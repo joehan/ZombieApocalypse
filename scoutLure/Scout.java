@@ -13,13 +13,12 @@ public class Scout {
         Team enemyTeam = myTeam.opponent();
         Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
                 Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-        Random rand = new Random(rc.getID());
+//        Random rand = new Random(rc.getID());
 		MapLocation startingLocation = rc.getLocation();
-		int fate = rand.nextInt(1000);
-		Optional<MapLocation> guard = Optional.empty();
-		boolean baitingZombies = false;
-		boolean scoutingZombieDir = false;
-		Direction currentDir = directions[fate%8];
+//		Optional<MapLocation> guard = Optional.empty();
+//		boolean baitingZombies = false;
+//		boolean scoutingZombieDir = false;
+		Optional<Direction> currentDir = Optional.empty();
 
 
 		
@@ -61,131 +60,33 @@ public class Scout {
 					scout(rc, brain);
 				}
 				else {
-					
-					
 					MapLocation robotLocation = rc.getLocation();
-					if (scoutingZombieDir){
-						for (RobotInfo zombie : zombiesWithinRange){
-							if (zombie.type == RobotType.ZOMBIEDEN){
-								scoutingZombieDir = false;
-								baitingZombies = true;
-							}
-						}
-						Entity.moveTowards(rc, currentDir);
+					Direction lureDir;
+					Optional<RobotInfo> closestArchon = Entity.findClosestArchon(rc);
+					if (!brain.enemyBaseFound){
+						lureDir = robotLocation.directionTo(startingLocation).opposite();
 					}
-					else if (baitingZombies){
-						Direction dirToMove;
-						if (brain.enemyBaseFound){
-							dirToMove = robotLocation.directionTo(brain.enemyBase);
-						}
-						else {
-							dirToMove = robotLocation.directionTo(startingLocation).opposite();
-						}
-						for (RobotInfo enemyInfo : zombiesWithinRange){
-							if (robotLocation.distanceSquaredTo(enemyInfo.location) < 8){
-								rc.setIndicatorString(0, "enemy nearby, should have moved");
-								Entity.moveTowards(rc, dirToMove);
-							}
-						}
+					else{
+						lureDir = robotLocation.directionTo(brain.enemyBase);
 					}
-					else if (brain.denLocations.size() == brain.denGuarded.size()){
-						//Don't have an available den to go to: just sit and wait
-						if (zombiesWithinRange.length > 0 ){
-							rc.setIndicatorString(0, "scouting zombie dir");
-							scoutingZombieDir = true;
-							currentDir = robotLocation.directionTo(zombiesWithinRange[0].location);
-							Entity.moveTowards(rc, currentDir);
-						}
-							
-					}else if (!guard.isPresent() && !baitingZombies){
-						for (MapLocation denLoc : brain.denLocations){
-							if (!brain.denGuarded.contains(denLoc) && robotLocation.distanceSquaredTo(denLoc) < 900){
-								guard = Optional.of(denLoc);
-								rc.broadcastMessageSignal(8, Entity.convertMapToSignal(denLoc), 900);
-								rc.setIndicatorString(0, "going to guard");
-								brain.denGuarded.add(denLoc);
-							}
-						}
+					
+					if ((!closestArchon.isPresent() || robotLocation.distanceSquaredTo(closestArchon.get().location)> 50)
+							&& Entity.findDistanceClosestZombie(rc) < 8){
+						Entity.moveAvoidArchons(rc, lureDir);
 					}
-					else if (guard.isPresent()){
-						for (RobotInfo enemyInfo : zombiesWithinRange){
-							if (robotLocation.distanceSquaredTo(enemyInfo.location) < 13){
-								//Now we need to start luring to enemy base
-								baitingZombies = true;
-								rc.broadcastMessageSignal(9, Entity.convertMapToSignal(guard.get()), 900);
-								guard = Optional.empty();
-								rc.setIndicatorString(0, "now baiting zombies");
-								break;
-							}
+					else if (!closestArchon.isPresent() || robotLocation.distanceSquaredTo(closestArchon.get().location)> 50){
+						//Being chased, but no zombies close enough.  Wait to agro zombies then head to enemy base
+					}
+					else if (zombiesWithinRange.length > 0){
+						if (!currentDir.isPresent()){
+							currentDir = Optional.of(robotLocation.directionTo(zombiesWithinRange[0].location));
 						}
-						if (guard.isPresent() && robotLocation.distanceSquaredTo(guard.get()) > 13){
-							Entity.moveTowards(rc, robotLocation.directionTo(guard.get()));
-							rc.setIndicatorString(0, "should have just moved");
-							
-						}
+						Entity.moveTowards(rc, currentDir.get());
+					} else {
+						//Case where no zombies present, dont move
 					}
 				}
 				Clock.yield();
-
-					
-					
-					
-					
-					
-					
-					
-					/*
-					MapLocation currentLocation = rc.getLocation();
-					boolean move = false;
-					boolean stop = false;
-					boolean archonClose = false;
-//					RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
-					//					RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, enemyTeam);
-					RobotInfo[] alliesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, myTeam);
-
-					for (RobotInfo zombie : zombiesWithinRange){
-						if (zombie.location.distanceSquaredTo(currentLocation) < 24){
-							move = true;
-						}
-					}
-					for (RobotInfo enemy : enemiesWithinRange){
-						if (enemy.location.distanceSquaredTo(currentLocation) < 15){
-							move = false;
-							stop = true;
-						}
-					}
-					for (RobotInfo ally : alliesWithinRange){
-						if (ally.location.distanceSquaredTo(currentLocation) < 48 && ally.type == RobotType.ARCHON){
-							archonClose = true;
-						}
-					}
-					if (!brain.enemyBaseFound){
-						Entity.moveSemiRandom(rc, currentDir);
-					}
-					else {
-						if (archonClose && zombiesWithinRange.length == 0){
-
-						}
-						else{
-							Direction moveDir = rc.getLocation().directionTo(brain.enemyBase);
-							Entity.moveTowards(rc, moveDir);
-
-							if (rc.isCoreReady() && move && ! stop ){
-								Entity.moveTowards(rc, moveDir);
-							}
-							else if (rc.isCoreReady() && !stop && !archonClose){
-								fate = rand.nextInt(1000);
-								Direction dirToMove = directions[fate%8];
-								if (rc.canMove(dirToMove)){
-									rc.move(dirToMove);
-								}
-							}
-							if (stop && rc.isInfected()){
-								rc.disintegrate();
-							}
-						}
-					}
-				}*/
 			}catch (Exception e){
 				System.out.println(e.getMessage());
 					e.printStackTrace();
