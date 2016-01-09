@@ -1,5 +1,6 @@
 package scoutLure;
 
+import java.util.Optional;
 import java.util.Random;
 import scoutLure.Entity;
 
@@ -12,24 +13,46 @@ public class Scout {
         Team enemyTeam = myTeam.opponent();
         Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
                 Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-        Random rand = new Random(rc.getID());
+//        Random rand = new Random(rc.getID());
 		MapLocation startingLocation = rc.getLocation();
+//		Optional<MapLocation> guard = Optional.empty();
+//		boolean baitingZombies = false;
+//		boolean scoutingZombieDir = false;
+		Optional<Direction> currentDir = Optional.empty();
 
+
+		
 		Brain brain = new Brain(startingLocation);
 
 
 		while (true){
 			try{
 				Entity.receiveMessages(rc, brain); 
+				RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, enemyTeam);
+				if (enemiesWithinRange.length > 5 && !brain.enemyBaseFound){
+					brain.enemyBaseFound = true;
+					brain.enemyBase = enemiesWithinRange[0].location;
+					rc.broadcastMessageSignal(6, Entity.convertMapToSignal(brain.enemyBase), 2000);
+				}
+				RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
+				for (RobotInfo zombie : zombiesWithinRange){
+					if (zombie.type == RobotType.ZOMBIEDEN && !brain.denLocations.contains(zombie.location)){
+						MapLocation den = zombie.location;
+						brain.denLocations.add(den);
+						rc.broadcastMessageSignal(7, Entity.convertMapToSignal(den), 2000);
+					}
+				}
+
+				
 				if (!brain.haveYScout && !brain.scouty && !brain.scoutx &&
 						((brain.minHeight == (Integer) null) || (brain.maxHeight == (Integer) null))){
                 	brain.scouty = true;
-                	rc.broadcastMessageSignal(4, 0, 80);
+                	rc.broadcastMessageSignal(4, 0, 500);
                 	rc.setIndicatorString(0, "became y scout");
                 }
                 else if (!brain.haveXScout && !brain.scoutx && !brain.scouty && 
                 		((brain.minWidth == (Integer) null) || (brain.maxWidth == (Integer) null))){
-                	rc.broadcastMessageSignal(5, 0, 80);
+                	rc.broadcastMessageSignal(5, 0, 500);
                 	rc.setIndicatorString(0, "became x scout");
                 	brain.scoutx = true;
                 }
@@ -37,75 +60,57 @@ public class Scout {
 					scout(rc, brain);
 				}
 				else {
-					MapLocation currentLocation = rc.getLocation();
-					boolean move = false;
-					boolean stop = false;
-					boolean archonClose = false;
-					RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, Team.ZOMBIE);
-					RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, enemyTeam);
-					RobotInfo[] alliesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, myTeam);
-
-					for (RobotInfo zombie : zombiesWithinRange){
-						if (zombie.location.distanceSquaredTo(currentLocation) < 24){
-							move = true;
+					MapLocation robotLocation = rc.getLocation();
+					Direction lureDir;
+					Optional<RobotInfo> closestArchon = Entity.findClosestArchon(rc);
+					if (!brain.enemyBaseFound){
+						lureDir = robotLocation.directionTo(startingLocation).opposite();
+					}
+					else{
+						lureDir = robotLocation.directionTo(brain.enemyBase);
+					}
+					
+					if ((!closestArchon.isPresent() || robotLocation.distanceSquaredTo(closestArchon.get().location)> 50)
+							&& Entity.findDistanceClosestZombie(rc) < 8){
+						Entity.moveAvoidArchons(rc, lureDir);
+					}
+					else if (!closestArchon.isPresent() || robotLocation.distanceSquaredTo(closestArchon.get().location)> 50){
+						//Being chased, but no zombies close enough.  Wait to agro zombies then head to enemy base
+					}
+					else if (zombiesWithinRange.length > 0){
+						if (!currentDir.isPresent()){
+							currentDir = Optional.of(robotLocation.directionTo(zombiesWithinRange[0].location));
 						}
-					}
-					for (RobotInfo enemy : enemiesWithinRange){
-						if (enemy.location.distanceSquaredTo(currentLocation) < 15){
-							move = false;
-							stop = true;
-						}
-					}
-					for (RobotInfo ally : alliesWithinRange){
-						if (ally.location.distanceSquaredTo(currentLocation) < 48 && ally.type == RobotType.ARCHON){
-							archonClose = true;
-						}
-					}
-
-					Direction moveDir = Direction.SOUTH_EAST;
-					rc.setIndicatorString(0, "should be moving");
-
-					Entity.moveTowards(rc, moveDir);
-
-					if (rc.isCoreReady() && move && ! stop ){
-						Entity.moveTowards(rc, moveDir);
-					}
-					else if (rc.isCoreReady() && !stop && !archonClose){
-						int fate = rand.nextInt(1000);
-						Direction dirToMove = directions[fate%8];
-						if (rc.canMove(dirToMove)){
-							rc.move(dirToMove);
-						}
-					}
-					if (stop && rc.isInfected()){
-						rc.disintegrate();
+						Entity.moveTowards(rc, currentDir.get());
+					} else {
+						//Case where no zombies present, dont move
 					}
 				}
 				Clock.yield();
 			}catch (Exception e){
 				System.out.println(e.getMessage());
-				e.printStackTrace();
+					e.printStackTrace();
+				}
 			}
 		}
-	}
 
-	private static void scout(RobotController rc, Brain brain) throws GameActionException{
-		MapLocation currentLocation = rc.getLocation();
-		int power = currentLocation.distanceSquaredTo(brain.startLocation) + 100;
-		if (brain.scoutx){
-			if ((brain.maxWidth == (Integer) null)){
-				for (int i = 0; i < 8; i ++){
-					if (!rc.onTheMap(currentLocation.add(Direction.EAST, i))){
-						brain.maxWidth = currentLocation.x - 1;
-						rc.broadcastMessageSignal(2, brain.maxWidth, power);
+		private static void scout(RobotController rc, Brain brain) throws GameActionException{
+			MapLocation currentLocation = rc.getLocation();
+			int power = currentLocation.distanceSquaredTo(brain.startLocation) + 100;
+			if (brain.scoutx){
+				if ((brain.maxWidth == (Integer) null)){
+					for (int i = 0; i < 8; i ++){
+						if (!rc.onTheMap(currentLocation.add(Direction.EAST, i))){
+							brain.maxWidth = currentLocation.x - 1;
+							rc.broadcastMessageSignal(2, brain.maxWidth, power);
+						}
+					}
+					if ((brain.maxWidth == (Integer) null) && rc.isCoreReady()){
+						Entity.moveTowards(rc, Direction.EAST);
 					}
 				}
-				if ((brain.maxWidth == (Integer) null) && rc.isCoreReady()){
-					Entity.moveTowards(rc, Direction.EAST);
-				}
-			}
-			else if (brain.minWidth == (Integer) null){
-				for (int i = 0; i < 8; i ++){
+				else if (brain.minWidth == (Integer) null){
+					for (int i = 0; i < 8; i ++){
 					if (!rc.onTheMap(currentLocation.add(Direction.WEST, i))){
 						brain.minWidth = currentLocation.x + 1;
 						rc.broadcastMessageSignal(3, brain.minWidth, power);
