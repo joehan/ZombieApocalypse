@@ -14,36 +14,31 @@ public class Soldier {
 		while (true) {
 			if (rc.isCoreReady()) {
 				
-				MapLocation[] dens = brain.getDenLocations();
-				//Listen for messages
-				MapLocation aDen = Entity.listenForMessageLocation(rc);
-				Boolean heardDen = !(rc.getLocation().equals(aDen));
-				//If we hear a new den
-				if (heardDen){
-					brain.addDenLocation(aDen);
+//				MapLocation[] dens = brain.getDenLocations();
+//				//Listen for messages
+//				MapLocation aDen = Entity.listenForMessageLocation(rc);
+//				Boolean heardDen = !(rc.getLocation().equals(aDen));
+//				//If we hear a new den
+//				if (heardDen){
+//					brain.addDenLocation(aDen);
+//				}
+				
+				//IF you don't have a squad, get one
+				if (brain.getSquadNum() == -1){
+					Squad.lookForASquad(rc, brain);
+				//Otherwise, listen for squad commands
+				} else {
+					Squad.listenForCommands(rc, brain);
 				}
-				
-				//Look for enemies in attack range
-				
 				Boolean attack = Entity.attackHostiles(rc);
 				if (attack) {
 					rc.setIndicatorString(1, "Attacking");
-				//Look for dens
-				} else if(dens.length > 0 ){
-					Entity.moveTowardLocation(rc, dens[0]);
-					//is the den still there
-					if (rc.canSense(dens[0])){
-						RobotInfo maybeDen = rc.senseRobotAtLocation(dens[0]);
-						if (maybeDen == null || maybeDen.type != RobotType.ZOMBIEDEN){
-							brain.removeDenLocation(dens[0]);
-						}
-					}
-					rc.setIndicatorString(1, "Moving to den at " + aDen.x + ", " + aDen.y);
-				} else {
-					boolean moved = Entity.moveInDirection(rc, randomDir);
-					if (!moved){
-						randomDir = Entity.directions[rand.nextInt(8)];
-					}
+				} else if (brain.goalLocation != null){
+					Entity.moveTowardLocation(rc, brain.goalLocation);
+//					boolean moved = Entity.moveInDirection(rc, randomDir);
+//					if (!moved){
+//						randomDir = Entity.directions[rand.nextInt(8)];
+//					}
 				}
 			}
 			Clock.yield();
