@@ -1,4 +1,4 @@
-package rovingGangs;
+package viperAggro;
 
 import battlecode.common.*;
 /*
@@ -36,7 +36,7 @@ public class Entity {
 	
 	/*
 	 * attackHostiles looks for hostile enemies within the current units attack range
-	 * and attacks one of them
+	 * and attacks the weakest of them
 	 * It returns true if the robot attacked, and false otherwise
 	 */
 	public static Boolean attackHostiles(RobotController rc) throws GameActionException {
@@ -44,9 +44,19 @@ public class Entity {
 		Boolean attacked = false;
 		if (enemiesInAttackRange.length > 0){
 			if (rc.isWeaponReady()){
-				MapLocation enemyLocation = enemiesInAttackRange[0].location;
+				RobotInfo weakestSoFar=null;
+				double healthOfWeakest=1;
+				for (RobotInfo enemy : enemiesInAttackRange){
+					double currentHealth = enemy.health/enemy.maxHealth;
+					if (weakestSoFar==null || currentHealth < healthOfWeakest) {
+						weakestSoFar=enemy;
+						healthOfWeakest = currentHealth;
+					}
+				}
+				if (rc.canAttackLocation(weakestSoFar.location)){
+					rc.attackLocation(weakestSoFar.location);
+				}
 				attacked = true;
-				rc.attackLocation(enemyLocation);
 			}
 		}
 		return attacked;
@@ -56,22 +66,30 @@ public class Entity {
 		Direction towardLoc = rc.getLocation().directionTo(loc);
 		moveInDirection(rc, towardLoc);
 	}
-	public static void moveInDirection(RobotController rc, Direction dir) throws GameActionException{
+	
+	public static boolean moveInDirection(RobotController rc, Direction dir) throws GameActionException{
+		boolean moved = false;
 		if (rc.canMove(dir)){
 			moveOrClear(rc, dir);
+			moved=true;
 		}
 		else if (rc.canMove(dir.rotateLeft())){
 			moveOrClear(rc, dir.rotateLeft());
+			moved=true;
 		}
 		else if (rc.canMove(dir.rotateRight())){
 			moveOrClear(rc, dir.rotateRight());
+			moved=true;
 		}
 		else if (rc.canMove(dir.rotateLeft().rotateLeft())){
 			moveOrClear(rc, dir.rotateLeft().rotateLeft());
+			moved=true;
 		}
 		else if (rc.canMove(dir.rotateRight().rotateRight())){
 			moveOrClear(rc, dir.rotateRight().rotateRight());
+			moved=true;
 		}
+		return moved;
 	}
 	public static void moveOrClear(RobotController rc, Direction dirToMove) throws GameActionException{
 		if (rc.senseRubble(rc.getLocation().add(dirToMove)) >= GameConstants.RUBBLE_SLOW_THRESH) {
@@ -108,5 +126,23 @@ public class Entity {
 		}
 	}
 	
+	/*
+	 * findAverageOfLocations takes an array of MapLocations, and returns the average, or center point,
+	 * of them.
+	 */
+	public static MapLocation findAverageOfLocations (MapLocation[] locations){
+		int sumX = 0;
+		int sumY = 0;
+		if (locations.length>0){
+			for (MapLocation loc : locations){
+				sumX+=loc.x;
+				sumY+=loc.y;
+			}
+			int avgX = sumX/locations.length;
+			int avgY = sumY/locations.length;
+			return new MapLocation(avgX,avgY);
+		}
+		return new MapLocation(-1,-1);
+	}
 	
 }

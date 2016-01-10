@@ -1,4 +1,4 @@
-package rovingGangs;
+package zombieHunting;
 
 import java.util.Random;
 

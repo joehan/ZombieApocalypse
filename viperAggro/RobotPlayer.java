@@ -1,4 +1,4 @@
-package rovingGangs;
+package viperAggro;
 
 import battlecode.common.*;
 
