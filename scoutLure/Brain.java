@@ -21,6 +21,7 @@ public class Brain {
 	public boolean scouty;
 	public boolean enemyBaseFound;
 	public MapLocation enemyBase;
+	public HashSet<MapLocation> denGuarded;
 	
 	
 //	this.maxHeight = this.minHeight = this.maxWidth = this.minWidth = (Integer) null;
@@ -31,6 +32,8 @@ public class Brain {
 		startLocation = startingLocation;
 		scoutx = scouty = false;
 		enemyBase = null;
+		denGuarded = new HashSet<MapLocation>();
+		
 	}
 	
 	/*

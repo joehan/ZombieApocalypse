@@ -1,14 +1,152 @@
 package scoutLure;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.Random;
 
 import battlecode.common.*;
+
+import java.util.Comparator;
 
 
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static int findDistanceClosestZombie(RobotController rc){
+		RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
+		int closest = 100;	
+		for (RobotInfo zombie : zombies){
+			int distance = rc.getLocation().distanceSquaredTo(zombie.location);
+			if (distance < closest){
+				closest = distance;
+			}
+		}
+		return closest;
+	}
+	
+	public static Optional<RobotInfo> findClosestArchon(RobotController rc){
+		RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+		ArrayList<RobotInfo> archons = new ArrayList<RobotInfo>();
+		for (RobotInfo ally : allies){
+			if (ally.type == RobotType.ARCHON){
+				archons.add(ally);
+			}
+		}
+		Optional<RobotInfo> closestArchon = Optional.empty();
+		int distToArchon = 10000;
+		for (RobotInfo archon : archons){
+			int distance = archon.location.distanceSquaredTo(rc.getLocation());
+			if (distance < distToArchon){
+				distToArchon = distance;
+				closestArchon = Optional.of(archon);
+			}
+		}
+		return closestArchon;
+	}
+	
+	public static void moveAvoidArchons(RobotController rc, Direction dir) throws GameActionException{
+		MapLocation robotLocation = rc.getLocation();
+		Optional<RobotInfo> closestArchon = Entity.findClosestArchon(rc); 
+//		Direction[] dirToTry = {dir, dir.rotateLeft(), dir.rotateRight(), 
+//				dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+		Direction[] dirToTry = {dir, dir.rotateRight(), dir.rotateRight().rotateRight(), 
+				dir.rotateRight().rotateRight().rotateRight()};
+		if (!closestArchon.isPresent()){
+			Entity.moveTowards(rc, dir);
+		}
+		else {
+			for (Direction direction : dirToTry){
+				//Note, this 50 is hard-coded and might need to be changed
+				if (!(robotLocation.add(direction).distanceSquaredTo(closestArchon.get().location) < 50)
+						&& rc.isCoreReady() && rc.canMove(dir)){
+					rc.move(dir);
+				}
+			}
+		}
+	}
+
+	/*public static void moveAvoidArchons(RobotController rc, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
+			ArrayList<RobotInfo> archons = new ArrayList<RobotInfo>();
+			for (RobotInfo ally : allies){
+				if (ally.type == RobotType.ARCHON){
+					archons.add(ally);
+				}
+			}
+			Direction[] dirToTry = {dir, dir.rotateLeft(), dir.rotateRight(), 
+					dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+			Direction direction;
+			for (int i = 0; i < dirToTry.length; i ++){
+				//			boolean valid = true;
+				boolean archonThreat = false;
+				boolean inDanger = false;
+				direction = dirToTry[i];
+				MapLocation postPosition = rc.getLocation().add(direction, 1);
+				for (RobotInfo zombie : zombies){
+					MapLocation zombieLocation = zombie.location;
+					for (RobotInfo archon : archons){
+						if (zombieLocation.distanceSquaredTo(archon.location) <= zombieLocation.distanceSquaredTo(postPosition)){
+							archonThreat = true;
+							break;
+						}
+						if (zombieLocation.add(zombieLocation.directionTo(postPosition)).distanceSquaredTo(
+								archon.location) >= zombieLocation.distanceSquaredTo(archon.location) &&
+								zombieLocation.add(zombieLocation.directionTo(postPosition
+										)).distanceSquaredTo(archon.location) < 25){
+							archonThreat = true;
+							break;
+						}
+					}
+//					if ()
+					if (archonThreat){
+						break;
+					}
+				}
+				for (RobotInfo archon : archons){
+					Direction newDir = rc.getLocation().directionTo(archon.location);
+					if (newDir == direction || newDir == direction.rotateLeft() || newDir == direction.rotateRight()){
+						archonThreat = true;
+					}
+				}
+				if (!archonThreat && rc.canMove(direction)){
+					rc.move(direction);
+					break;
+				}
+			}
+		}
+		
+	}
+	*/
+	
+	public static int convertMapToSignal(MapLocation loc){
+		return (int) (loc.x + loc.y*Math.pow(2, 16));
+	}
+	
+	public static MapLocation convertSignalToMap(int signal){
+		int x = (int) (signal % Math.pow(2, 16));
+		int y = (int) (signal / Math.pow(2, 16));
+		return new MapLocation(x, y);
+	}
+	
+	/*
+	 * returns an array with the closest n locations to the givenLoc
+	 * Note: this is untested code. Test before you use it
+	 */
+	public static MapLocation[] sortByDistance(final MapLocation loc, MapLocation[] otherLocs){
+		ArrayList<MapLocation> returnList = new ArrayList<MapLocation>(Arrays.asList(otherLocs));
+		Collections.sort(returnList, new Comparator<MapLocation>(){
+		     public int compare(MapLocation o1, MapLocation o2){
+		         return o1.distanceSquaredTo(loc) - o2.distanceSquaredTo(loc);
+		     }
+		});
+		return (MapLocation[]) returnList.toArray();
+	}
 	
 	public static MapLocation split(MapLocation loc1, MapLocation loc2){
 		return new MapLocation((loc1.x + loc2.x)/2, (loc1.y + loc2.y)/2);
@@ -114,6 +252,16 @@ public class Entity {
         		case 7:
         			MapLocation newLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
         			brain.denLocations.add(newLoc);
+        			break;
+        		//Guard zombie base
+        		case 8:
+        			MapLocation denLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+        			brain.denGuarded.add(denLoc);
+        			break;
+        		case 9:
+        			MapLocation denNotGuard = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+        			brain.denGuarded.remove(denNotGuard);
+        			break;
         		}
         	}
 		}
