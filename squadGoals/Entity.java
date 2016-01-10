@@ -7,6 +7,14 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+	public static Direction[] directionsToTry(Direction dir){
+		Direction[] ret = {dir, dir.rotateRight(), dir.rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateLeft().rotateLeft(),
+			dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft().rotateLeft(),
+			dir.opposite()};
+		return ret;
+	}
+	
+	
 	/*
 	 * Note that this method doesn't account for ranged robots like ranged zombies unless ranged=true
 	 * In the future we should modify this to see if an enemy (mostly zombie) can attack us the turn after
@@ -36,17 +44,44 @@ public class Entity {
 		if (rc.isCoreReady()){
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 			MapLocation robotLocation = rc.getLocation();
-			int start = brain.rand.nextInt(8);
-			for (int i = start; i < start + 8; i ++){
-				Direction dirToTry = directions[i%8];
-				MapLocation newLoc = robotLocation.add(dirToTry);
-				if (!inDanger(enemies, newLoc, false) && rc.canMove(dirToTry)){
-					rc.move(dirToTry);
+			Direction start = awayFromEnemies(rc, enemies, brain);
+			Direction[] dirToTry = directionsToTry(start);
+			for (int i = 0; i < 8; i ++){
+				Direction currentDir = dirToTry[i];
+				MapLocation newLoc = robotLocation.add(currentDir);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()){
+					rc.move(currentDir);
+					return true;
+				}
+			}
+			for (int i = 0; i < 8; i ++){
+				Direction currentDir = dirToTry[i];
+				MapLocation newLoc = robotLocation.add(currentDir);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir)){
+					rc.move(currentDir);
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+	
+	public static Direction awayFromEnemies(RobotController rc, RobotInfo[] enemies, Brain brain){
+		//Get closest enemy
+		if (enemies.length > 0){
+			MapLocation robotLocation = rc.getLocation();
+			int distance = 100;
+			MapLocation closest = enemies[0].location;
+			for (RobotInfo enemy : enemies){
+				int seperation = robotLocation.distanceSquaredTo(enemy.location);
+				if (seperation < distance){
+					distance = seperation;
+					closest = enemy.location;
+				}
+			}
+			return robotLocation.directionTo(closest).opposite();
+		}
+		return directions[brain.rand.nextInt(8)];
 	}
 	
 	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{

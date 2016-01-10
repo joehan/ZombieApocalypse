@@ -33,8 +33,13 @@ public class Soldier {
 				Squad.listenForCommands(rc, brain);
 			}
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+//			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+			boolean moved = false;
 			if (Entity.inDanger(enemies, rc.getLocation(), false)){
-				Entity.safeMove(rc, brain);
+				moved = Entity.safeMove(rc, brain);
+				if (!moved){
+					Entity.moveRandomDirection(rc, brain);
+				}
 			}
 			Boolean attack = Entity.attackHostiles(rc);
 			if (attack) {
