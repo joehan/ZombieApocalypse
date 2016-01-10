@@ -1,4 +1,4 @@
-package rovingGangs;
+package zombieHunting;
 
 import java.util.HashSet;
 import java.util.HashMap;
@@ -14,6 +14,7 @@ public class Brain {
 	
 	//Rembering den locations!
 	private HashSet<MapLocation> denLocations = new HashSet<MapLocation>();
+	
 	public MapLocation[] getDenLocations(){
 		return denLocations.toArray(new MapLocation[denLocations.size()]);
 	}
@@ -41,6 +42,16 @@ public class Brain {
 	
 	public void iterateUnitInBuildHistory(RobotType type){
 		buildHistory.put(type, buildHistory.get(type) +1);
+	}
+	
+	private HashSet<MapLocation> archonStarts = new HashSet<MapLocation>();
+	
+	public MapLocation[] getArchonStarts() {
+		return archonStarts.toArray(new MapLocation[denLocations.size()]);
+	}
+	
+	public void addArchonStart(MapLocation loc){
+		archonStarts.add(loc);
 	}
 	
 	
