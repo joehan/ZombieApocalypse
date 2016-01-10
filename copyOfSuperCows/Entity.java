@@ -1,30 +1,86 @@
-package scoutLure;
+package copyOfSuperCows;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
 
+import copyOfSuperCows.Brain;
 import battlecode.common.*;
-
-import java.util.Comparator;
-
 
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
 	
+	/*
+	 * Note that this method doesn't account for ranged robots like ranged zombies unless ranged=true
+	 * In the future we should modify this to see if an enemy (mostly zombie) can attack us the turn after
+	 * next if we are on weapon cooldown
+	 */
+	public static boolean inDanger(RobotInfo[] enemies, MapLocation loc, boolean ranged){
+		if (ranged){
+			for (RobotInfo enemy : enemies){
+				if (enemy.location.distanceSquaredTo(loc) < enemy.type.attackRadiusSquared){
+					return true;
+				}
+			}
+		} else {
+			for (RobotInfo enemy : enemies){
+				if (enemy.location.distanceSquaredTo(loc) < 3){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * Move in random direction to avoid enemies
+	 */
+	public static boolean safeMove(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			MapLocation robotLocation = rc.getLocation();
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dirToTry = directions[i%8];
+				MapLocation newLoc = robotLocation.add(dirToTry);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(dirToTry)){
+					rc.move(dirToTry);
+					return true;
+				}
+			}
+		}
+		if (rc.isCoreReady()){
+			moveRandomDirection(rc, brain);
+		}
+		return false;
+	}
+	
+	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dir = directions[i%8];
+				if (rc.canMove(dir)){
+					rc.move(dir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	
 	public static Direction getDirectionFromSignal(int signal){
-		 Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
-	                Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		 return directions[signal];
 	}
 	
 	public static int getSignalFromDirection(Direction dir){
-		 Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
-	                Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		 for (int i = 0; i < directions.length; i ++){
 			 if (dir == directions[i]){
 				 return i;
@@ -190,78 +246,78 @@ public class Entity {
 	
 	public static void receiveMessages(RobotController rc, Brain brain){
 		Signal[] signals = rc.emptySignalQueue();
-        for (Signal signal: signals){
-        	if (signal.getTeam() == rc.getTeam()){
-        		int[] messages = signal.getMessage();
-        		switch(messages[0]) {
-        		case 0:
-        			if ((brain.maxHeight == (Integer) null)){
-        				brain.maxHeight = messages[1];
-        			}
-        			break;
-        		
-        		case 1:
-        			if ((brain.minHeight == (Integer) null)){
-        				brain.minHeight = messages[1];
-        			}
-        			break;
-        		case 2:
-        			if ((brain.maxWidth == (Integer) null)){
-        				brain.maxWidth = messages[1];
-        				rc.setIndicatorString(0, "received maxWidth data");
-        			}
-        			break;
-        		case 3:
-        			if ((brain.minWidth == (Integer) null)){
-        				brain.minWidth = messages[1];
-        			}
-        			break;
-        		case 4:
-        			brain.haveYScout = true;
-        			break;
-        		case 5:
-        			brain.haveXScout = true;
-        			break;
-        		case 6:
-        			brain.enemyBaseFound = true;
-        			int x = (int) (messages[1] % Math.pow(2, 16));
-        			int y = (int) (messages[1] / Math.pow(2, 16));
-        			brain.enemyBase = new MapLocation(x, y);
-        			break;
-        		case 7:
-        			MapLocation newLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
-        			brain.denLocations.add(newLoc);
-        			break;
-        		//Guard zombie base
-        		case 8:
-        			MapLocation denLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
-        			brain.denGuarded.add(denLoc);
-        			break;
-        		case 9:
-        			MapLocation denNotGuard = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
-        			brain.denGuarded.remove(denNotGuard);
-        			break;
-        		case 10:
-        			//Going to lure zombies in direction
-        			//set a timer for 10 turns after which it is ok to go and lure in that
-        			//direction again
-//        			Direction dir = Entity.getDirectionFromSignal(messages[1]);
-        			brain.lastLuredDirection[messages[1]] = rc.getRoundNum();
-        			break;
-        		case 11:
-        			//Archon broadcast their location so they can clump together
-        			brain.archonLocations.add(signal.getLocation());
-        			break;
-        		case 12:
-        			//Tagged zombie, don't chase after this zombie.
-        			brain.taggedZombies.add(messages[1]);
-        		}
-        	}
+       for (Signal signal: signals){
+       	if (signal.getTeam() == rc.getTeam()){
+       		int[] messages = signal.getMessage();
+       		switch(messages[0]) {
+       		case 0:
+       			if ((brain.maxHeight == (Integer) null)){
+       				brain.maxHeight = messages[1];
+       			}
+       			break;
+       		
+       		case 1:
+       			if ((brain.minHeight == (Integer) null)){
+       				brain.minHeight = messages[1];
+       			}
+       			break;
+       		case 2:
+       			if ((brain.maxWidth == (Integer) null)){
+       				brain.maxWidth = messages[1];
+       				rc.setIndicatorString(0, "received maxWidth data");
+       			}
+       			break;
+       		case 3:
+       			if ((brain.minWidth == (Integer) null)){
+       				brain.minWidth = messages[1];
+       			}
+       			break;
+       		case 4:
+       			brain.haveYScout = true;
+       			break;
+       		case 5:
+       			brain.haveXScout = true;
+       			break;
+       		case 6:
+       			brain.enemyBaseFound = true;
+       			int x = (int) (messages[1] % Math.pow(2, 16));
+       			int y = (int) (messages[1] / Math.pow(2, 16));
+       			brain.enemyBase = new MapLocation(x, y);
+       			break;
+       		case 7:
+       			MapLocation newLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+       			brain.denLocations.add(newLoc);
+       			break;
+       		//Guard zombie base
+       		case 8:
+       			MapLocation denLoc = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+       			brain.denGuarded.add(denLoc);
+       			break;
+       		case 9:
+       			MapLocation denNotGuard = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
+       			brain.denGuarded.remove(denNotGuard);
+       			break;
+       		case 10:
+       			//Going to lure zombies in direction
+       			//set a timer for 10 turns after which it is ok to go and lure in that
+       			//direction again
+//       			Direction dir = Entity.getDirectionFromSignal(messages[1]);
+       			brain.lastLuredDirection[messages[1]] = rc.getRoundNum();
+       			break;
+       		case 11:
+       			//Archon broadcast their location so they can clump together
+       			brain.archonLocations.add(signal.getLocation());
+       			break;
+       		case 12:
+       			//Tagged zombie, don't chase after this zombie.
+       			brain.taggedZombies.add(messages[1]);
+       		}
+       	}
 		}
 	}
 	
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
-            Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+           Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
 	public static MapLocation searchForDen(RobotController rc) {
 		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
@@ -310,7 +366,4 @@ public class Entity {
 		}
 	}
 	
-//	public static void signalMessageLocation(RobotController rc, MapLocation loc) throws GameActionException{
-//		rc.broadcastMessageSignal(loc.x, loc.y, )
-//	}
 }
