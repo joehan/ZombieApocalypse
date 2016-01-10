@@ -6,6 +6,13 @@ import battlecode.common.*;
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+
+	
+	public static Direction[] bugDirectionsToTry(Direction dir){
+		Direction[] ret = {dir, dir.rotateRight(), dir.rotateRight().rotateRight(), dir.rotateRight().rotateRight().rotateRight(),
+				dir.opposite(), dir.opposite().rotateRight(), dir.rotateLeft().rotateLeft(), dir.rotateLeft()};
+		return ret;
+	}
 	
 	public static Direction[] directionsToTry(Direction dir){
 		Direction[] ret = {dir, dir.rotateRight(), dir.rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateLeft().rotateLeft(),
@@ -13,7 +20,6 @@ public class Entity {
 			dir.opposite()};
 		return ret;
 	}
-	
 	
 	/*
 	 * Note that this method doesn't account for ranged robots like ranged zombies unless ranged=true
@@ -40,7 +46,7 @@ public class Entity {
 	/*
 	 * Move in random direction to avoid enemies
 	 */
-	public static boolean safeMove(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+	public static boolean safeMove(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
 		if (rc.isCoreReady()){
 			Direction start;
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
@@ -50,8 +56,50 @@ public class Entity {
 			else {
 				start = dir;
 			}
+			MapLocation robotLocation = rc.getLocation();Direction[] dirToTry;
+			if (bug){
+				dirToTry = bugDirectionsToTry(start);
+			}else {
+				dirToTry = directionsToTry(start);
+			}
+			for (int i = 0; i < 8; i ++){
+				Direction currentDir = dirToTry[i];
+				MapLocation newLoc = robotLocation.add(currentDir);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()){
+					rc.move(currentDir);
+					return true;
+				}
+			}
+			for (int i = 0; i < 8; i ++){
+				Direction currentDir = dirToTry[i];
+				MapLocation newLoc = robotLocation.add(currentDir);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir)){
+					rc.move(currentDir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static boolean safeMove(RobotController rc, Brain brain, MapLocation loc, boolean bug) throws GameActionException{
+		if (rc.isCoreReady() && rc.getLocation().distanceSquaredTo(loc) > 8){
+			Direction start;
+			Direction dir = rc.getLocation().directionTo(loc);
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			if (dir == Direction.NONE){
+				start = awayFromEnemies(rc, enemies, brain);
+			}
+			else {
+				start = dir;
+			}
 			MapLocation robotLocation = rc.getLocation();
-			Direction[] dirToTry = directionsToTry(start);
+			Direction[] dirToTry;
+			if (bug){
+				dirToTry = bugDirectionsToTry(start);
+			}else {
+				dirToTry = directionsToTry(start);
+			}
 			for (int i = 0; i < 8; i ++){
 				Direction currentDir = dirToTry[i];
 				MapLocation newLoc = robotLocation.add(currentDir);
@@ -143,6 +191,11 @@ public class Entity {
 	    return combined;
 	}
 	
+	public static RobotType[] orderToAttack = {RobotType.VIPER, RobotType.TURRET, RobotType.TTM,
+		RobotType.SOLDIER, RobotType.GUARD, RobotType.ARCHON, RobotType.RANGEDZOMBIE, RobotType.FASTZOMBIE, 
+		RobotType.STANDARDZOMBIE, RobotType.BIGZOMBIE, RobotType.SCOUT, RobotType.ZOMBIEDEN};
+	
+	
 	/*
 	 * attackHostiles looks for hostile enemies within the current units attack range
 	 * and attacks the weakest of them
@@ -150,21 +203,23 @@ public class Entity {
 	 */
 	public static Boolean attackHostiles(RobotController rc) throws GameActionException {
 		RobotInfo[] enemiesInAttackRange = Entity.enemiesInRange(rc, rc.getType().attackRadiusSquared);
-		Boolean attacked = false;
+//		Boolean attacked = false;
 		if (enemiesInAttackRange.length > 0){
 			if (rc.isWeaponReady()){
-				RobotInfo weakestSoFar=null;
-				double healthOfWeakest=1;
-				for (RobotInfo enemy : enemiesInAttackRange){
-					double currentHealth = enemy.health/enemy.maxHealth;
-					if (weakestSoFar==null || currentHealth < healthOfWeakest) {
-						weakestSoFar=enemy;
-						healthOfWeakest = currentHealth;
+				for (int i = 0; i < orderToAttack.length; i ++){
+					RobotInfo weakestSoFar=null;
+					double healthOfWeakest=1;
+					for (RobotInfo enemy : enemiesInAttackRange){
+						double currentHealth = enemy.health/enemy.maxHealth;
+						if ((weakestSoFar==null || currentHealth < healthOfWeakest) && enemy.type == orderToAttack[i]){
+							weakestSoFar=enemy;
+							healthOfWeakest = currentHealth;
+						}
 					}
-				}
-				if (rc.canAttackLocation(weakestSoFar.location)){
-					rc.attackLocation(weakestSoFar.location);
-					return true;
+					if (!(weakestSoFar == null) && rc.canAttackLocation(weakestSoFar.location)){
+						rc.attackLocation(weakestSoFar.location);
+						return true;
+					}
 				}
 //				attacked = true;
 			}
