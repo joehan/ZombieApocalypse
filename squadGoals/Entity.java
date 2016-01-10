@@ -1,6 +1,6 @@
 package squadGoals;
 
-import copyOfSuperCows.Brain;
+import squadGoals.Brain;
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
@@ -45,9 +45,6 @@ public class Entity {
 					return true;
 				}
 			}
-		}
-		if (rc.isCoreReady()){
-			moveRandomDirection(rc, brain);
 		}
 		return false;
 	}

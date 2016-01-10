@@ -1,5 +1,7 @@
 package squadGoals;
 
+import java.util.Random;
+
 import battlecode.common.*;
 
 /*
@@ -13,6 +15,7 @@ public class RobotPlayer {
 			try {
 				RobotType type = rc.getType();
 				Brain brain = new Brain();
+				brain.rand = new Random(rc.getID());
 			    
 				if (type == RobotType.ARCHON) {
 					Archon archon = new Archon();
