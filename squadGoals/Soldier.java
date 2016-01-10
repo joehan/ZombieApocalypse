@@ -30,6 +30,7 @@ public class Soldier {
 				Squad.lookForASquad(rc, brain);
 				//Otherwise, listen for squad commands
 			} else {
+				Squad.findLeaderLocation(rc, brain);
 				Squad.listenForCommands(rc, brain);
 			}
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
@@ -45,6 +46,9 @@ public class Soldier {
 				//					if (!moved){
 				//						randomDir = Entity.directions[rand.nextInt(8)];
 				//					}
+			} else if (rc.isCoreReady() &&
+					(brain.leadersLastKnownLocation!= null && rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 8)){
+				Entity.moveTowardLocation(rc,brain.leadersLastKnownLocation);
 			}
 			Clock.yield();
 		}

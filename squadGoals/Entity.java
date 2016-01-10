@@ -73,12 +73,13 @@ public class Entity {
 		return new MapLocation(x, y);
 	}
 	
+	
+	
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
             Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
 	public static MapLocation searchForDen(RobotController rc) {
 		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
-		MapLocation target;
 		for (RobotInfo zombie : zombiesWithinRange) {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
 				return zombie.location;
