@@ -37,6 +37,15 @@ public class Squad {
 	 */
 	public static MapLocation findLeaderLocation(RobotController rc, Brain brain) throws GameActionException {
 		RobotInfo[] friends = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-		//for (RobotInfo friend)
+		for (RobotInfo friend : friends) {
+			if (friend.ID == brain.getLeaderID()){
+				return friend.location;
+			}
+		}
+		return rc.getLocation();
+	}
+	
+	public static void sendMoveCommand(RobotController rc, Brain brain, MapLocation loc) throws GameActionException{
+		
 	}
 }
