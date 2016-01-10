@@ -113,14 +113,29 @@ public class Entity {
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
             Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
-	public static MapLocation searchForDen(RobotController rc) {
+	public static void searchForDen(RobotController rc, Brain brain) {
 		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 		for (RobotInfo zombie : zombiesWithinRange) {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
-				return zombie.location;
+				brain.addDenLocation(zombie.location);
 			}
 		}
-		return rc.getLocation();
+	}
+	
+	public static void updateDenLocations(RobotController rc, Brain brain) throws GameActionException {
+		for (MapLocation den : brain.getDenLocations()){
+			if (rc.canSenseLocation(den)){
+				RobotInfo maybeDen = rc.senseRobotAtLocation(den);
+				if (maybeDen == null || maybeDen.type!=RobotType.ZOMBIEDEN){
+					brain.removeDenLocation(den);
+					if (brain.goalLocation.equals(den)){
+						brain.goalLocation = null;
+					}
+				}
+			}
+		}
+		searchForDen(rc, brain);
+		
 	}
 	
 	public static RobotInfo[] enemiesInRange(RobotController rc, int squaredRange) {
