@@ -13,6 +13,7 @@ public class Archon {
 		brain.initBuildHistory();
 		while (true) {
 			if (rc.isCoreReady()) {
+				brain.thisTurnsSignals = rc.emptySignalQueue();
 				//Look for dens
 				MapLocation nearbyDen = Entity.searchForDen(rc);
 				

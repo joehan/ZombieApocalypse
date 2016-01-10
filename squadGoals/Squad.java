@@ -5,11 +5,11 @@ import battlecode.common.*;
 public class Squad {
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(-16001, -16001, 36);
+		rc.broadcastMessageSignal(-16001, -16001, 35);
 	}
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = rc.emptySignalQueue();
+		Signal[] signals = brain.thisTurnsSignals;
 		//listen for signals from new bots
 		for (Signal signal : signals){
 			if (signal.getTeam()==rc.getTeam()){
@@ -20,13 +20,13 @@ public class Squad {
 	}
 	
 	public static void lookForASquad(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = rc.emptySignalQueue();
+		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal: signals){
 			//if its a recruiting signal from our team
 			if (signal.getTeam()==rc.getTeam() && (signal.getMessage()!=null && signal.getMessage()[0]==-16001)){
 				brain.setSquad(signal.getRobotID());
 				brain.setLeaderID(signal.getRobotID());
-				rc.broadcastSignal(36);
+				rc.broadcastSignal(15);
 				rc.setIndicatorString(2, "On squad" + brain.getSquadNum());
 				break;
 			}
@@ -50,7 +50,7 @@ public class Squad {
 	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = rc.emptySignalQueue();
+		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal : signals){
 			//if it's from our leader, and its not a recruiting signal
 			if (signal.getID() == brain.getLeaderID() && (signal.getMessage()!=null && signal.getMessage()[0]!=-16001)){

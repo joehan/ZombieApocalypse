@@ -6,6 +6,16 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+	public static int convertMapToSignal(MapLocation loc){
+		return (int) (loc.x + loc.y*Math.pow(2, 16));
+	}
+	
+	public static MapLocation convertSignalToMap(int signal){
+		int x = (int) (signal % Math.pow(2, 16));
+		int y = (int) (signal / Math.pow(2, 16));
+		return new MapLocation(x, y);
+	}
+	
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
             Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	

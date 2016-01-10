@@ -13,6 +13,7 @@ public class Soldier {
 		
 		while (true) {
 			if (rc.isCoreReady()) {
+				brain.thisTurnsSignals = rc.emptySignalQueue();
 				
 //				MapLocation[] dens = brain.getDenLocations();
 //				//Listen for messages

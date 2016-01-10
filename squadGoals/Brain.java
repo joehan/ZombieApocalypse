@@ -86,4 +86,6 @@ public class Brain {
 	public Integer[] getSquadMembers(){
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
+	
+	public Signal[] thisTurnsSignals; 
 }
