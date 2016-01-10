@@ -5,7 +5,7 @@ import battlecode.common.*;
 public class Squad {
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(-16001, -16001, 36);
+		rc.broadcastMessageSignal(-16001, -16001, 15);
 	}
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
@@ -26,7 +26,7 @@ public class Squad {
 			if (signal.getTeam()==rc.getTeam() && (signal.getMessage()!=null && signal.getMessage()[0]==-16001)){
 				brain.setSquad(signal.getRobotID());
 				brain.setLeaderID(signal.getRobotID());
-				rc.broadcastSignal(36);
+				rc.broadcastSignal(15);
 				rc.setIndicatorString(2, "On squad" + brain.getSquadNum());
 				break;
 			}
