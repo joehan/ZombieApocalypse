@@ -1,4 +1,4 @@
-package rovingGangs;
+package squadGoals;
 
 import java.util.Random;
 
@@ -12,38 +12,40 @@ public class Archon {
 		RobotType typeToBuild = RobotType.SOLDIER;
 		brain.initBuildHistory();
 		while (true) {
-			if (rc.isCoreReady()) {
-				//Decide what unit to make
-				int makeScout = rand.nextInt(10);
-				if (makeScout > 8) {
-					typeToBuild=RobotType.SCOUT;
-					
-				} else {
-					typeToBuild=RobotType.SOLDIER;
-				}
-				
-				//Look for dens
-				MapLocation nearbyDen = Entity.searchForDen(rc);
-				
-				//Repair a neaarby unit, if there aare any
-				repairUnits(rc);
-				
-				//Try to build a unit if you have the parts
+			//			if (rc.isCoreReady()) {
+			String print = "";
+			for (Integer i : brain.getSquadMembers()){
+				print = print + i.toString() + ", ";
+			}
+			rc.setIndicatorString(0, print);
+			brain.thisTurnsSignals = rc.emptySignalQueue();
+			//Look for dens
+			MapLocation nearbyDen = Entity.searchForDen(rc);
+
+			//Repair a nearby unit, if there are any
+			repairUnits(rc);
+
+			//Try to build a unit if you have the parts
+			Squad.recruit(rc, brain);
+			Squad.listenForRecruits(rc, brain);
+			if (rc.isCoreReady()){
 				if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
-				//Otherwise, call out any dens if you see them
+					//Otherwise, call out any dens if you see them
 				} else if (!(nearbyDen.equals(rc.getLocation()))) {
 					rc.setIndicatorString(3, "See den at" + nearbyDen.x + "," + nearbyDen.y);
-					Entity.signalMessageLocation(rc, nearbyDen);
-				//Otherwise, move
-				} else {
+					Squad.sendMoveCommand(rc, brain, nearbyDen);
+					//Otherwise, move
+				} else /*if (rc.isCoreReady())*/{
 					archonMove(rc);
 				}
-				Clock.yield();
+				//				}
 			}
+			Clock.yield();
+
 		}
 	}
-	
+
 	/*
 	 * tryBuildUniitInEmptySpace takes a type of robot to build and a direction to start trying to build in,
 	 * and, if the Archon is able, it will build a robot of that type in the nearest possible direction to dirTozBuild
@@ -87,5 +89,23 @@ public class Archon {
 			Direction randomDir = Entity.directions[rand.nextInt(8)];
 			Entity.moveInDirection(rc, randomDir);
 		}
+	}
+	
+	private void listenForArchonStarts(RobotController rc, Brain brain) throws GameActionException {
+		Signal[] signals = rc.emptySignalQueue();
+		for (Signal signal: signals){
+			if (signal.getTeam()==rc.getTeam()) {
+				MapLocation loc = signal.getLocation();
+				brain.addArchonStart(loc);
+			}
+		}
+	}
+	
+	private MapLocation groupArchons(RobotController rc, Brain brain) throws GameActionException {
+		MapLocation[] archonStarts = brain.getArchonStarts();
+		MapLocation center = Entity.findAverageOfLocations(archonStarts);
+//		Direction dirTo = center.directionTo(rc.getLocation());
+//		MapLocation mySpot = center.add(dirTo, 2);
+		return center;
 	}
 }

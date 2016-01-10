@@ -1,18 +1,14 @@
-package scoutLure;
+package copyOfSuperCows;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Random;
 
-import battlecode.common.*;
+import battlecode.common.Direction;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
 
-/*
- * Brain is used by robots to track information about the world around them.
- * For example, it keeps track of a list of the dens that robot has seen, the dimmensions
- * of the map, etc.
- * It is separated out from the individual classes becasue many of these function are universal
- */
 public class Brain {
-	
+
 	public HashSet<MapLocation> denLocations; 
 	public Integer maxHeight, minHeight, maxWidth, minWidth;
 	public boolean haveXScout, haveYScout;
@@ -30,10 +26,11 @@ public class Brain {
 	public int[] lastLuredDirection;
 	public HashSet<MapLocation> archonLocations = new HashSet<MapLocation>();
 	public HashSet<Integer> taggedZombies = new HashSet<Integer>();
+	public Random rand;
 	
 	
 //	this.maxHeight = this.minHeight = this.maxWidth = this.minWidth = (Integer) null;
-	public Brain(MapLocation startingLocation){
+	public Brain(MapLocation startingLocation, RobotController rc){
 		denLocations = new HashSet<MapLocation>();
 		this.maxHeight = minHeight = maxWidth = minWidth = (Integer) null;
 		haveXScout = haveYScout = false;
@@ -42,6 +39,7 @@ public class Brain {
 		enemyBase = null;
 		denGuarded = new HashSet<MapLocation>();
 		lastLuredDirection = new int[8];
+		rand = new Random(rc.getID());
 	}
 	
 	public MapLocation averageArchonLocation(){
@@ -78,6 +76,4 @@ public class Brain {
 			enemyBaseFound = true;
 		}
 	}
-
-	
 }
