@@ -40,11 +40,17 @@ public class Entity {
 	/*
 	 * Move in random direction to avoid enemies
 	 */
-	public static boolean safeMove(RobotController rc, Brain brain) throws GameActionException{
+	public static boolean safeMove(RobotController rc, Brain brain, Direction dir) throws GameActionException{
 		if (rc.isCoreReady()){
+			Direction start;
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			if (dir == Direction.NONE){
+				start = awayFromEnemies(rc, enemies, brain);
+			}
+			else {
+				start = dir;
+			}
 			MapLocation robotLocation = rc.getLocation();
-			Direction start = awayFromEnemies(rc, enemies, brain);
 			Direction[] dirToTry = directionsToTry(start);
 			for (int i = 0; i < 8; i ++){
 				Direction currentDir = dirToTry[i];
@@ -158,16 +164,44 @@ public class Entity {
 				}
 				if (rc.canAttackLocation(weakestSoFar.location)){
 					rc.attackLocation(weakestSoFar.location);
+					return true;
 				}
-				attacked = true;
+//				attacked = true;
 			}
 		}
-		return attacked;
+		return false;
 	}
 	
 	public static void moveTowardLocation(RobotController rc, MapLocation loc) throws GameActionException{
 		Direction towardLoc = rc.getLocation().directionTo(loc);
-		moveInDirection(rc, towardLoc);
+		if (rc.getLocation().distanceSquaredTo(loc) > 8){
+			moveTowards(rc, towardLoc);
+		}
+	}
+	public static void moveTowards(RobotController rc, Direction dir){
+		if (rc.isCoreReady()){
+			try {
+				if (rc.canMove(dir)){
+					rc.move(dir);
+				}
+				else if (rc.canMove(dir.rotateLeft())){
+					rc.move(dir.rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateRight())){
+					rc.move(dir.rotateRight());
+				}
+				else if (rc.canMove(dir.rotateLeft().rotateLeft())){
+					rc.move(dir.rotateLeft().rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight());
+				}
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public static boolean moveInDirection(RobotController rc, Direction dir) throws GameActionException{

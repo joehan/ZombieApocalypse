@@ -11,7 +11,7 @@ public class Squad {
 	public static int clearGoalLocationCode = 3;
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 15);
+		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
 	}
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
@@ -89,6 +89,7 @@ public class Squad {
 			//if it's from our leader,
 			int[] message = signal.getMessage();
 			if (signal.getID() == brain.getLeaderID() && (message!=null)){
+				brain.leadersLastKnownLocation = signal.getLocation();
 				if (message[0] == recruitCode){
 					continue;
 				} else if (message[0] == setGoalLocationCode) {

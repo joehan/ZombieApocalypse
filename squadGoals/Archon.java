@@ -68,11 +68,19 @@ public class Archon {
 	 */
 	private void repairUnits(RobotController rc) throws GameActionException {
 		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, rc.getTeam());
+		//Get lowest health enemy
+		double lowestHealth = 200;
+		MapLocation loc = rc.getLocation();
 		for (RobotInfo friendly : adjacentFriendlies){
-			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON) {
-				rc.repair(friendly.location);
+			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON && 
+					friendly.health < lowestHealth) {
+				lowestHealth = friendly.health;
+				loc = friendly.location;
 				break;
 			}
+		}
+		if (loc != rc.getLocation()){
+			rc.repair(loc);
 		}
 	}
 	
