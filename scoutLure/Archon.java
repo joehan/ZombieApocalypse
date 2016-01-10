@@ -48,10 +48,10 @@ public class Archon {
 //					if (rc.canMove(rc.getLocation().directionTo(brain.enemyBase).opposite()) && rc.isCoreReady()){
 //						rc.move(rc.getLocation().directionTo(brain.enemyBase).opposite());
 					MapLocation robotLocation = rc.getLocation();
-					if (!(brain.maxWidth == null) && brain.maxWidth != robotLocation.x && 
-							!(brain.minWidth == null) && brain.minWidth != robotLocation.x &&
-							!(brain.maxHeight == null) && brain.maxHeight != robotLocation.y &&
-							!(brain.minHeight == null) && brain.minHeight != robotLocation.y){
+					if (!(brain.maxWidth == null) && brain.maxWidth - 3 > robotLocation.x && 
+							!(brain.minWidth == null) && brain.minWidth + 3 < robotLocation.x &&
+							!(brain.maxHeight == null) && brain.maxHeight -3 > robotLocation.y &&
+							!(brain.minHeight == null) && brain.minHeight + 3 < robotLocation.y){
 						Entity.moveTowards(rc, rc.getLocation().directionTo(brain.enemyBase).opposite());
 					}
 //					}

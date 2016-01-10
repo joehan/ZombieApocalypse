@@ -34,6 +34,16 @@ public class Entity {
 		 //Maybe change this though? throw an exception?
 		 return 8;
 	}
+
+	public static boolean canBeAttacked(RobotController rc, MapLocation loc, Team team){
+		RobotInfo[] rInfo = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, team);
+		for (RobotInfo enemy: rInfo){
+			if (enemy.location.distanceSquaredTo(loc) < enemy.type.attackRadiusSquared){
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public static int findDistanceClosestZombie(RobotController rc){
 		RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
@@ -82,31 +92,15 @@ public class Entity {
 			, int safeDist) throws GameActionException{
 
 		MapLocation robotLocation = rc.getLocation();
-		Optional<MapLocation> closestArchon = Entity.findClosestArchon(rc, brain); 
 		Direction[] dirToTry = {dir, dir.rotateRight(), dir.rotateRight().rotateRight(), 
 				dir.rotateRight().rotateRight().rotateRight()};
-		boolean moved = false;
-		if (!closestArchon.isPresent()){
-			Entity.moveTowards(rc, dir);	
-			moved = true;
-		}
-		else {
 			for (Direction direction : dirToTry){
 				//Note, this 60 is hard-coded and might need to be changed
-				if (robotLocation.add(direction).distanceSquaredTo(closestArchon.get()) > safeDist
+				if (robotLocation.add(direction).distanceSquaredTo(brain.startLocation) > safeDist
 						&& rc.isCoreReady() && rc.canMove(dir)){
 					rc.move(dir);
-					moved = true;
 				}
 			}
-		}
-		
-		if (!moved && closestArchon.isPresent()){
-			Direction newDir = robotLocation.directionTo(closestArchon.get()).opposite();
-			if (rc.canMove(newDir) && rc.isCoreReady()){
-				rc.move(newDir);
-			}
-		}
 	}
 	
 	public static int convertMapToSignal(MapLocation loc){

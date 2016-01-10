@@ -19,7 +19,7 @@ public class Scout {
 		Optional<Direction> currentDir = Optional.empty();
 		Brain brain = new Brain(startingLocation);
 		boolean isBaiting = false;
-		int distanceToArchon = 70;
+		int distanceToArchon = 90;
 
 		while (true){
 			try{
@@ -62,7 +62,7 @@ public class Scout {
 				else {
 					MapLocation robotLocation = rc.getLocation();
 					Direction lureDir;
-					Optional<MapLocation> closestArchon = Entity.findClosestArchon(rc, brain);
+//					Optional<MapLocation> closestArchon = Entity.findClosestArchon(rc, brain);
 					RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 					if (!brain.enemyBaseFound){
 						lureDir = robotLocation.directionTo(startingLocation).opposite();
@@ -70,32 +70,29 @@ public class Scout {
 					else{
 						lureDir = robotLocation.directionTo(brain.enemyBase);
 					}
-					
-					if ((isBaiting || (!closestArchon.isPresent() || 
-							robotLocation.distanceSquaredTo(closestArchon.get()) > distanceToArchon))
-							&& Entity.findDistanceClosestZombie(rc) < 8){
-						int range = RobotType.SCOUT.sensorRadiusSquared*2;
+					if ((isBaiting && robotLocation.distanceSquaredTo(startingLocation) > distanceToArchon)
+							&& (Entity.findDistanceClosestZombie(rc) < 13 ||
+									Entity.canBeAttacked(rc, robotLocation, Team.ZOMBIE))){
 						isBaiting = true;
-						rc.setIndicatorString(0, "trying to bait zombies");
+						Entity.moveAvoidArchons(rc, lureDir, brain, distanceToArchon);
+					} else if ( isBaiting && robotLocation.distanceSquaredTo(startingLocation) > distanceToArchon){
+						//Being chased, but no zombies close enough.  Wait to agro zombies then head to enemy base
+						int range = RobotType.SCOUT.sensorRadiusSquared*2;
 						if (allies.length > 0 && zombiesWithinRange.length < 5){
 							for (RobotInfo zombie : zombiesWithinRange){
 								rc.broadcastMessageSignal(12, zombie.ID, range);
 							}
 						}
+					}
+					else if (isBaiting){
+						if (currentDir.isPresent()){
+							Entity.moveTowards(rc, currentDir.get());
+						}
+					}
+					else if (robotLocation.distanceSquaredTo(startingLocation) > distanceToArchon){
+						isBaiting = true;
+						rc.setIndicatorString(0, "trying to bait zombies");
 						Entity.moveAvoidArchons(rc, lureDir, brain, distanceToArchon);
-					}
-					
-					else if ( !closestArchon.isPresent() || 
-							robotLocation.distanceSquaredTo(closestArchon.get()) > distanceToArchon){
-						//Being chased, but no zombies close enough.  Wait to agro zombies then head to enemy base
-					}
-					else if (isBaiting && Entity.findDistanceClosestZombie(rc) < 8){
-						if (robotLocation.distanceSquaredTo(closestArchon.get()) < distanceToArchon){
-							Entity.moveTowards(rc, robotLocation.directionTo(closestArchon.get()).opposite());
-						}
-						else {
-							Entity.moveTowards(rc, lureDir);
-						}
 					}
 					else if (zombiesWithinRange.length > 0){
 						//We need to check all zombies and see if we should head towards them
