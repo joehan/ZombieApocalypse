@@ -1,9 +1,11 @@
 package copyOfSuperCows;
 
 import java.util.HashSet;
+import java.util.Random;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
 
 public class Brain {
 
@@ -24,10 +26,11 @@ public class Brain {
 	public int[] lastLuredDirection;
 	public HashSet<MapLocation> archonLocations = new HashSet<MapLocation>();
 	public HashSet<Integer> taggedZombies = new HashSet<Integer>();
+	public Random rand;
 	
 	
 //	this.maxHeight = this.minHeight = this.maxWidth = this.minWidth = (Integer) null;
-	public Brain(MapLocation startingLocation){
+	public Brain(MapLocation startingLocation, RobotController rc){
 		denLocations = new HashSet<MapLocation>();
 		this.maxHeight = minHeight = maxWidth = minWidth = (Integer) null;
 		haveXScout = haveYScout = false;
@@ -36,6 +39,7 @@ public class Brain {
 		enemyBase = null;
 		denGuarded = new HashSet<MapLocation>();
 		lastLuredDirection = new int[8];
+		rand = new Random(rc.getID());
 	}
 	
 	public MapLocation averageArchonLocation(){

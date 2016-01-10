@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
 
-import scoutLure.Brain;
+import copyOfSuperCows.Brain;
 import battlecode.common.*;
 
 /*
@@ -16,22 +16,71 @@ import battlecode.common.*;
 public class Entity {
 	
 	/*
-	 * Move in direction closest to dir. Can specify Direction.None to get safe movement
-	 * in 
+	 * Note that this method doesn't account for ranged robots like ranged zombies unless ranged=true
+	 * In the future we should modify this to see if an enemy (mostly zombie) can attack us the turn after
+	 * next if we are on weapon cooldown
 	 */
-	public static void safeMove(RobotController rc, MapLocation loc){
-		
+	public static boolean inDanger(RobotInfo[] enemies, MapLocation loc, boolean ranged){
+		if (ranged){
+			for (RobotInfo enemy : enemies){
+				if (enemy.location.distanceSquaredTo(loc) < enemy.type.attackRadiusSquared){
+					return true;
+				}
+			}
+		} else {
+			for (RobotInfo enemy : enemies){
+				if (enemy.location.distanceSquaredTo(loc) < 3){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
+	/*
+	 * Move in random direction to avoid enemies
+	 */
+	public static boolean safeMove(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			MapLocation robotLocation = rc.getLocation();
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dirToTry = directions[i%8];
+				MapLocation newLoc = robotLocation.add(dirToTry);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(dirToTry)){
+					rc.move(dirToTry);
+					return true;
+				}
+			}
+		}
+		if (rc.isCoreReady()){
+			moveRandomDirection(rc, brain);
+		}
+		return false;
+	}
+	
+	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dir = directions[i%8];
+				if (rc.canMove(dir)){
+					rc.move(dir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	
 	public static Direction getDirectionFromSignal(int signal){
-		 Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
-	                Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		 return directions[signal];
 	}
 	
 	public static int getSignalFromDirection(Direction dir){
-		 Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
-	                Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		 for (int i = 0; i < directions.length; i ++){
 			 if (dir == directions[i]){
 				 return i;
