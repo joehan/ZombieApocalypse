@@ -9,7 +9,7 @@ public class Squad {
 	}
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = rc.emptySignalQueue();
+		Signal[] signals = brain.thisTurnsSignals;
 		//listen for signals from new bots
 		for (Signal signal : signals){
 			if (signal.getTeam()==rc.getTeam()){
@@ -20,7 +20,7 @@ public class Squad {
 	}
 	
 	public static void lookForASquad(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = rc.emptySignalQueue();
+		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal: signals){
 			//if its a recruiting signal from our team
 			if (signal.getTeam()==rc.getTeam() && (signal.getMessage()!=null && signal.getMessage()[0]==-16001)){
@@ -50,7 +50,7 @@ public class Squad {
 	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = rc.emptySignalQueue();
+		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal : signals){
 			//if it's from our leader, and its not a recruiting signal
 			if (signal.getID() == brain.getLeaderID() && (signal.getMessage()!=null && signal.getMessage()[0]!=-16001)){
