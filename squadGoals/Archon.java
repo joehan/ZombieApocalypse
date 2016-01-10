@@ -16,20 +16,23 @@ public class Archon {
 				//Look for dens
 				MapLocation nearbyDen = Entity.searchForDen(rc);
 				
-				//Repair a neaarby unit, if there are any
+				//Repair a nearby unit, if there are any
 				repairUnits(rc);
 				
 				//Try to build a unit if you have the parts
-				if (rc.hasBuildRequirements(typeToBuild)) {
-					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
-					
-				//Otherwise, call out any dens if you see them
-				} else if (!(nearbyDen.equals(rc.getLocation()))) {
-					rc.setIndicatorString(3, "See den at" + nearbyDen.x + "," + nearbyDen.y);
-					Entity.signalMessageLocation(rc, nearbyDen);
-				//Otherwise, move
-				} else {
-					archonMove(rc);
+				Squad.recruit(rc, brain);
+				Squad.listenForRecruits(rc, brain);
+				if (rc.isCoreReady()){
+					if (rc.hasBuildRequirements(typeToBuild)) {
+						tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
+					//Otherwise, call out any dens if you see them
+					} else if (!(nearbyDen.equals(rc.getLocation()))) {
+						rc.setIndicatorString(3, "See den at" + nearbyDen.x + "," + nearbyDen.y);
+						Squad.sendMoveCommand(rc, brain, nearbyDen);
+					//Otherwise, move
+					} else {
+						archonMove(rc);
+					}
 				}
 				Clock.yield();
 			}

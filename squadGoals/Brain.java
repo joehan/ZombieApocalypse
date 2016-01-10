@@ -55,17 +55,19 @@ public class Brain {
 		archonStarts.add(loc);
 	}
 	
-	private int squadNumber;
+	public MapLocation goalLocation = null;
+	
+	private int squadNumber = -1;
 	
 	public void setSquad(int squadNum){
 		squadNumber=squadNum;
 	}
 	
-	public int getSquadNum(){
+	public Integer getSquadNum(){
 		return squadNumber;
 	}
 	
-	private int squadLeaderID;
+	private int squadLeaderID = -1;
 	
 	public void setLeaderID(int id){
 		squadLeaderID = id;
