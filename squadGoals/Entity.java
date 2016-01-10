@@ -1,10 +1,70 @@
 package squadGoals;
 
+import copyOfSuperCows.Brain;
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	/*
+	 * Note that this method doesn't account for ranged robots like ranged zombies unless ranged=true
+	 * In the future we should modify this to see if an enemy (mostly zombie) can attack us the turn after
+	 * next if we are on weapon cooldown
+	 */
+	public static boolean inDanger(RobotInfo[] enemies, MapLocation loc, boolean ranged){
+		if (ranged){
+			for (RobotInfo enemy : enemies){
+				if (enemy.location.distanceSquaredTo(loc) < enemy.type.attackRadiusSquared){
+					return true;
+				}
+			}
+		} else {
+			for (RobotInfo enemy : enemies){
+				if (enemy.location.distanceSquaredTo(loc) < 3){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * Move in random direction to avoid enemies
+	 */
+	public static boolean safeMove(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			MapLocation robotLocation = rc.getLocation();
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dirToTry = directions[i%8];
+				MapLocation newLoc = robotLocation.add(dirToTry);
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(dirToTry)){
+					rc.move(dirToTry);
+					return true;
+				}
+			}
+		}
+		if (rc.isCoreReady()){
+			moveRandomDirection(rc, brain);
+		}
+		return false;
+	}
+	
+	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dir = directions[i%8];
+				if (rc.canMove(dir)){
+					rc.move(dir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	
 	public static int convertMapToSignal(MapLocation loc){
 		return (int) (loc.x + 16000 + (loc.y + 16000)*Math.pow(2, 16));
