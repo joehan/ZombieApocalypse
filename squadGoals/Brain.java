@@ -3,6 +3,8 @@ package squadGoals;
 import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
+
 import battlecode.common.*;
 
 /*
@@ -87,5 +89,6 @@ public class Brain {
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
 	
-	public Signal[] thisTurnsSignals; 
+	public Signal[] thisTurnsSignals;
+	public Random rand;
 }
