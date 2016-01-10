@@ -58,6 +58,7 @@ public class Brain {
 	}
 	
 	public MapLocation goalLocation = null;
+	public MapLocation leadersLastKnownLocation = null;
 	
 	private int squadNumber = -1;
 	

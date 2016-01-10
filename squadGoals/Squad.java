@@ -53,6 +53,7 @@ public class Squad {
 				if (signal.getTeam()==rc.getTeam() && (!(signal.getMessage() == null) && signal.getMessage()[0]==recruitCode)){
 					brain.setSquad(signal.getRobotID());
 					brain.setLeaderID(signal.getRobotID());
+					brain.leadersLastKnownLocation = signal.getLocation();
 					rc.broadcastSignal(closestArchonDistance + 1);
 					rc.broadcastSignal(closestArchonDistance + 1);
 					rc.setIndicatorString(2, "On squad" + brain.getSquadNum());
@@ -62,16 +63,15 @@ public class Squad {
 		}
 	}
 	/*
-	 * findLeaderLocation returns the location of the squad leader if it is in range. Otherwise, it returns rc.getLocation();
+	 * findLeaderLocation updates the leadersLastKnownLocation to his current position, if he is in sight range
 	 */
-	public static MapLocation findLeaderLocation(RobotController rc, Brain brain) throws GameActionException {
+	public static void findLeaderLocation(RobotController rc, Brain brain) throws GameActionException {
 		RobotInfo[] friends = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 		for (RobotInfo friend : friends) {
 			if (friend.ID == brain.getLeaderID()){
-				return friend.location;
+				brain.leadersLastKnownLocation = friend.location;
 			}
 		}
-		return rc.getLocation();
 	}
 	
 	public static void sendMoveCommand(RobotController rc, Brain brain, MapLocation loc) throws GameActionException{
