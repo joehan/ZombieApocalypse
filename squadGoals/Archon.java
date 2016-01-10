@@ -67,7 +67,7 @@ public class Archon {
 	 * repairUnits looks for damaged, adjacent friendly units, and repairs the non-archon unit it sees
 	 */
 	private void repairUnits(RobotController rc) throws GameActionException {
-		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(2, rc.getTeam());
+		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, rc.getTeam());
 		for (RobotInfo friendly : adjacentFriendlies){
 			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON) {
 				rc.repair(friendly.location);

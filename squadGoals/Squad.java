@@ -11,7 +11,7 @@ public class Squad {
 	public static int clearGoalLocationCode = 3;
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(recruitCode, 0, 15);
+		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 15);
 	}
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
