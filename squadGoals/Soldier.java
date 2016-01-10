@@ -52,7 +52,8 @@ public class Soldier {
 				//						randomDir = Entity.directions[rand.nextInt(8)];
 				//					}
 			} else if (rc.isCoreReady() &&
-					(brain.leadersLastKnownLocation!= null && rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 8)){
+					(brain.leadersLastKnownLocation!= null && 
+					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 8)){
 				Entity.moveTowardLocation(rc,brain.leadersLastKnownLocation);
 			}
 			Clock.yield();
