@@ -1,6 +1,7 @@
-package viperAggro;
+package squadGoals;
 
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.HashMap;
 import battlecode.common.*;
 
@@ -56,6 +57,31 @@ public class Brain {
 	
 	private int squadNumber;
 	
+	public void setSquad(int squadNum){
+		squadNumber=squadNum;
+	}
 	
+	public int getSquadNum(){
+		return squadNumber;
+	}
 	
+	private int squadLeaderID;
+	
+	public void setLeaderID(int id){
+		squadLeaderID = id;
+	}
+	
+	public int getLeaderID(){
+		return squadLeaderID;
+	}
+	
+	private HashSet<Integer> squadMembers = new HashSet<Integer>();
+	
+	public void addSquadMember(int memberID){
+		squadMembers.add(new Integer(memberID));
+	}
+	
+	public Integer[] getSquadMembers(){
+		return squadMembers.toArray(new Integer[squadMembers.size()]);
+	}
 }
