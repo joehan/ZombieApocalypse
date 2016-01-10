@@ -9,7 +9,7 @@ public class Archon {
 	private Random rand;
 	public void run(RobotController rc, Brain brain) throws GameActionException{	
 		rand = new Random(rc.getID());
-		RobotType typeToBuild = RobotType.SOLDIER;
+		RobotType typeToBuild = buildNextUnit(brain);
 		brain.initBuildHistory();
 		while (true) {
 			//			if (rc.isCoreReady()) {
@@ -107,5 +107,30 @@ public class Archon {
 //		Direction dirTo = center.directionTo(rc.getLocation());
 //		MapLocation mySpot = center.add(dirTo, 2);
 		return center;
+	}
+	
+	public RobotType buildNextUnit(Brain brain){
+		int buildCount = brain.getBuildCount();
+		if(brain.getInitialIteration()){
+			RobotType returnRobot = brain.getStartBuildArray()[buildCount];
+			buildCount++;
+			if(buildCount >= brain.getStartBuildLength()){
+				brain.setBuildCount(0);
+				brain.setInitialIteration(false);
+			}else{
+				brain.setBuildCount(buildCount);
+			}
+			return returnRobot;
+		}else{
+			RobotType returnRobot = brain.getIterateBuildArray()[buildCount];
+			buildCount++;
+			if(buildCount >= brain.getIterateBuildLength()){
+				brain.setBuildCount(0);
+			}
+			else{
+				brain.setBuildCount(buildCount);
+			}
+			return returnRobot;
+		}
 	}
 }
