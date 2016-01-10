@@ -1,5 +1,6 @@
 package scoutLure;
 
+import java.util.HashSet;
 import java.util.Random;
 
 import scoutLure.Entity;
@@ -10,13 +11,22 @@ public class Archon {
 	
 	public static void run(RobotController rc) throws GameActionException{
 		Brain brain = new Brain(rc.getLocation());
+    	brain.archonLocations.add(rc.getLocation());
         Random rand = new Random(rc.getID());
         tryBuildUnitInEmptySpace(rc, RobotType.SCOUT, Direction.NORTH);
         int range = 2000;
+        boolean clumped = false;
+		//Whether the archon can move closer to the cluster
+//		boolean canMove = true;
+        rc.broadcastMessageSignal(11, 0, 500);
 
 		while (true){
 			try{
 				Entity.receiveMessages(rc, brain);
+				if (rc.getRoundNum() % 10 == 9){
+					brain.archonLocations.clear();
+					brain.archonLocations.add(rc.getLocation());
+				}
 				if (!brain.enemyBaseFound){
 					brain.tryFindEnemyBase();
 					if (brain.enemyBaseFound){
@@ -32,16 +42,52 @@ public class Archon {
 					sendHeartbeat(rc, brain);
 				}
 				RobotType typeToBuild = RobotType.SCOUT;
+				Direction dirToSpawn = Direction.NORTH;
+				if (brain.enemyBaseFound){
+					dirToSpawn = rc.getLocation().directionTo(brain.enemyBase);
+//					if (rc.canMove(rc.getLocation().directionTo(brain.enemyBase).opposite()) && rc.isCoreReady()){
+//						rc.move(rc.getLocation().directionTo(brain.enemyBase).opposite());
+					MapLocation robotLocation = rc.getLocation();
+					if (!(brain.maxWidth == null) && brain.maxWidth != robotLocation.x && 
+							!(brain.minWidth == null) && brain.minWidth != robotLocation.x &&
+							!(brain.maxHeight == null) && brain.maxHeight != robotLocation.y &&
+							!(brain.minHeight == null) && brain.minHeight != robotLocation.y){
+						Entity.moveTowards(rc, rc.getLocation().directionTo(brain.enemyBase).opposite());
+					}
+//					}
+				}
 				if (rc.isCoreReady()) {
 					repairUnits(rc);
-					if (rand.nextInt(1000) < 15){
-						tryBuildUnitInEmptySpace(rc, typeToBuild, Direction.NORTH);
+					if (brain.archonLocations.size() > 1){
+						clumpWithArchons(rc, brain);
+					}
+					if (rand.nextInt(1000) < 25){
+						tryBuildUnitInEmptySpace(rc, typeToBuild, dirToSpawn);
 					}
 				}
 				Clock.yield();
 			}catch (Exception e){
 				System.out.println(e.getMessage());
 				e.printStackTrace();
+			}
+		}
+	}
+	
+	private static void clumpWithArchons(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			MapLocation robotLocation = rc.getLocation();
+			MapLocation clumpLocation = brain.averageArchonLocation();
+			Direction dirToClump = robotLocation.directionTo(clumpLocation);
+			if (robotLocation.distanceSquaredTo(clumpLocation) > 3){
+				if (rc.canMove(dirToClump)){
+					rc.move(dirToClump);
+				}
+				else if (rc.canMove(dirToClump.rotateLeft())){
+					rc.move(dirToClump.rotateLeft());
+				}
+				else if (rc.canMove(dirToClump.rotateRight())){
+					rc.move(dirToClump.rotateRight());
+				}
 			}
 		}
 	}
@@ -75,6 +121,7 @@ public class Archon {
     			rc.broadcastMessageSignal(7, signal, range);
     		}
     	}
+        rc.broadcastMessageSignal(11, 0, 200);
 	}
 	
 	/*
@@ -85,7 +132,7 @@ public class Archon {
 		if (rc.hasBuildRequirements(typeToBuild)) {
             for (int i = 0; i < 8; i++) {
                 // If possible, build in this direction
-                if (rc.canBuild(dirToBuild, typeToBuild)) {
+                if (rc.canBuild(dirToBuild, typeToBuild) && rc.isCoreReady()) {
                     rc.build(dirToBuild, typeToBuild);
                     break;
                 } else {

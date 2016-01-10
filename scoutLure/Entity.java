@@ -16,6 +16,25 @@ import java.util.Comparator;
  */
 public class Entity {
 	
+	public static Direction getDirectionFromSignal(int signal){
+		 Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
+	                Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+		 return directions[signal];
+	}
+	
+	public static int getSignalFromDirection(Direction dir){
+		 Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
+	                Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+		 for (int i = 0; i < directions.length; i ++){
+			 if (dir == directions[i]){
+				 return i;
+			 }
+		 }
+		 //Should never get here
+		 //Maybe change this though? throw an exception?
+		 return 8;
+	}
+	
 	public static int findDistanceClosestZombie(RobotController rc){
 		RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 		int closest = 100;	
@@ -28,101 +47,67 @@ public class Entity {
 		return closest;
 	}
 	
-	public static Optional<RobotInfo> findClosestArchon(RobotController rc){
+	public static Optional<MapLocation> findClosestArchon(RobotController rc, Brain brain){
+		ArrayList<MapLocation> archons;
+		if (brain.archonLocations.size() > 0){
+			archons = new ArrayList<MapLocation>(brain.archonLocations);
+		}
+		else {
+			archons = new ArrayList<MapLocation>();
+		}
 		RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-		ArrayList<RobotInfo> archons = new ArrayList<RobotInfo>();
 		for (RobotInfo ally : allies){
 			if (ally.type == RobotType.ARCHON){
-				archons.add(ally);
+				archons.add(ally.location);
 			}
 		}
-		Optional<RobotInfo> closestArchon = Optional.empty();
+//		}
+		Optional<MapLocation> closestArchon = Optional.empty();
 		int distToArchon = 10000;
-		for (RobotInfo archon : archons){
-			int distance = archon.location.distanceSquaredTo(rc.getLocation());
+		for (MapLocation archon : archons){
+			int distance = archon.distanceSquaredTo(rc.getLocation());
 			if (distance < distToArchon){
 				distToArchon = distance;
 				closestArchon = Optional.of(archon);
+//				rc.setIndicatorString(0, "found close archon");
 			}
+		}
+		if (closestArchon.isPresent()){
+//			rc.setIndicatorString(0, "found close archon");
 		}
 		return closestArchon;
 	}
 	
-	public static void moveAvoidArchons(RobotController rc, Direction dir) throws GameActionException{
+	public static void moveAvoidArchons(RobotController rc, Direction dir, Brain brain
+			, int safeDist) throws GameActionException{
+
 		MapLocation robotLocation = rc.getLocation();
-		Optional<RobotInfo> closestArchon = Entity.findClosestArchon(rc); 
-//		Direction[] dirToTry = {dir, dir.rotateLeft(), dir.rotateRight(), 
-//				dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+		Optional<MapLocation> closestArchon = Entity.findClosestArchon(rc, brain); 
 		Direction[] dirToTry = {dir, dir.rotateRight(), dir.rotateRight().rotateRight(), 
 				dir.rotateRight().rotateRight().rotateRight()};
+		boolean moved = false;
 		if (!closestArchon.isPresent()){
-			Entity.moveTowards(rc, dir);
+			Entity.moveTowards(rc, dir);	
+			moved = true;
 		}
 		else {
 			for (Direction direction : dirToTry){
-				//Note, this 50 is hard-coded and might need to be changed
-				if (!(robotLocation.add(direction).distanceSquaredTo(closestArchon.get().location) < 50)
+				//Note, this 60 is hard-coded and might need to be changed
+				if (robotLocation.add(direction).distanceSquaredTo(closestArchon.get()) > safeDist
 						&& rc.isCoreReady() && rc.canMove(dir)){
 					rc.move(dir);
-				}
-			}
-		}
-	}
-
-	/*public static void moveAvoidArchons(RobotController rc, Direction dir) throws GameActionException{
-		if (rc.isCoreReady()){
-			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
-			ArrayList<RobotInfo> archons = new ArrayList<RobotInfo>();
-			for (RobotInfo ally : allies){
-				if (ally.type == RobotType.ARCHON){
-					archons.add(ally);
-				}
-			}
-			Direction[] dirToTry = {dir, dir.rotateLeft(), dir.rotateRight(), 
-					dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
-			Direction direction;
-			for (int i = 0; i < dirToTry.length; i ++){
-				//			boolean valid = true;
-				boolean archonThreat = false;
-				boolean inDanger = false;
-				direction = dirToTry[i];
-				MapLocation postPosition = rc.getLocation().add(direction, 1);
-				for (RobotInfo zombie : zombies){
-					MapLocation zombieLocation = zombie.location;
-					for (RobotInfo archon : archons){
-						if (zombieLocation.distanceSquaredTo(archon.location) <= zombieLocation.distanceSquaredTo(postPosition)){
-							archonThreat = true;
-							break;
-						}
-						if (zombieLocation.add(zombieLocation.directionTo(postPosition)).distanceSquaredTo(
-								archon.location) >= zombieLocation.distanceSquaredTo(archon.location) &&
-								zombieLocation.add(zombieLocation.directionTo(postPosition
-										)).distanceSquaredTo(archon.location) < 25){
-							archonThreat = true;
-							break;
-						}
-					}
-//					if ()
-					if (archonThreat){
-						break;
-					}
-				}
-				for (RobotInfo archon : archons){
-					Direction newDir = rc.getLocation().directionTo(archon.location);
-					if (newDir == direction || newDir == direction.rotateLeft() || newDir == direction.rotateRight()){
-						archonThreat = true;
-					}
-				}
-				if (!archonThreat && rc.canMove(direction)){
-					rc.move(direction);
-					break;
+					moved = true;
 				}
 			}
 		}
 		
+		if (!moved && closestArchon.isPresent()){
+			Direction newDir = robotLocation.directionTo(closestArchon.get()).opposite();
+			if (rc.canMove(newDir) && rc.isCoreReady()){
+				rc.move(newDir);
+			}
+		}
 	}
-	*/
 	
 	public static int convertMapToSignal(MapLocation loc){
 		return (int) (loc.x + loc.y*Math.pow(2, 16));
@@ -262,6 +247,20 @@ public class Entity {
         			MapLocation denNotGuard = new MapLocation((int) (messages[1]%Math.pow(2, 16)), (int) (messages[1]/Math.pow(2, 16)));
         			brain.denGuarded.remove(denNotGuard);
         			break;
+        		case 10:
+        			//Going to lure zombies in direction
+        			//set a timer for 10 turns after which it is ok to go and lure in that
+        			//direction again
+//        			Direction dir = Entity.getDirectionFromSignal(messages[1]);
+        			brain.lastLuredDirection[messages[1]] = rc.getRoundNum();
+        			break;
+        		case 11:
+        			//Archon broadcast their location so they can clump together
+        			brain.archonLocations.add(signal.getLocation());
+        			break;
+        		case 12:
+        			//Tagged zombie, don't chase after this zombie.
+        			brain.taggedZombies.add(messages[1]);
         		}
         	}
 		}

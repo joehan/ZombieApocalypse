@@ -1,5 +1,6 @@
 package scoutLure;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Random;
 import scoutLure.Entity;
@@ -13,21 +14,20 @@ public class Scout {
         Team enemyTeam = myTeam.opponent();
         Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
                 Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-//        Random rand = new Random(rc.getID());
+        Random rand = new Random(rc.getID());
 		MapLocation startingLocation = rc.getLocation();
-//		Optional<MapLocation> guard = Optional.empty();
-//		boolean baitingZombies = false;
-//		boolean scoutingZombieDir = false;
 		Optional<Direction> currentDir = Optional.empty();
-
-
-		
 		Brain brain = new Brain(startingLocation);
-
+		boolean isBaiting = false;
+		int distanceToArchon = 70;
 
 		while (true){
 			try{
+				rc.setIndicatorString(0, "new Round");
 				Entity.receiveMessages(rc, brain); 
+				if (rc.getRoundNum() == 50){
+					brain.archonLocations = new HashSet<MapLocation>();
+				}
 				RobotInfo[] enemiesWithinRange = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadiusSquared, enemyTeam);
 				if (enemiesWithinRange.length > 5 && !brain.enemyBaseFound){
 					brain.enemyBaseFound = true;
@@ -62,7 +62,8 @@ public class Scout {
 				else {
 					MapLocation robotLocation = rc.getLocation();
 					Direction lureDir;
-					Optional<RobotInfo> closestArchon = Entity.findClosestArchon(rc);
+					Optional<MapLocation> closestArchon = Entity.findClosestArchon(rc, brain);
+					RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 					if (!brain.enemyBaseFound){
 						lureDir = robotLocation.directionTo(startingLocation).opposite();
 					}
@@ -70,20 +71,70 @@ public class Scout {
 						lureDir = robotLocation.directionTo(brain.enemyBase);
 					}
 					
-					if ((!closestArchon.isPresent() || robotLocation.distanceSquaredTo(closestArchon.get().location)> 50)
+					if ((isBaiting || (!closestArchon.isPresent() || 
+							robotLocation.distanceSquaredTo(closestArchon.get()) > distanceToArchon))
 							&& Entity.findDistanceClosestZombie(rc) < 8){
-						Entity.moveAvoidArchons(rc, lureDir);
+						int range = RobotType.SCOUT.sensorRadiusSquared*2;
+						isBaiting = true;
+						rc.setIndicatorString(0, "trying to bait zombies");
+						if (allies.length > 0 && zombiesWithinRange.length < 5){
+							for (RobotInfo zombie : zombiesWithinRange){
+								rc.broadcastMessageSignal(12, zombie.ID, range);
+							}
+						}
+						Entity.moveAvoidArchons(rc, lureDir, brain, distanceToArchon);
 					}
-					else if (!closestArchon.isPresent() || robotLocation.distanceSquaredTo(closestArchon.get().location)> 50){
+					
+					else if ( !closestArchon.isPresent() || 
+							robotLocation.distanceSquaredTo(closestArchon.get()) > distanceToArchon){
 						//Being chased, but no zombies close enough.  Wait to agro zombies then head to enemy base
 					}
-					else if (zombiesWithinRange.length > 0){
-						if (!currentDir.isPresent()){
-							currentDir = Optional.of(robotLocation.directionTo(zombiesWithinRange[0].location));
+					else if (isBaiting && Entity.findDistanceClosestZombie(rc) < 8){
+						if (robotLocation.distanceSquaredTo(closestArchon.get()) < distanceToArchon){
+							Entity.moveTowards(rc, robotLocation.directionTo(closestArchon.get()).opposite());
 						}
-						Entity.moveTowards(rc, currentDir.get());
+						else {
+							Entity.moveTowards(rc, lureDir);
+						}
+					}
+					else if (zombiesWithinRange.length > 0){
+						//We need to check all zombies and see if we should head towards them
+						if (!currentDir.isPresent()){
+							for (RobotInfo zombie : zombiesWithinRange){
+								Direction dirToZombie = robotLocation.directionTo(zombie.location);
+								boolean allyInDirection = false;
+								for (RobotInfo ally : allies){
+									if (robotLocation.directionTo(ally.location) == dirToZombie 
+											&& ally.type == RobotType.SCOUT && ally.coreDelay < 1){
+										allyInDirection = true;
+									}
+								}
+								if (brain.lastLuredDirection[Entity.getSignalFromDirection(dirToZombie)] + 20
+										< rc.getRoundNum()  && (rc.canMove(dirToZombie) || 
+												rc.canMove(dirToZombie.rotateLeft()) 
+												|| rc.canMove(dirToZombie.rotateRight()))
+												&& /*!allyInDirection &&*/ !brain.taggedZombies.contains(zombie.ID)){
+									rc.broadcastMessageSignal(10, Entity.getSignalFromDirection(dirToZombie), 200);
+									rc.setIndicatorString(0, "claiming zombie");
+									currentDir = Optional.of(dirToZombie);
+								}
+							}
+						}
+						if (currentDir.isPresent()){
+							Entity.moveTowards(rc, currentDir.get());
+						}
 					} else {
 						//Case where no zombies present, dont move
+						int numNearbyAllies = 0;
+						for (RobotInfo ally : allies){
+							if (ally.location.distanceSquaredTo(robotLocation)< 3){
+								numNearbyAllies ++;
+							}
+						}
+						if (numNearbyAllies > 2){
+							Direction randomDir = Entity.directions[rand.nextInt(8)];
+							Entity.moveTowards(rc, randomDir);
+						}
 					}
 				}
 				Clock.yield();
@@ -98,6 +149,9 @@ public class Scout {
 			MapLocation currentLocation = rc.getLocation();
 			int power = currentLocation.distanceSquaredTo(brain.startLocation) + 100;
 			if (brain.scoutx){
+				if (rc.getRoundNum() % 5 == 0){
+					rc.broadcastMessageSignal(5, 0, 1000);
+				}
 				if ((brain.maxWidth == (Integer) null)){
 					for (int i = 0; i < 8; i ++){
 						if (!rc.onTheMap(currentLocation.add(Direction.EAST, i))){
@@ -126,6 +180,9 @@ public class Scout {
 			}
 		}
 		else if (brain.scouty){
+			if (rc.getRoundNum() % 5 == 0){
+				rc.broadcastMessageSignal(4, 0, 1000);
+			}
 			if (brain.maxHeight == (Integer) null){
 				for (int i = 0; i < 8; i ++){
 					if (!rc.onTheMap(currentLocation.add(Direction.NORTH, i))){
