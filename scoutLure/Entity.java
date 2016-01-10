@@ -104,12 +104,12 @@ public class Entity {
 	}
 	
 	public static int convertMapToSignal(MapLocation loc){
-		return (int) (loc.x + loc.y*Math.pow(2, 16));
+		return (int) (loc.x + 16000 + (loc.y + 16000)*Math.pow(2, 16));
 	}
 	
 	public static MapLocation convertSignalToMap(int signal){
-		int x = (int) (signal % Math.pow(2, 16));
-		int y = (int) (signal / Math.pow(2, 16));
+		int x = (int) (signal % Math.pow(2, 16) - 16000);
+		int y = (int) (signal / Math.pow(2, 16) - 16000);
 		return new MapLocation(x, y);
 	}
 	
