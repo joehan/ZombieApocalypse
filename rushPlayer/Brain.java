@@ -3,6 +3,7 @@ package rushPlayer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Random;
 
 import battlecode.common.*;
 
@@ -45,5 +46,17 @@ public class Brain {
 		buildHistory.put(type, buildHistory.get(type) +1);
 	}
 	
+	public RobotType nextBuildUnit(){
+		Random rand = new Random();
+		if(buildHistory.get(RobotType.SCOUT) < 3){
+			return RobotType.SCOUT;
+		}
+		else{
+			if(rand.nextInt(10) < 9){
+				return RobotType.SOLDIER;
+			}
+			return RobotType.SCOUT;
+		}
+	}
 	
 }
