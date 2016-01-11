@@ -5,10 +5,15 @@ import java.util.HashSet;
 import battlecode.common.*;
 
 public class Squad {
-	
+	//Intrasquad codes
 	public static int recruitCode = 1;
 	public static int setGoalLocationCode = 2;
 	public static int clearGoalLocationCode = 3;
+	
+	//Intersquad codes
+	public static int intersquadCodeMinimum = 100;
+	public static int helpMeCode = 101;
+	public static int shareDenLocationCode = 102;
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
 		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
@@ -45,10 +50,9 @@ public class Squad {
 		rc.setIndicatorString(2, brain.getSquadMembers().length + " members in squad" + rc.getID());
 	}
 	
-	public static void lookForASquad(RobotController rc, Brain brain) throws GameActionException {
+	public static void lookForASquad(RobotController rc, Brain brain, RobotInfo[] allies) throws GameActionException {
 		Signal[] signals = brain.thisTurnsSignals;
 
-		RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 		int closestArchonDistance = 100;
 		for (RobotInfo ally: allies){
 			if (ally.type == RobotType.ARCHON && 
@@ -80,10 +84,9 @@ public class Squad {
 	 * findLeaderLocation updates the leadersLastKnownLocation to his current position, if he is in sight range
 	 */
 	public static void findLeaderLocation(RobotController rc, Brain brain) throws GameActionException {
-		RobotInfo[] friends = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-		for (RobotInfo friend : friends) {
-			if (friend.ID == brain.getLeaderID()){
-				brain.leadersLastKnownLocation = friend.location;
+		for (Signal friend : brain.thisTurnsSignals) {
+			if (friend.getID() == brain.getLeaderID()){
+				brain.leadersLastKnownLocation = friend.getLocation();
 			}
 		}
 	}
@@ -96,6 +99,20 @@ public class Squad {
 		rc.broadcastMessageSignal(clearGoalLocationCode, 0, 2*rc.getType().sensorRadiusSquared);
 	}
 	
+	/*
+	 * SendHelpMessage asks any nearby archons for help
+	 */
+	public static void sendHelpMessage(RobotController rc, Brain brain) throws GameActionException {
+		rc.broadcastMessageSignal(helpMeCode, 0, 2*rc.getType().sensorRadiusSquared);
+	}
+	
+	/*
+	 * ShareDenLocation shares the location of a den with any nearby archons
+	 */
+	public static void shareDenLocation(RobotController rc, Brain brain, MapLocation den, int distance
+			) throws GameActionException {
+		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , distance);
+	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
 		Signal[] signals = brain.thisTurnsSignals;
@@ -110,6 +127,23 @@ public class Squad {
 					brain.goalLocation = Entity.convertSignalToMap(signal.getMessage()[1]);
 				} else if (message[0] == clearGoalLocationCode) {
 					brain.goalLocation = null;
+				}
+			}
+		}
+	}
+	
+	public static void listenForIntersquadCommunication(RobotController rc, Brain brain) throws GameActionException {
+		Signal[] signals = brain.thisTurnsSignals;
+		for (Signal signal: signals){
+			int[] message = signal.getMessage();
+			//if
+			if (signal.getTeam()==rc.getTeam() &&  !(message == null) && message[0]>intersquadCodeMinimum){
+				if (message[0] == helpMeCode){
+					MapLocation friend = signal.getLocation();
+					brain.goalLocation = friend;
+				} else if (message[0] == shareDenLocationCode){
+					MapLocation den = Entity.convertSignalToMap(message[0]);
+					brain.addDenLocation(den);
 				}
 			}
 		}
