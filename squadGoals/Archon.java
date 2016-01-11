@@ -9,11 +9,11 @@ public class Archon {
 	private Random rand;
 	public void run(RobotController rc, Brain brain) throws GameActionException{	
 		rand = new Random(rc.getID());
-		RobotType typeToBuild = buildNextUnit(brain);
 		brain.initBuildHistory();
 		while (true) {
 			//			if (rc.isCoreReady()) {
 			String print = "";
+			RobotType typeToBuild = buildNextUnit(brain);
 			for (Integer i : brain.getSquadMembers()){
 				print = print + i.toString() + ", ";
 			}
