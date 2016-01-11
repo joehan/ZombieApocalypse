@@ -40,12 +40,12 @@ public class Archon {
 			repairUnits(rc);
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 
-			//TRecruit new squad members
+			//Recruit new squad members
 			Squad.recruit(rc, brain);
 			Squad.listenForRecruits(rc, brain);
 			
 			//If you see another archon, share some info with him
-			shareInfo(rc,  brain);
+			//shareInfo(rc,  brain);
 			
 			//Look for nearby parts
 			Entity.findPartsInRange(rc, brain, 35);
@@ -57,8 +57,9 @@ public class Archon {
 					if (!moved){
 						Entity.moveTowards(rc, Entity.awayFromEnemies(rc, enemies, brain).opposite());
 					}
-				}
-				else if (rc.hasBuildRequirements(typeToBuild)) {
+				} else if (activateAdjacentNeutralRobots(rc,brain)){
+					rc.setIndicatorString(0, "Activated Robot");
+				} else if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 					//Otherwise, call out any dens if you see them
 				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
@@ -72,7 +73,6 @@ public class Archon {
 					}
 					brain.removePartLocation(rc.getLocation());
 				}
-				//				}
 			}
 			
 			if (brain.goalLocation==null) {
@@ -155,6 +155,15 @@ public class Archon {
 				}
 			}
 		}
+	}
+	
+	private boolean activateAdjacentNeutralRobots(RobotController rc, Brain brain) throws GameActionException {
+		RobotInfo[] neutrals = rc.senseNearbyRobots(2, Team.NEUTRAL);
+		if (neutrals.length >0){
+			rc.activate(neutrals[0].location);
+			return true;
+		}
+		return false;
 	}
 	
 	private void listenForArchonStarts(RobotController rc, Brain brain) throws GameActionException {
