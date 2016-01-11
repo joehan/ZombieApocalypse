@@ -36,6 +36,7 @@ public class Archon {
 			}
 			//Repair a nearby unit, if there are any
 			repairUnits(rc);
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 
 			//Try to build a unit if you have the parts
 			Squad.recruit(rc, brain);
@@ -45,7 +46,7 @@ public class Archon {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 					//Otherwise, call out any dens if you see them
 				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
-					Entity.safeMove(rc, brain, brain.goalLocation, true);
+					Entity.safeMove(rc, brain, enemies, brain.goalLocation, true);
 				}
 				else {
 					archonMove(rc);

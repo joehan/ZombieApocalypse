@@ -30,38 +30,36 @@ public class Soldier {
 			}
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 			if (enemies.length > 0 && !(brain.leadersLastKnownLocation == null) 
-					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100){
+					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100 && 
+					rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
+							rc, brain, enemies, rc.getLocation()).location) > 13){
 				rc.broadcastSignal(rc.getType().sensorRadiusSquared*2);
 			}
-//			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-			boolean moved = false;
-			if (Entity.inDanger(enemies, rc.getLocation(), false)){
-				moved = Entity.safeMove(rc, brain, Direction.NONE, false);
-				if (!moved){
-					Entity.moveRandomDirection(rc, brain);
-				}
+			boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), false);
+			if (inDanger){
+				Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
 			}
-			Boolean attack = Entity.attackHostiles(rc);
+			Boolean attack = Entity.attackHostiles(rc, enemies);
 			if (attack) {
 				rc.setIndicatorString(1, "Attacking");
+			} else if (rc.isCoreReady() && inDanger){
+				Entity.moveRandomDirection(rc, brain);
 			} else if (rc.isCoreReady() && enemies.length != 0){
 				Entity.moveOptimalAttackRange(rc, brain, enemies);
 			} else if (brain.goalLocation != null && rc.isCoreReady() && enemies.length == 0){
-				Entity.safeMove(rc, brain, brain.goalLocation, false);
+				Entity.safeMove(rc, brain, enemies, brain.goalLocation, false);
 			} else if (rc.isCoreReady() &&
 					(brain.leadersLastKnownLocation!= null && 
 					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 33)
 					&& enemies.length == 0){
-				Entity.safeMove(rc, brain, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
+				Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
 			}
 			else if (rc.isCoreReady() &&
 					(brain.leadersLastKnownLocation!= null && 
 					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 15)
 					&& enemies.length == 0){
-				Entity.safeMove(rc, brain, Direction.NONE, false);
+				Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
 			}
-//			else if (rc.isCoreReady() && (brain.leadersLastKnownLocation!= null && 
-//					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 8)))
 			Clock.yield();
 		}
 	}
