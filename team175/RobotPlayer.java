@@ -1,10 +1,6 @@
 package team175;
 
 import battlecode.common.*;
-<<<<<<< HEAD
-=======
-
->>>>>>> cspan
 import java.util.Random;
 
 public class RobotPlayer {
