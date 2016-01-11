@@ -271,6 +271,46 @@ public class Entity {
 		return closestEnemy;
 	}
 	
+	public static boolean retreatMove(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
+		if (rc.isCoreReady()){
+			RobotInfo nearestEnemy = Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation());
+			Direction[] dirToTry = directionsToTry(rc.getLocation().directionTo(nearestEnemy.location).opposite());
+			int currentDistToEnemy = rc.getLocation().distanceSquaredTo(nearestEnemy.location);
+			if (nearestEnemy.type.attackRadiusSquared > 3){
+				for (Direction direction : dirToTry){
+					if (direction.isDiagonal() && rc.getLocation().add(direction).distanceSquaredTo(
+							nearestEnemy.location) > currentDistToEnemy && rc.canMove(direction)){
+						rc.move(direction);
+						return true;
+					}
+				}
+				for (Direction direction : dirToTry){
+					if (rc.getLocation().add(direction).distanceSquaredTo(
+							nearestEnemy.location) > currentDistToEnemy && rc.canMove(direction)){
+						rc.move(direction);
+						return true;
+					}
+				}
+			}
+			else {
+				for (Direction direction : dirToTry){
+					if (!direction.isDiagonal() && rc.getLocation().add(direction).distanceSquaredTo(
+							nearestEnemy.location) > currentDistToEnemy && rc.canMove(direction)){
+						rc.move(direction);
+						return true;
+					}
+				}
+				for (Direction direction : dirToTry){
+					if (rc.getLocation().add(direction).distanceSquaredTo(
+							nearestEnemy.location) > currentDistToEnemy && rc.canMove(direction)){
+						rc.move(direction);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 	
 	
 	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
@@ -281,12 +321,13 @@ public class Entity {
 			MapLocation enemyLoc = enemy.location;
 			Direction dirToEnemy = robotLocation.directionTo(enemyLoc);
 			Direction[] dirToTri = directionsToTry(dirToEnemy.opposite());
+			int currentDistance = robotLocation.distanceSquaredTo(enemyLoc);
 			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13 &&
 					(enemy.coreDelay > 2.0 || !(enemy.team == Team.ZOMBIE) || enemy.type == RobotType.ZOMBIEDEN))){
 				for (Direction dir : dirToTri){
 					if (!dir.isDiagonal() && rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
 						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
-						if (moveDistToEnemy <= maxAttackRange && moveDistToEnemy >= 8 ){
+						if (moveDistToEnemy <= maxAttackRange && moveDistToEnemy >= 8){
 							boolean moved = Entity.safeMoveOneDirection(rc, enemies, brain, dir);
 							if (moved){
 								return true;
@@ -344,7 +385,6 @@ public class Entity {
 	public static RobotType[] orderToAttack = {RobotType.VIPER, RobotType.TURRET, RobotType.TTM,
 		RobotType.SOLDIER, RobotType.GUARD, RobotType.ARCHON, RobotType.RANGEDZOMBIE, RobotType.FASTZOMBIE, 
 		RobotType.BIGZOMBIE, RobotType.STANDARDZOMBIE, RobotType.SCOUT, RobotType.ZOMBIEDEN};
-	
 	
 	/*
 	 * attackHostiles looks for hostile enemies within the current units attack range
@@ -475,20 +515,37 @@ public class Entity {
 		}
 	}
 	
+	public static boolean digInDirection(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			Direction[] dirToTry = directionsToTry(dir);
+			for (Direction direction : dirToTry){
+				if (rc.senseRubble(rc.getLocation().add(direction)) > 0){
+					rc.clearRubble(direction);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	//digAdjacent will look for rubble in the adjacentsquares, and dig in the square with the most rubble
 	public static void digAdjacent(RobotController rc, Brain brain) throws GameActionException{
-		MapLocation[] adjacentSpaces = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), 2);
+		MapLocation[] adjacentSpaces = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), 3);
 		MapLocation spaceToDig = rc.getLocation();
 		double maxRubble = rc.senseRubble(spaceToDig);
 		for (MapLocation space : adjacentSpaces){
 			double rubble = rc.senseRubble(space);
 			//if theres more rubble here, but its not a 'lost cause' space with too much rubble
-			if (rubble > maxRubble && rubble < 3*GameConstants.RUBBLE_OBSTRUCTION_THRESH){
+			if (rubble > maxRubble /*&& rubble < 3*GameConstants.RUBBLE_OBSTRUCTION_THRESH */
+					/*&& rc.getLocation().directionTo(spaceToDig) != Direction.OMNI*/){
+				rc.setIndicatorString(1, "should try to dig");
 				spaceToDig = space;
 				maxRubble = rubble;
 			}
 		}
-		rc.clearRubble(rc.getLocation().directionTo(spaceToDig));
+		if (!(spaceToDig == rc.getLocation())){
+			rc.clearRubble(rc.getLocation().directionTo(spaceToDig));
+		}
 		
 	}
 	

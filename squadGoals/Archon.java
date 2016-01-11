@@ -25,7 +25,7 @@ public class Archon {
 				brain.goalLocation = brain.getDenLocations()[0];
 			}
 			Squad.processSquadMessages(rc, brain);
-			Squad.listenForIntersquadCommunication(rc, brain);
+//			Squad.listenForIntersquadCommunication(rc, brain);
 			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
 				brain.goalLocation = null;
 			}
@@ -48,12 +48,12 @@ public class Archon {
 			//Look for nearby parts
 			Entity.findPartsInRange(rc, brain, 35);
 			if (rc.isCoreReady()){
-				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), false);
+				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), true);
 				boolean moved = false;
 				if (inDanger){
-					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
+					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, true);
 					if (!moved){
-						Entity.moveRandomDirection(rc, brain);
+						Entity.moveTowards(rc, Entity.awayFromEnemies(rc, enemies, brain).opposite());
 					}
 				}
 				else if (rc.hasBuildRequirements(typeToBuild)) {

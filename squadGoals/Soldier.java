@@ -40,14 +40,20 @@ public class Soldier {
 			Boolean attack = Entity.attackHostiles(rc, enemies);
 			if (attack) {
 				rc.setIndicatorString(1, "Attacking");
-			} else if (rc.getHealth() < rc.getType().maxHealth /3){
-				Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
+			} else if (rc.getHealth() < rc.getType().maxHealth /3 && enemies.length > 0){
+				Entity.retreatMove(rc, brain, enemies);
+//				Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
+			} else if (rc.getHealth() < rc.getType().maxHealth /3 && brain.leadersLastKnownLocation != null) {
+				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.leadersLastKnownLocation));
 			} else if (rc.isCoreReady() && inDanger){
 				Entity.moveRandomDirection(rc, brain);
 			} else if (rc.isCoreReady() && enemies.length != 0){
-				Entity.moveOptimalAttackRange(rc, brain, enemies);
+				boolean move= Entity.moveOptimalAttackRange(rc, brain, enemies);
+				if (!move){
+					Entity.digInDirection(rc, brain, Entity.awayFromEnemies(rc, enemies, brain));
+				}
 			} else if (brain.goalLocation != null && rc.isCoreReady() && enemies.length == 0){
-				Entity.safeMove(rc, brain, enemies, brain.goalLocation, true);
+				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.goalLocation));
 			} else if (rc.isCoreReady() &&
 					(brain.leadersLastKnownLocation!= null && 
 					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 33)
@@ -59,6 +65,9 @@ public class Soldier {
 					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 15)
 					&& enemies.length == 0){
 				Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
+			}
+			else if (rc.isCoreReady()){
+				Entity.digAdjacent(rc, brain);
 			}
 			Clock.yield();
 		}
