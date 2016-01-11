@@ -21,9 +21,13 @@ public class Archon {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			//Look for dens
 			Entity.updateDenLocations(rc, brain);
-			if (brain.getDenLocations().length >0){
+//			Entity.processSquadMessages(rc, brain);
+			/*if (brain.getDenLocations().length >0){
 				brain.goalLocation = brain.getDenLocations()[0];
-				
+			}*/
+			Squad.processSquadMessages(rc, brain);
+			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
+				brain.goalLocation = null;
 			}
 			if (brain.goalLocation != null){
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
@@ -41,7 +45,7 @@ public class Archon {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 					//Otherwise, call out any dens if you see them
 				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
-					Entity.moveTowardLocation(rc, brain.goalLocation);
+					Entity.safeMove(rc, brain, brain.goalLocation, true);
 				}
 				else {
 					archonMove(rc);

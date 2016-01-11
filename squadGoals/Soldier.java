@@ -16,15 +16,6 @@ public class Soldier {
 			//			if (rc.isCoreReady()) {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 
-			//				MapLocation[] dens = brain.getDenLocations();
-			//				//Listen for messages
-			//				MapLocation aDen = Entity.listenForMessageLocation(rc);
-			//				Boolean heardDen = !(rc.getLocation().equals(aDen));
-			//				//If we hear a new den
-			//				if (heardDen){
-			//					brain.addDenLocation(aDen);
-			//				}
-
 			//IF you don't have a squad, get one
 			if (brain.getSquadNum() == -1){
 				Squad.lookForASquad(rc, brain);
@@ -32,8 +23,16 @@ public class Soldier {
 			} else {
 				Squad.findLeaderLocation(rc, brain);
 				Squad.listenForCommands(rc, brain);
+				
+			}
+			if (!(brain.goalLocation == null)){
+				rc.setIndicatorString(0, brain.goalLocation.toString());
 			}
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			if (enemies.length > 0 && !(brain.leadersLastKnownLocation == null) 
+					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100){
+				rc.broadcastSignal(rc.getType().sensorRadiusSquared*2);
+			}
 //			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 			boolean moved = false;
 			if (Entity.inDanger(enemies, rc.getLocation(), false)){
@@ -45,14 +44,15 @@ public class Soldier {
 			Boolean attack = Entity.attackHostiles(rc);
 			if (attack) {
 				rc.setIndicatorString(1, "Attacking");
+			} else if (rc.isCoreReady() && enemies.length != 0){
+				Entity.moveOptimalAttackRange(rc, brain, enemies);
+			} else if (brain.goalLocation != null && rc.isCoreReady() && enemies.length == 0){
+				Entity.safeMove(rc, brain, brain.goalLocation, false);
 			} else if (rc.isCoreReady() &&
 					(brain.leadersLastKnownLocation!= null && 
 					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 33)
 					&& enemies.length == 0){
 				Entity.safeMove(rc, brain, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
-			
-			} else if (brain.goalLocation != null && rc.isCoreReady()){
-				Entity.safeMove(rc, brain, brain.goalLocation, false);
 			}
 			else if (rc.isCoreReady() &&
 					(brain.leadersLastKnownLocation!= null && 

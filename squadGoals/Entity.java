@@ -1,5 +1,7 @@
 package squadGoals;
 
+import java.util.Arrays;
+
 import squadGoals.Brain;
 import battlecode.common.*;
 /*
@@ -43,10 +45,32 @@ public class Entity {
 		return false;
 	}
 	
+	public static boolean safeMoveOneDirection(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			MapLocation robotLocation = rc.getLocation();
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			Direction currentDir = dir;
+			MapLocation newLoc = robotLocation.add(currentDir);
+			if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()){
+				rc.move(currentDir);
+				return true;
+			}
+			if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir)
+					&& rc.senseRubble(newLoc) > GameConstants.RUBBLE_SLOW_THRESH){
+				rc.move(currentDir);
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	/*
-	 * Move in random direction to avoid enemies
+	 * 
 	 */
 	public static boolean safeMove(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
+		if (dir == Direction.NONE){
+			return true;
+		}
 		if (rc.isCoreReady()){
 			Direction start;
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
@@ -65,7 +89,8 @@ public class Entity {
 			for (int i = 0; i < 8; i ++){
 				Direction currentDir = dirToTry[i];
 				MapLocation newLoc = robotLocation.add(currentDir);
-				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()){
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()
+						&& rc.senseRubble(newLoc) > GameConstants.RUBBLE_SLOW_THRESH){
 					rc.move(currentDir);
 					return true;
 				}
@@ -103,7 +128,8 @@ public class Entity {
 			for (int i = 0; i < 8; i ++){
 				Direction currentDir = dirToTry[i];
 				MapLocation newLoc = robotLocation.add(currentDir);
-				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()){
+				if (!inDanger(enemies, newLoc, false) && rc.canMove(currentDir) && !currentDir.isDiagonal()
+						&& rc.senseRubble(newLoc) > GameConstants.RUBBLE_SLOW_THRESH){
 					rc.move(currentDir);
 					return true;
 				}
@@ -174,6 +200,53 @@ public class Entity {
 				brain.addDenLocation(zombie.location);
 			}
 		}
+	}
+	
+	public static RobotInfo findClosestEnemy(RobotController rc, Brain brain, RobotInfo[] enemies){
+		int distance = 100;
+		MapLocation robotLocation = rc.getLocation();
+		RobotInfo closestEnemy = enemies[0];
+		for (RobotInfo enemy : enemies){
+			if (robotLocation.distanceSquaredTo(enemy.location) < distance){
+				distance = robotLocation.distanceSquaredTo(enemy.location);
+				closestEnemy = enemy;
+			}
+		}
+		return closestEnemy;
+	}
+	
+	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
+		if (rc.isCoreReady()){
+			int maxAttackRange = rc.getType().attackRadiusSquared;
+			MapLocation robotLocation = rc.getLocation();
+			RobotInfo closestEnemy = findClosestEnemy(rc, brain, enemies);
+			Direction dirToEnemy = robotLocation.directionTo(closestEnemy.location);
+			Direction[] dirToTri = directionsToTry(dirToEnemy);
+			Direction[] directions = new Direction[9];
+			System.arraycopy(dirToTri, 0, directions, 0, 8);
+			directions[8] = Direction.NONE;
+			int[] attackRadiusForDirection = new int[9];
+			for (int i = 0; i < 9; i ++){
+				Direction newDir = directions[i];
+				attackRadiusForDirection[i] = robotLocation.add(newDir).distanceSquaredTo(closestEnemy.location);
+			}
+			int[] copyAttackRadius = attackRadiusForDirection.clone();
+			Arrays.sort(copyAttackRadius);
+			for (int j = 8; j > -1; j --){
+				for (int i = 0; i < 9; i ++){
+					if (attackRadiusForDirection[i] == copyAttackRadius[j] 
+							&& attackRadiusForDirection[i] <= maxAttackRange){
+						boolean moved = Entity.safeMoveOneDirection(rc, brain, directions[i]);
+						if (moved){
+							return true;
+						}
+					}
+				}
+			}
+		}
+		
+		
+		return false;
 	}
 	
 	public static void updateDenLocations(RobotController rc, Brain brain) throws GameActionException {
