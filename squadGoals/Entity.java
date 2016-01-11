@@ -475,6 +475,23 @@ public class Entity {
 		}
 	}
 	
+	//digAdjacent will look for rubble in the adjacentsquares, and dig in the square with the most rubble
+	public static void digAdjacent(RobotController rc, Brain brain) throws GameActionException{
+		MapLocation[] adjacentSpaces = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), 2);
+		MapLocation spaceToDig = rc.getLocation();
+		double maxRubble = rc.senseRubble(spaceToDig);
+		for (MapLocation space : adjacentSpaces){
+			double rubble = rc.senseRubble(space);
+			//if theres more rubble here, but its not a 'lost cause' space with too much rubble
+			if (rubble > maxRubble && rubble < 3*GameConstants.RUBBLE_OBSTRUCTION_THRESH){
+				spaceToDig = space;
+				maxRubble = rubble;
+			}
+		}
+		rc.clearRubble(rc.getLocation().directionTo(spaceToDig));
+		
+	}
+	
 	/*
 	 * findAverageOfLocations takes an array of MapLocations, and returns the average, or center point,
 	 * of them.
