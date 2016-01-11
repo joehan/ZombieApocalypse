@@ -15,18 +15,24 @@ public class Archon {
 
 			RobotType typeToBuild = buildNextUnit(brain);
 			brain.thisTurnsSignals = rc.emptySignalQueue();
+			//Squad.listenForIntersquadCommunication(rc, brain);
 			//Look for dens
 			Entity.updateDenLocations(rc, brain);
 			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
 			if (memberRequestedHelp) {
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+				if (brain.goalLocation!=null) {
+					rc.setIndicatorString(1, "Friend is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
+				}
 			} else if (brain.getDenLocations().length >0){
 				brain.goalLocation = brain.getDenLocations()[0];
 				Squad.sendAttackDenCommand(rc, brain, brain.goalLocation);
+				if (brain.goalLocation!=null) {
+					rc.setIndicatorString(1, "Den is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
+				}
 			} else {
 				Squad.sendClearGoalLocationCommand(rc, brain);
 			}
-			
 			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
 				brain.goalLocation = null;
 			}
@@ -68,9 +74,8 @@ public class Archon {
 				}
 				//				}
 			}
-			if (brain.goalLocation!=null) {
-				rc.setIndicatorString(1, "Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
-			} else {
+			
+			if (brain.goalLocation==null) {
 				rc.setIndicatorString(1, "No goal yet");
 			}
 			Clock.yield();
@@ -146,7 +151,7 @@ public class Archon {
 				MapLocation[] dens = brain.getDenLocations();
 				//Share the location of a random den
 				if (dens.length>0){
-					Squad.shareDenLocation(rc, brain, dens[brain.rand.nextInt(dens.length)]);
+					Squad.shareDenLocation(rc, brain, dens[brain.rand.nextInt(dens.length)], 2*rc.getType().sensorRadiusSquared);
 				}
 			}
 		}

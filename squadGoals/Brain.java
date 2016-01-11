@@ -124,6 +124,16 @@ public class Brain {
 	public int getIterateBuildLength() {
 		return iterateBuildArray.length;
 	}
+	
+	private MapLocation startingLocation;
+	
+	public void setStartingLocation(MapLocation loc){
+		this.startingLocation = loc;
+	}
+	
+	public MapLocation getStartingLocation(){
+		return this.startingLocation;
+	}
 
 	private HashSet<MapLocation> archonStarts = new HashSet<MapLocation>();
 	

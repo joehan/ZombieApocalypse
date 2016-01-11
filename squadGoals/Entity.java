@@ -43,7 +43,7 @@ public class Entity {
 	public static boolean inDanger(RobotInfo[] enemies, MapLocation loc, boolean ranged){
 		if (ranged){
 			for (RobotInfo enemy : enemies){
-				if (enemy.location.distanceSquaredTo(loc) < enemy.type.attackRadiusSquared){
+				if (enemy.location.distanceSquaredTo(loc) <= enemy.type.attackRadiusSquared){
 					return true;
 				}
 			}
@@ -52,6 +52,20 @@ public class Entity {
 				if (enemy.location.distanceSquaredTo(loc) < 3){
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+	
+	public static boolean safeMoveOneDirectionRanged(RobotController rc, RobotInfo[] enemies,
+			Brain brain, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			MapLocation robotLocation = rc.getLocation();
+			Direction currentDir = dir;
+			MapLocation newLoc = robotLocation.add(currentDir);
+			if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir)){
+				rc.move(currentDir);
+				return true;
 			}
 		}
 		return false;
@@ -85,8 +99,7 @@ public class Entity {
 			for (int i = 0; i < 8; i ++){
 				Direction currentDir = dirToTry[i];
 				MapLocation newLoc = robotLocation.add(currentDir);
-				if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir) && !currentDir.isDiagonal()
-						&& rc.senseRubble(newLoc) < GameConstants.RUBBLE_SLOW_THRESH){
+				if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir) && !currentDir.isDiagonal()){
 					rc.move(currentDir);
 					return true;
 				}
@@ -236,6 +249,10 @@ public class Entity {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
 				if (brain.isDenNew(zombie.location)){
 					brain.addDenLocation(zombie.location);
+//					Squad.shareDenLocation(rc, brain, zombie.location, 
+//							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+//					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+
 				}
 			}
 		}
@@ -427,8 +444,8 @@ public class Entity {
         }
 	}
 	
-	public static void signalMessageLocation(RobotController rc, MapLocation loc) throws GameActionException {
-		rc.broadcastMessageSignal(loc.x, loc.y, 900);
+	public static void signalMessageLocation(RobotController rc, MapLocation loc, int distance) throws GameActionException {
+		rc.broadcastMessageSignal(loc.x, loc.y, distance);
 	}
 	
 	/*
