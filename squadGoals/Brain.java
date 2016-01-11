@@ -15,6 +15,21 @@ import battlecode.common.*;
  */
 public class Brain {
 	
+	
+	//Remember where we've seen parts
+	private HashSet<MapLocation> partLocations = new HashSet<MapLocation>();
+	
+	public MapLocation[] getPartLocations(){
+		return  partLocations.toArray(new MapLocation[partLocations.size()]);
+	}
+	
+	public void addPartLocation(MapLocation loc) {
+		partLocations.add(loc);
+	}
+	
+	public void removePartLocation(MapLocation loc){
+		partLocations.remove(loc);
+	}
 	//Rembering den locations!
 	private HashSet<MapLocation> denLocations = new HashSet<MapLocation>();
 	
