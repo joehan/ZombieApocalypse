@@ -50,10 +50,9 @@ public class Squad {
 		rc.setIndicatorString(2, brain.getSquadMembers().length + " members in squad" + rc.getID());
 	}
 	
-	public static void lookForASquad(RobotController rc, Brain brain) throws GameActionException {
+	public static void lookForASquad(RobotController rc, Brain brain, RobotInfo[] allies) throws GameActionException {
 		Signal[] signals = brain.thisTurnsSignals;
 
-		RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 		int closestArchonDistance = 100;
 		for (RobotInfo ally: allies){
 			if (ally.type == RobotType.ARCHON && 
@@ -85,10 +84,9 @@ public class Squad {
 	 * findLeaderLocation updates the leadersLastKnownLocation to his current position, if he is in sight range
 	 */
 	public static void findLeaderLocation(RobotController rc, Brain brain) throws GameActionException {
-		RobotInfo[] friends = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-		for (RobotInfo friend : friends) {
-			if (friend.ID == brain.getLeaderID()){
-				brain.leadersLastKnownLocation = friend.location;
+		for (Signal friend : brain.thisTurnsSignals) {
+			if (friend.getID() == brain.getLeaderID()){
+				brain.leadersLastKnownLocation = friend.getLocation();
 			}
 		}
 	}

@@ -71,6 +71,38 @@ public class Entity {
 		return false;
 	}
 	
+	public static boolean safeMoveRanged(RobotController rc, Brain brain, RobotInfo[] enemies, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			Direction start;
+			if (dir == Direction.NONE){
+				start = awayFromEnemies(rc, enemies, brain);
+			}
+			else {
+				start = dir;
+			}
+			MapLocation robotLocation = rc.getLocation();Direction[] dirToTry;
+			dirToTry = directionsToTry(start);
+			for (int i = 0; i < 8; i ++){
+				Direction currentDir = dirToTry[i];
+				MapLocation newLoc = robotLocation.add(currentDir);
+				if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir) && !currentDir.isDiagonal()
+						&& rc.senseRubble(newLoc) < GameConstants.RUBBLE_SLOW_THRESH){
+					rc.move(currentDir);
+					return true;
+				}
+			}
+			for (int i = 0; i < 8; i ++){
+				Direction currentDir = dirToTry[i];
+				MapLocation newLoc = robotLocation.add(currentDir);
+				if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir)){
+					rc.move(currentDir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	/*
 	 * 
 	 */
@@ -198,11 +230,15 @@ public class Entity {
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
             Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
-	public static void searchForDen(RobotController rc, Brain brain) {
+	public static void searchForDen(RobotController rc, Brain brain) throws GameActionException {
 		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 		for (RobotInfo zombie : zombiesWithinRange) {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
-				brain.addDenLocation(zombie.location);
+				if (brain.isDenNew(zombie.location)){
+					brain.addDenLocation(zombie.location);
+					Entity.signalMessageLocation(rc, zombie.location);
+					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+				}
 			}
 		}
 	}
@@ -220,6 +256,8 @@ public class Entity {
 		return closestEnemy;
 	}
 	
+	
+	
 	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
 		if (rc.isCoreReady()){
 			int maxAttackRange = rc.getType().attackRadiusSquared;
@@ -229,7 +267,7 @@ public class Entity {
 			Direction dirToEnemy = robotLocation.directionTo(enemyLoc);
 			Direction[] dirToTri = directionsToTry(dirToEnemy.opposite());
 			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13 &&
-					(enemy.coreDelay > 2.0 && enemy.team == Team.ZOMBIE))){
+					(enemy.coreDelay > 2.0 || !(enemy.team == Team.ZOMBIE) || enemy.type == RobotType.ZOMBIEDEN))){
 				for (Direction dir : dirToTri){
 					if (!dir.isDiagonal() && rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
 						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
