@@ -20,8 +20,20 @@ public class Archon {
 			rc.setIndicatorString(0, print);
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			//Look for dens
-			MapLocation nearbyDen = Entity.searchForDen(rc);
-
+			Entity.updateDenLocations(rc, brain);
+//			Entity.processSquadMessages(rc, brain);
+			/*if (brain.getDenLocations().length >0){
+				brain.goalLocation = brain.getDenLocations()[0];
+			}*/
+			Squad.processSquadMessages(rc, brain);
+			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
+				brain.goalLocation = null;
+			}
+			if (brain.goalLocation != null){
+				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+			} else {
+				Squad.sendClearGoalLocationCommand(rc, brain);
+			}
 			//Repair a nearby unit, if there are any
 			repairUnits(rc);
 
@@ -32,11 +44,10 @@ public class Archon {
 				if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 					//Otherwise, call out any dens if you see them
-				} else if (!(nearbyDen.equals(rc.getLocation()))) {
-					rc.setIndicatorString(3, "See den at" + nearbyDen.x + "," + nearbyDen.y);
-					Squad.sendMoveCommand(rc, brain, nearbyDen);
-					//Otherwise, move
-				} else /*if (rc.isCoreReady())*/{
+				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
+					Entity.safeMove(rc, brain, brain.goalLocation, true);
+				}
+				else {
 					archonMove(rc);
 				}
 				//				}
@@ -67,12 +78,20 @@ public class Archon {
 	 * repairUnits looks for damaged, adjacent friendly units, and repairs the non-archon unit it sees
 	 */
 	private void repairUnits(RobotController rc) throws GameActionException {
-		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(2, rc.getTeam());
+		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, rc.getTeam());
+		//Get lowest health enemy
+		double lowestHealth = 200;
+		MapLocation loc = rc.getLocation();
 		for (RobotInfo friendly : adjacentFriendlies){
-			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON) {
-				rc.repair(friendly.location);
+			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON && 
+					friendly.health < lowestHealth) {
+				lowestHealth = friendly.health;
+				loc = friendly.location;
 				break;
 			}
+		}
+		if (loc != rc.getLocation()){
+			rc.repair(loc);
 		}
 	}
 	

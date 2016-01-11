@@ -137,6 +137,14 @@ public class Brain {
 		squadMembers.add(new Integer(memberID));
 	}
 	
+	public void removeSquadMember(int memberID){
+		squadMembers.remove(memberID);
+	}
+	
+	public boolean memberInSquad(int memberID){
+		return squadMembers.contains(memberID);
+	}
+	
 	public Integer[] getSquadMembers(){
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
