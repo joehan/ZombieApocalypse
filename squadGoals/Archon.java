@@ -47,7 +47,15 @@ public class Archon {
 			//Look for nearby parts
 			Entity.findPartsInRange(rc, brain, 35);
 			if (rc.isCoreReady()){
-				if (rc.hasBuildRequirements(typeToBuild)) {
+				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), false);
+				boolean moved = false;
+				if (inDanger){
+					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
+					if (!moved){
+						Entity.moveRandomDirection(rc, brain);
+					}
+				}
+				else if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 					//Otherwise, call out any dens if you see them
 				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
@@ -110,7 +118,7 @@ public class Archon {
 		if (nearbyHostiles.length > 0 ) {
 			RobotInfo enemy = nearbyHostiles[0];
 			Direction dirToHostile = rc.getLocation().directionTo(enemy.location);
-			Entity.moveInDirection(rc, dirToHostile.opposite());
+			Entity.safeMove(rc, brain, nearbyHostiles, dirToHostile.opposite(), true);
 			//Otherwise, run around randomly
 		} else if (brain.getPartLocations().length >0) {
 			Entity.moveToLocation(rc, brain.getPartLocations()[0]);

@@ -1,7 +1,6 @@
 package team175;
 
 import battlecode.common.*;
-
 import java.util.Random;
 
 public class RobotPlayer {
