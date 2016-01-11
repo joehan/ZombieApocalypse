@@ -1,14 +1,11 @@
 package squadGoals;
 
-import java.util.Random;
 
 import battlecode.common.*;
 
 public class Archon {
 	
-	private Random rand;
 	public void run(RobotController rc, Brain brain) throws GameActionException{	
-		rand = new Random(rc.getID());
 		brain.initBuildHistory();
 		Direction currentDirection = Entity.directions[brain.rand.nextInt(8)];
 		while (true) {
@@ -17,19 +14,23 @@ public class Archon {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			//Squad.listenForIntersquadCommunication(rc, brain);
 			//Look for dens
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+
 			Entity.updateDenLocations(rc, brain);
 			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
-			if (memberRequestedHelp) {
+			if (Entity.inDanger(enemies, rc.getLocation(), true)){
+				Squad.sendMoveCommand(rc, brain, rc.getLocation());
+			} else if (memberRequestedHelp) {
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
-				if (brain.goalLocation!=null) {
-					rc.setIndicatorString(1, "Friend is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
-				}
+//				if (brain.goalLocation!=null) {
+//					rc.setIndicatorString(1, "Friend is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
+//				}
 			} else if (brain.getDenLocations().length >0){
 				brain.goalLocation = brain.getDenLocations()[0];
 				Squad.sendAttackDenCommand(rc, brain, brain.goalLocation);
-				if (brain.goalLocation!=null) {
-					rc.setIndicatorString(1, "Den is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
-				}
+//				if (brain.goalLocation!=null) {
+//					rc.setIndicatorString(1, "Den is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
+//				}
 			} else {
 				Squad.sendClearGoalLocationCommand(rc, brain);
 			}
@@ -38,7 +39,6 @@ public class Archon {
 			}
 			//Repair a nearby unit, if there are any
 			repairUnits(rc);
-			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 
 			//TRecruit new squad members
 			Squad.recruit(rc, brain);

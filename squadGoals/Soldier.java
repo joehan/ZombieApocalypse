@@ -41,7 +41,6 @@ public class Soldier {
 				rc.setIndicatorString(1, "Attacking");
 			} else if (rc.getHealth() < rc.getType().maxHealth /3 && enemies.length > 0){
 				Entity.retreatMove(rc, brain, enemies);
-//				Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
 			} else if (rc.getHealth() < rc.getType().maxHealth /3 && brain.leadersLastKnownLocation != null) {
 				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.leadersLastKnownLocation));
 			} else if (rc.isCoreReady() && inDanger){
