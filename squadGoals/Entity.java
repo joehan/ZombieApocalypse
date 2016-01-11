@@ -343,7 +343,7 @@ public class Entity {
 	
 	public static RobotType[] orderToAttack = {RobotType.VIPER, RobotType.TURRET, RobotType.TTM,
 		RobotType.SOLDIER, RobotType.GUARD, RobotType.ARCHON, RobotType.RANGEDZOMBIE, RobotType.FASTZOMBIE, 
-		RobotType.STANDARDZOMBIE, RobotType.BIGZOMBIE, RobotType.SCOUT, RobotType.ZOMBIEDEN};
+		RobotType.BIGZOMBIE, RobotType.STANDARDZOMBIE, RobotType.SCOUT, RobotType.ZOMBIEDEN};
 	
 	
 	/*

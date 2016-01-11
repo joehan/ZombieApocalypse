@@ -40,6 +40,8 @@ public class Soldier {
 			Boolean attack = Entity.attackHostiles(rc, enemies);
 			if (attack) {
 				rc.setIndicatorString(1, "Attacking");
+			} else if (rc.getHealth() < rc.getType().maxHealth /3){
+				Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.leadersLastKnownLocation), false);
 			} else if (rc.isCoreReady() && inDanger){
 				Entity.moveRandomDirection(rc, brain);
 			} else if (rc.isCoreReady() && enemies.length != 0){
