@@ -21,10 +21,9 @@ public class Archon {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			//Look for dens
 			Entity.updateDenLocations(rc, brain);
-//			Entity.processSquadMessages(rc, brain);
-			/*if (brain.getDenLocations().length >0){
+			if (brain.getDenLocations().length >0){
 				brain.goalLocation = brain.getDenLocations()[0];
-			}*/
+			}
 			Squad.processSquadMessages(rc, brain);
 			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
 				brain.goalLocation = null;
@@ -40,6 +39,9 @@ public class Archon {
 			//Try to build a unit if you have the parts
 			Squad.recruit(rc, brain);
 			Squad.listenForRecruits(rc, brain);
+			
+			//If you see another archon, share some info with him
+			shareInfo(rc,  brain);
 			if (rc.isCoreReady()){
 				if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
@@ -107,6 +109,19 @@ public class Archon {
 		} else {
 			Direction randomDir = Entity.directions[rand.nextInt(8)];
 			Entity.moveInDirection(rc, randomDir);
+		}
+	}
+	
+	private void shareInfo(RobotController rc, Brain brain) throws GameActionException {
+		RobotInfo[] friends = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+		for (RobotInfo friend : friends){
+			if (friend.type == RobotType.ARCHON){
+				MapLocation[] dens = brain.getDenLocations();
+				//Share the location of a random den
+				if (dens.length>0){
+					Squad.shareDenLocation(rc, brain, dens[brain.rand.nextInt(dens.length)]);
+				}
+			}
 		}
 	}
 	
