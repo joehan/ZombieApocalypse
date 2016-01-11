@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 import battlecode.common.*;
+import scala.tools.nsc.settings.RC;
 
 /*
  * Brain is used by robots to track information about the world around them.
@@ -62,6 +63,56 @@ public class Brain {
 		buildHistory.put(type, buildHistory.get(type) +1);
 	}
 	
+	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
+	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	private int buildCount = 0;
+	private Boolean initialIteration = true;
+	
+//	public RobotType buildNextUnit(RobotController rc){
+//		if(initialIteration){
+//			RobotType returnRobot = startBuildArray[buildCount];
+//			buildCount++;
+//			rc.setIndicatorString(1, "" + startBuildArray.length);
+//			if(buildCount >= startBuildArray.length){
+//				buildCount = 0;
+//				initialIteration = false;
+//			}
+//			return returnRobot;
+//		}else{
+//			RobotType returnRobot = iterateBuildArray[buildCount];
+//			buildCount++;
+//			if(buildCount >= iterateBuildArray.length){
+//				buildCount = 0;
+//			}
+//			return returnRobot;
+//		}
+//	}
+	
+	public int getBuildCount() {
+		return buildCount;
+	}
+	public void setBuildCount(int buildCount) {
+		this.buildCount = buildCount;
+	}
+	public Boolean getInitialIteration() {
+		return initialIteration;
+	}
+	public void setInitialIteration(Boolean initialIteration) {
+		this.initialIteration = initialIteration;
+	}
+	public RobotType[] getStartBuildArray() {
+		return startBuildArray;
+	}
+	public RobotType[] getIterateBuildArray() {
+		return iterateBuildArray;
+	}
+	public int getStartBuildLength() {
+		return startBuildArray.length;
+	}
+	public int getIterateBuildLength() {
+		return iterateBuildArray.length;
+	}
+
 	private HashSet<MapLocation> archonStarts = new HashSet<MapLocation>();
 	
 	public MapLocation[] getArchonStarts() {
