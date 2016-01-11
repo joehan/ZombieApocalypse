@@ -5,10 +5,15 @@ import java.util.HashSet;
 import battlecode.common.*;
 
 public class Squad {
-	
+	//Intrasquad codes
 	public static int recruitCode = 1;
 	public static int setGoalLocationCode = 2;
 	public static int clearGoalLocationCode = 3;
+	
+	//Intersquad codes
+	public static int intersquadCodeMinimum = 100;
+	public static int helpMeCode = 101;
+	public static int shareDenLocationCode = 102;
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
 		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
@@ -96,6 +101,19 @@ public class Squad {
 		rc.broadcastMessageSignal(clearGoalLocationCode, 0, 2*rc.getType().sensorRadiusSquared);
 	}
 	
+	/*
+	 * SendHelpMessage asks any nearby archons for help
+	 */
+	public static void sendHelpMessage(RobotController rc, Brain brain) throws GameActionException {
+		rc.broadcastMessageSignal(helpMeCode, 0, 2*rc.getType().sensorRadiusSquared);
+	}
+	
+	/*
+	 * ShareDenLocation shares the location of a den with any nearby archons
+	 */
+	public static void shareDenLocation(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
+		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , 2*rc.getType().sensorRadiusSquared);
+	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
 		Signal[] signals = brain.thisTurnsSignals;
@@ -110,6 +128,23 @@ public class Squad {
 					brain.goalLocation = Entity.convertSignalToMap(signal.getMessage()[1]);
 				} else if (message[0] == clearGoalLocationCode) {
 					brain.goalLocation = null;
+				}
+			}
+		}
+	}
+	
+	public static void listenForIntersquadCommunication(RobotController rc, Brain brain) throws GameActionException {
+		Signal[] signals = brain.thisTurnsSignals;
+		for (Signal signal: signals){
+			int[] message = signal.getMessage();
+			//if
+			if (signal.getTeam()==rc.getTeam() && message[0]>intersquadCodeMinimum){
+				if (message[0] == helpMeCode){
+					MapLocation friend = signal.getLocation();
+					brain.goalLocation = friend;
+				} else if (message[0] == shareDenLocationCode){
+					MapLocation den = Entity.convertSignalToMap(message[0]);
+					brain.addDenLocation(den);
 				}
 			}
 		}

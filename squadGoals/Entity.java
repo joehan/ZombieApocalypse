@@ -26,6 +26,15 @@ public class Entity {
 		return ret;
 	}
 	
+	public static void findPartsInRange(RobotController rc, Brain brain, int squaredRange){
+		MapLocation[] spacesInRange = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), squaredRange);
+		for (MapLocation space : spacesInRange){
+			if (rc.senseParts(space) > 10 && rc.senseRubble(space)<GameConstants.RUBBLE_OBSTRUCTION_THRESH){
+				brain.addPartLocation(space);
+			}
+		}
+	}
+	
 	/*
 	 * Note that this method doesn't account for ranged robots like ranged zombies unless ranged=true
 	 * In the future we should modify this to see if an enemy (mostly zombie) can attack us the turn after
@@ -318,6 +327,13 @@ public class Entity {
 	public static void moveTowardLocation(RobotController rc, MapLocation loc) throws GameActionException{
 		Direction towardLoc = rc.getLocation().directionTo(loc);
 		if (rc.getLocation().distanceSquaredTo(loc) > 8){
+			moveTowards(rc, towardLoc);
+		}
+	}
+	
+	public static void moveToLocation(RobotController rc, MapLocation loc) throws GameActionException{
+		Direction towardLoc = rc.getLocation().directionTo(loc);
+		if (rc.getLocation() != loc) {
 			moveTowards(rc, towardLoc);
 		}
 	}
