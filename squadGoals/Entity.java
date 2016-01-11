@@ -252,7 +252,7 @@ public class Entity {
 			}
 			return closest;
 		}
-		return rc.getLocation();
+		return null;
 	}
 	
 	
@@ -260,14 +260,24 @@ public class Entity {
             Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
 	public static void searchForDen(RobotController rc, Brain brain) throws GameActionException {
+		MapLocation closestDen = Entity.getNearestDen(rc, brain);
+		if (rc.getType() == RobotType.SCOUT && !(closestDen == null) && rc.getLocation().distanceSquaredTo(closestDen) < 
+				rc.getType().sensorRadiusSquared){
+			RobotInfo robotAtLoc = rc.senseRobotAtLocation(closestDen);
+			if (!(robotAtLoc == null) && robotAtLoc.type != RobotType.ZOMBIEDEN){
+				Squad.sendDeadDenCommand(rc, brain, closestDen);
+			}
+		}
 		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 		for (RobotInfo zombie : zombiesWithinRange) {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
 				if (brain.isDenNew(zombie.location)){
 					brain.addDenLocation(zombie.location);
-					Squad.shareDenLocation(rc, brain, zombie.location, 
+					if (rc.getType() == RobotType.SCOUT || rc.getType() == RobotType.ARCHON){
+						Squad.shareDenLocation(rc, brain, zombie.location, 
 							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
-					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+						rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+					}
 
 				}
 			}

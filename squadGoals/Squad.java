@@ -10,12 +10,14 @@ public class Squad {
 	public static int setGoalLocationCode = 2;
 	public static int clearGoalLocationCode = 3;
 	public static int denCode = 4;
-	public static int deadDenCode = 5;
 	
 	//Intersquad codes
 	public static int intersquadCodeMinimum = 100;
 	public static int helpMeCode = 101;
 	public static int shareDenLocationCode = 102;
+	public static int deadDenCode = 105;
+
+	
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
 		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
@@ -115,14 +117,14 @@ public class Squad {
 	}
 	
 	public static void sendDeadDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
-		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), messageRange(rc));
+		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 10*messageRange(rc));
 	}
 	
 	/*
 	 * SendHelpMessage asks any nearby archons for help
 	 */
-	public static void sendHelpMessage(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(helpMeCode, 0, 2*rc.getType().sensorRadiusSquared);
+	public static void sendHelpMessage(RobotController rc, Brain brain, int distance) throws GameActionException {
+		rc.broadcastMessageSignal(helpMeCode, 0, distance);
 	}
 	
 	/*

@@ -53,18 +53,32 @@ public class Archon {
 				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), true);
 				boolean moved = false;
 				if (inDanger){
+					Squad.sendHelpMessage(rc, brain, 10*rc.getType().sensorRadiusSquared);
 					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, true);
 					if (!moved){
 						Entity.moveTowards(rc, Entity.awayFromEnemies(rc, enemies, brain).opposite());
 					}
-				} else if (activateAdjacentNeutralRobots(rc,brain)){
+				} 
+				else if ( enemies.length > 0 && rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
+						rc, brain, enemies, rc.getLocation()).location) <= 24 ){
+					Squad.sendMoveCommand(rc, brain, rc.getLocation());
+				} else if (enemies.length > 0 && rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
+					rc, brain, enemies, rc.getLocation()).location) <= 24 ){
+					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, true);
+					if (!moved){
+						Entity.moveTowards(rc, Entity.awayFromEnemies(rc, enemies, brain).opposite());
+					}
+				}else if (activateAdjacentNeutralRobots(rc,brain)){
 					rc.setIndicatorString(0, "Activated Robot");
 				} else if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
-					//Otherwise, call out any dens if you see them
 				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
-					Entity.safeMove(rc, brain, enemies, brain.goalLocation, true);
+					Entity.moveTowards(rc, rc.getLocation().directionTo(brain.goalLocation));
+//					Entity.safeMove(rc, brain, enemies, brain.goalLocation, false);
 					brain.removePartLocation(rc.getLocation());
+				}
+				else if (brain.goalLocation != null){
+					Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.goalLocation), true);
 				}
 				else {
 					moved = archonMove(rc, brain, currentDirection);
