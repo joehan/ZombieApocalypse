@@ -10,34 +10,31 @@ public class Archon {
 	public void run(RobotController rc, Brain brain) throws GameActionException{	
 		rand = new Random(rc.getID());
 		brain.initBuildHistory();
+		Direction currentDirection = Entity.directions[brain.rand.nextInt(8)];
 		while (true) {
-			//			if (rc.isCoreReady()) {
-			String print = "";
+
 			RobotType typeToBuild = buildNextUnit(brain);
-			for (Integer i : brain.getSquadMembers()){
-				print = print + i.toString() + ", ";
-			}
-			rc.setIndicatorString(0, print);
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			//Look for dens
 			Entity.updateDenLocations(rc, brain);
-			if (brain.getDenLocations().length >0){
-				brain.goalLocation = brain.getDenLocations()[0];
-			}
-			Squad.processSquadMessages(rc, brain);
-			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
-				brain.goalLocation = null;
-			}
-			if (brain.goalLocation != null){
+			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
+			if (memberRequestedHelp) {
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+			} else if (brain.getDenLocations().length >0){
+				brain.goalLocation = brain.getDenLocations()[0];
+				Squad.sendAttackDenCommand(rc, brain, brain.goalLocation);
 			} else {
 				Squad.sendClearGoalLocationCommand(rc, brain);
+			}
+			
+			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
+				brain.goalLocation = null;
 			}
 			//Repair a nearby unit, if there are any
 			repairUnits(rc);
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 
-			//Try to build a unit if you have the parts
+			//TRecruit new squad members
 			Squad.recruit(rc, brain);
 			Squad.listenForRecruits(rc, brain);
 			
@@ -63,10 +60,18 @@ public class Archon {
 					brain.removePartLocation(rc.getLocation());
 				}
 				else {
-					archonMove(rc, brain);
+					moved = archonMove(rc, brain, currentDirection);
+					if (!moved){
+						currentDirection = Entity.directions[brain.rand.nextInt(8)];
+					}
 					brain.removePartLocation(rc.getLocation());
 				}
 				//				}
+			}
+			if (brain.goalLocation!=null) {
+				rc.setIndicatorString(1, "Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
+			} else {
+				rc.setIndicatorString(1, "No goal yet");
 			}
 			Clock.yield();
 
@@ -111,7 +116,7 @@ public class Archon {
 		}
 	}
 	
-	private void archonMove(RobotController rc, Brain brain) throws GameActionException {
+	private boolean archonMove(RobotController rc, Brain brain, Direction currentDirection) throws GameActionException {
 		//Look for bad guys
 		RobotInfo[] nearbyHostiles = rc.senseHostileRobots(rc.getLocation(),  rc.getType().sensorRadiusSquared);
 		//If there are any bad guys, run away
@@ -120,11 +125,17 @@ public class Archon {
 			Direction dirToHostile = rc.getLocation().directionTo(enemy.location);
 			Entity.safeMove(rc, brain, nearbyHostiles, dirToHostile.opposite(), true);
 			//Otherwise, run around randomly
+			return true;
 		} else if (brain.getPartLocations().length >0) {
 			Entity.moveToLocation(rc, brain.getPartLocations()[0]);
+			return true;
 		} else {
-			Direction directionToMove = Entity.directions[rand.nextInt(8)];
-			Entity.moveInDirection(rc, directionToMove);
+			if (rc.canMove(currentDirection)){
+				rc.move(currentDirection);
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 	

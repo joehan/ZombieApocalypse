@@ -33,16 +33,28 @@ public class Brain {
 	}
 	//Rembering den locations!
 	private HashSet<MapLocation> denLocations = new HashSet<MapLocation>();
+	private HashSet<MapLocation> deadDenLocations = new HashSet<MapLocation>();
 	
 	public MapLocation[] getDenLocations(){
 		return denLocations.toArray(new MapLocation[denLocations.size()]);
 	}
+	
+	public MapLocation[] getDeadDenLocations(){
+		return deadDenLocations.toArray(new MapLocation[deadDenLocations.size()]);
+	}
+	
 	public void addDenLocation(MapLocation loc) {
 		denLocations.add(loc);
 	}
 	public void removeDenLocation(MapLocation loc){
 		denLocations.remove(loc);
+		deadDenLocations.add(loc);
 	}
+	
+	public Boolean isDenDead(MapLocation den){
+		return (deadDenLocations.contains(den));
+	}
+	
 	public Boolean isDenNew(MapLocation den) {
 		return !(denLocations.contains(den));
 	}
@@ -63,7 +75,7 @@ public class Brain {
 		buildHistory.put(type, buildHistory.get(type) +1);
 	}
 	
-	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
+	private RobotType[] startBuildArray = {RobotType.SOLDIER};
 	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
 	private int buildCount = 0;
 	private Boolean initialIteration = true;
