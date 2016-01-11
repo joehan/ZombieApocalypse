@@ -39,7 +39,7 @@ public class Archon {
 			}
 			//Repair a nearby unit, if there are any
 			repairUnits(rc);
-
+			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
 			//Recruit new squad members
 			Squad.recruit(rc, brain);
 			Squad.listenForRecruits(rc, brain);
@@ -68,7 +68,7 @@ public class Archon {
 					if (!moved){
 						Entity.moveTowards(rc, Entity.awayFromEnemies(rc, enemies, brain).opposite());
 					}
-				}else if (activateAdjacentNeutralRobots(rc,brain)){
+				} else if (activateAdjacentNeutralRobots(rc,brain, neutrals)){
 					rc.setIndicatorString(0, "Activated Robot");
 				} else if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
@@ -81,7 +81,7 @@ public class Archon {
 					Entity.safeMove(rc, brain, enemies, rc.getLocation().directionTo(brain.goalLocation), true);
 				}
 				else {
-					moved = archonMove(rc, brain, currentDirection);
+					moved = archonMove(rc, brain, currentDirection, neutrals);
 					if (!moved){
 						currentDirection = Entity.directions[brain.rand.nextInt(8)];
 					}
@@ -135,7 +135,7 @@ public class Archon {
 		}
 	}
 	
-	private boolean archonMove(RobotController rc, Brain brain, Direction currentDirection) throws GameActionException {
+	private boolean archonMove(RobotController rc, Brain brain, Direction currentDirection, RobotInfo[] neutrals) throws GameActionException {
 		//Look for bad guys
 		RobotInfo[] nearbyHostiles = rc.senseHostileRobots(rc.getLocation(),  rc.getType().sensorRadiusSquared);
 		//If there are any bad guys, run away
@@ -145,7 +145,10 @@ public class Archon {
 			Entity.safeMove(rc, brain, nearbyHostiles, dirToHostile.opposite(), true);
 			//Otherwise, run around randomly
 			return true;
-		} else if (brain.getPartLocations().length >0) {
+		} else if (neutrals.length>0){
+			Entity.moveToLocation(rc, neutrals[0].location);
+			return true;
+		}else if (brain.getPartLocations().length >0) {
 			Entity.moveToLocation(rc, brain.getPartLocations()[0]);
 			return true;
 		} else {
@@ -171,11 +174,12 @@ public class Archon {
 		}
 	}
 	
-	private boolean activateAdjacentNeutralRobots(RobotController rc, Brain brain) throws GameActionException {
-		RobotInfo[] neutrals = rc.senseNearbyRobots(2, Team.NEUTRAL);
-		if (neutrals.length >0){
-			rc.activate(neutrals[0].location);
-			return true;
+	private boolean activateAdjacentNeutralRobots(RobotController rc, Brain brain, RobotInfo[] neutrals) throws GameActionException {
+		for (RobotInfo neutral : neutrals){
+			if (rc.getLocation().isAdjacentTo(neutral.location)){
+				rc.activate(neutral.location);
+				return true;
+			}
 		}
 		return false;
 	}
