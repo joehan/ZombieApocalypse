@@ -49,7 +49,7 @@ public class Brain {
 	}
 	
 	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
-	private RobotType[] iterateBuildArray = {RobotType.GUARD, RobotType.SOLDIER, RobotType.SOLDIER};
+	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
 	private int buildCount = 0;
 	private Boolean initialIteration = true;
 	
