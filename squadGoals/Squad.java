@@ -109,8 +109,9 @@ public class Squad {
 	/*
 	 * ShareDenLocation shares the location of a den with any nearby archons
 	 */
-	public static void shareDenLocation(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
-		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , 2*rc.getType().sensorRadiusSquared);
+	public static void shareDenLocation(RobotController rc, Brain brain, MapLocation den, int distance
+			) throws GameActionException {
+		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , distance);
 	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
@@ -136,7 +137,7 @@ public class Squad {
 		for (Signal signal: signals){
 			int[] message = signal.getMessage();
 			//if
-			if (signal.getTeam()==rc.getTeam() && message[0]>intersquadCodeMinimum){
+			if (signal.getTeam()==rc.getTeam() &&  !(message == null) && message[0]>intersquadCodeMinimum){
 				if (message[0] == helpMeCode){
 					MapLocation friend = signal.getLocation();
 					brain.goalLocation = friend;

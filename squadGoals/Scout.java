@@ -15,7 +15,21 @@ public class Scout {
 			Entity.searchForDen(rc, brain);
 			if (rc.isCoreReady()) {
 				RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-				Entity.safeMoveRanged(rc, brain, enemies, currentDir);
+				boolean move = false;
+				int randomNum = rand.nextInt(8);
+				int i = 0;
+				while (!move && i < 8){
+					move = Entity.safeMoveOneDirectionRanged(rc, enemies, brain, currentDir);
+					if (!move){
+						currentDir = Entity.directions[(randomNum + i)%8];
+					}
+					i ++;
+				}
+				if (!move){
+					//scout is trapped
+					Entity.moveRandomDirection(rc, brain);
+				}
+				
 				rc.setIndicatorString(1, "Moving Random "+ randomDir.toString());
 			}
 			Clock.yield();

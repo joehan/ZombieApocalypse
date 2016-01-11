@@ -25,6 +25,7 @@ public class Archon {
 				brain.goalLocation = brain.getDenLocations()[0];
 			}
 			Squad.processSquadMessages(rc, brain);
+			Squad.listenForIntersquadCommunication(rc, brain);
 			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
 				brain.goalLocation = null;
 			}
@@ -135,7 +136,7 @@ public class Archon {
 				MapLocation[] dens = brain.getDenLocations();
 				//Share the location of a random den
 				if (dens.length>0){
-					Squad.shareDenLocation(rc, brain, dens[brain.rand.nextInt(dens.length)]);
+					Squad.shareDenLocation(rc, brain, dens[brain.rand.nextInt(dens.length)], 2*rc.getType().sensorRadiusSquared);
 				}
 			}
 		}
