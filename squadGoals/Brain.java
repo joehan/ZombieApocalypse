@@ -53,26 +53,6 @@ public class Brain {
 	private int buildCount = 0;
 	private Boolean initialIteration = true;
 	
-//	public RobotType buildNextUnit(RobotController rc){
-//		if(initialIteration){
-//			RobotType returnRobot = startBuildArray[buildCount];
-//			buildCount++;
-//			rc.setIndicatorString(1, "" + startBuildArray.length);
-//			if(buildCount >= startBuildArray.length){
-//				buildCount = 0;
-//				initialIteration = false;
-//			}
-//			return returnRobot;
-//		}else{
-//			RobotType returnRobot = iterateBuildArray[buildCount];
-//			buildCount++;
-//			if(buildCount >= iterateBuildArray.length){
-//				buildCount = 0;
-//			}
-//			return returnRobot;
-//		}
-//	}
-	
 	public int getBuildCount() {
 		return buildCount;
 	}
