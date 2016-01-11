@@ -9,6 +9,8 @@ public class Squad {
 	public static int recruitCode = 1;
 	public static int setGoalLocationCode = 2;
 	public static int clearGoalLocationCode = 3;
+	public static int denCode = 4;
+	public static int deadDenCode = 5;
 	
 	//Intersquad codes
 	public static int intersquadCodeMinimum = 100;
@@ -20,17 +22,19 @@ public class Squad {
 	}
 	
 	/*
-	 * NOte that this method sets the current goal to be the last message processed out of 
+	 * NOte that this method sets the current goal to be the first message processed out of 
 	 * all the squad messages
 	 */
-	public static void processSquadMessages(RobotController rc, Brain brain){
+	public static boolean processSquadMessages(RobotController rc, Brain brain){
 		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal : signals){
 			if (brain.memberInSquad(signal.getID()) && (brain.goalLocation == null)){
 				Direction dirToFriend = rc.getLocation().directionTo(signal.getLocation());
 				brain.goalLocation = signal.getLocation().add(dirToFriend, 4);
+				return true;
 			}
-		}
+		} 
+		return false;
 	}
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
@@ -99,6 +103,14 @@ public class Squad {
 		rc.broadcastMessageSignal(clearGoalLocationCode, 0, 2*rc.getType().sensorRadiusSquared);
 	}
 	
+	public static void sendAttackDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException{
+		rc.broadcastMessageSignal(denCode, Entity.convertMapToSignal(den), 2*rc.getType().sensorRadiusSquared);
+	}
+	
+	public static void sendDeadDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
+		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 2*rc.getType().sensorRadiusSquared);
+	}
+	
 	/*
 	 * SendHelpMessage asks any nearby archons for help
 	 */
@@ -127,6 +139,16 @@ public class Squad {
 					brain.goalLocation = Entity.convertSignalToMap(signal.getMessage()[1]);
 				} else if (message[0] == clearGoalLocationCode) {
 					brain.goalLocation = null;
+				} else if (message[0] == denCode) {
+					MapLocation den =Entity.convertSignalToMap(message[1]);
+					if (!(brain.isDenDead(den))){
+						brain.addDenLocation(den);
+						brain.goalLocation = den;
+					} else {
+						rc.setIndicatorString(0, "Ignoring den message at " + den.x + ", " + den.y);
+					}
+				} else if (message[0] == deadDenCode) {
+					brain.removeDenLocation(Entity.convertSignalToMap(message[1]));
 				}
 			}
 		}

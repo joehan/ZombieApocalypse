@@ -23,14 +23,13 @@ public class Soldier {
 				Squad.findLeaderLocation(rc, brain);
 				Squad.listenForCommands(rc, brain);
 			}
-			/*if (!(brain.goalLocation == null)){
-				rc.setIndicatorString(0, brain.goalLocation.toString());
-			}*/
+			Entity.updateDenLocations(rc, brain);
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-			if (enemies.length > 0 && !(brain.leadersLastKnownLocation == null) 
+			RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
+			if (opponents.length > 0 && !(brain.leadersLastKnownLocation == null) 
 					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100 && 
 					rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
-							rc, brain, enemies, rc.getLocation()).location) > 13){
+							rc, brain, opponents, rc.getLocation()).location) > 13){
 				rc.broadcastSignal(rc.getType().sensorRadiusSquared*2);
 			}
 			boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), false);
@@ -66,8 +65,10 @@ public class Soldier {
 					&& enemies.length == 0){
 				Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
 			}
-			else if (rc.isCoreReady()){
-				Entity.digAdjacent(rc, brain);
+			if (brain.goalLocation!=null) {
+				rc.setIndicatorString(1, "Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
+			} else {
+				rc.setIndicatorString(1, "No goal yet");
 			}
 			Clock.yield();
 		}

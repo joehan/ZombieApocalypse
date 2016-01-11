@@ -249,10 +249,10 @@ public class Entity {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
 				if (brain.isDenNew(zombie.location)){
 					brain.addDenLocation(zombie.location);
-//					Entity.signalMessageLocation(rc, zombie.location, (int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
-					Squad.shareDenLocation(rc, brain, zombie.location, 
-							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
-					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+//					Squad.shareDenLocation(rc, brain, zombie.location, 
+//							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+//					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+
 				}
 			}
 		}
@@ -312,7 +312,6 @@ public class Entity {
 		return false;
 	}
 	
-	
 	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
 		if (rc.isCoreReady()){
 			int maxAttackRange = rc.getType().attackRadiusSquared;
@@ -358,9 +357,6 @@ public class Entity {
 				RobotInfo maybeDen = rc.senseRobotAtLocation(den);
 				if (maybeDen == null || maybeDen.type!=RobotType.ZOMBIEDEN){
 					brain.removeDenLocation(den);
-					if (brain.goalLocation.equals(den)){
-						brain.goalLocation = null;
-					}
 				}
 			}
 		}
