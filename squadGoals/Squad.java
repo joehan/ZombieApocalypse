@@ -95,20 +95,27 @@ public class Squad {
 		}
 	}
 	
+	public static int messageRange(RobotController rc){
+		if (rc.getRoundNum() % 80 == 0) {
+			return 31*rc.getType().sensorRadiusSquared;
+		} else {
+			return 2*rc.getType().sensorRadiusSquared;
+		}
+	}
 	public static void sendMoveCommand(RobotController rc, Brain brain, MapLocation loc) throws GameActionException{
-		rc.broadcastMessageSignal(setGoalLocationCode, Entity.convertMapToSignal(loc), 2*rc.getType().sensorRadiusSquared);
+		rc.broadcastMessageSignal(setGoalLocationCode, Entity.convertMapToSignal(loc), messageRange(rc));
 	}
 	
 	public static void sendClearGoalLocationCommand(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(clearGoalLocationCode, 0, 2*rc.getType().sensorRadiusSquared);
+		rc.broadcastMessageSignal(clearGoalLocationCode, 0, messageRange(rc));
 	}
 	
 	public static void sendAttackDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException{
-		rc.broadcastMessageSignal(denCode, Entity.convertMapToSignal(den), 2*rc.getType().sensorRadiusSquared);
+		rc.broadcastMessageSignal(denCode, Entity.convertMapToSignal(den), messageRange(rc));
 	}
 	
 	public static void sendDeadDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
-		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 2*rc.getType().sensorRadiusSquared);
+		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), messageRange(rc));
 	}
 	
 	/*
