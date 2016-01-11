@@ -12,7 +12,7 @@ public class Archon {
 
 			RobotType typeToBuild = buildNextUnit(brain);
 			brain.thisTurnsSignals = rc.emptySignalQueue();
-			//Squad.listenForIntersquadCommunication(rc, brain);
+			Squad.listenForIntersquadCommunication(rc, brain);
 			//Look for dens
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 
@@ -26,7 +26,7 @@ public class Archon {
 //					rc.setIndicatorString(1, "Friend is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);
 //				}
 			} else if (brain.getDenLocations().length >0){
-				brain.goalLocation = brain.getDenLocations()[0];
+				brain.goalLocation = Entity.getNearestDen(rc, brain);
 				Squad.sendAttackDenCommand(rc, brain, brain.goalLocation);
 //				if (brain.goalLocation!=null) {
 //					rc.setIndicatorString(1, "Den is Goal: " + brain.goalLocation.x + ", " + brain.goalLocation.y);

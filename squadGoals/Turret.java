@@ -17,7 +17,8 @@ public class Turret {
 	
 	}
 	public void turretRun(RobotController rc, Brain brain) throws GameActionException {
-		Boolean attack = Entity.attackHostiles(rc);
+		RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+		Boolean attack = Entity.attackHostiles(rc, enemies);
 		if (!attack) {
 			RobotInfo[] adjacentFriends = rc.senseNearbyRobots(3, rc.getTeam());
 			if (adjacentFriends.length >3){

@@ -238,6 +238,22 @@ public class Entity {
 		return new MapLocation(x, y);
 	}
 	
+	public static MapLocation getNearestDen(RobotController rc, Brain brain){
+		MapLocation[] zombieDens = brain.getDenLocations();
+		if (zombieDens.length > 0){
+			int min = 10000;
+			MapLocation closest = zombieDens[0];
+			for (MapLocation den : zombieDens){
+				int distance = rc.getLocation().distanceSquaredTo(den);
+				if (rc.getLocation().distanceSquaredTo(den) < min){
+					closest = den;
+					min = distance;
+				}
+			}
+			return closest;
+		}
+		return rc.getLocation();
+	}
 	
 	
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
@@ -249,9 +265,9 @@ public class Entity {
 			if (zombie.type == RobotType.ZOMBIEDEN) {
 				if (brain.isDenNew(zombie.location)){
 					brain.addDenLocation(zombie.location);
-//					Squad.shareDenLocation(rc, brain, zombie.location, 
-//							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
-//					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+					Squad.shareDenLocation(rc, brain, zombie.location, 
+							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+					rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
 
 				}
 			}

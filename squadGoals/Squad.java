@@ -171,7 +171,7 @@ public class Squad {
 					MapLocation friend = signal.getLocation();
 					brain.goalLocation = friend;
 				} else if (message[0] == shareDenLocationCode){
-					MapLocation den = Entity.convertSignalToMap(message[0]);
+					MapLocation den = Entity.convertSignalToMap(message[1]);
 					brain.addDenLocation(den);
 				}
 			}
