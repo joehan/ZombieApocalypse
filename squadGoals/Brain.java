@@ -195,6 +195,8 @@ public class Brain {
 		shareDenLocation = new ArrayList<Signal>();
 		deadDen = new ArrayList<Signal>();
 		regularMessage = new ArrayList<Signal>();
+		foundEnemy = new ArrayList<Signal>();
+		enemyTurret = new ArrayList<Signal>();
 	}
 	
 	public Signal[] thisTurnsSignals;
@@ -206,6 +208,8 @@ public class Brain {
 	public ArrayList<Signal> shareDenLocation = new ArrayList<Signal>();
 	public ArrayList<Signal> deadDen = new ArrayList<Signal>();
 	public ArrayList<Signal> regularMessage = new ArrayList<Signal>();
+	public ArrayList<Signal> foundEnemy = new ArrayList<Signal>();
+	public ArrayList<Signal> enemyTurret = new ArrayList<Signal>();
 
 	
 	public Random rand;

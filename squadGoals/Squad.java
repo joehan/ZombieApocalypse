@@ -16,7 +16,8 @@ public class Squad {
 	public final static int helpMeCode = 101;
 	public final static int shareDenLocationCode = 102;
 	public final static int deadDenCode = 105;
-
+	public final static int foundEnemyCode = 106;
+	public final static int enemyTurretCode = 107;
 	
 	public static void processMessages(RobotController rc, Brain brain){
 		Signal[] messages = rc.emptySignalQueue();
@@ -52,6 +53,12 @@ public class Squad {
 						break;
 					case deadDenCode:
 						brain.deadDen.add(signal);
+						break;
+					case foundEnemyCode:
+						brain.foundEnemy.add(signal);
+						break;
+					case enemyTurretCode:
+						brain.enemyTurret.add(signal);
 						break;
 				}
 			} else {
