@@ -186,6 +186,27 @@ public class Brain {
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
 	
+	public void resetMessages(){
+		recruitMessages = new ArrayList<Signal>();
+		setGoalLocation = new ArrayList<Signal>();
+		clearGoalLocation = new ArrayList<Signal>();
+		den = new ArrayList<Signal>();
+		helpMe = new ArrayList<Signal>();
+		shareDenLocation = new ArrayList<Signal>();
+		deadDen = new ArrayList<Signal>();
+		regularMessage = new ArrayList<Signal>();
+	}
+	
 	public Signal[] thisTurnsSignals;
+	public ArrayList<Signal> recruitMessages = new ArrayList<Signal>();
+	public ArrayList<Signal> setGoalLocation = new ArrayList<Signal>();
+	public ArrayList<Signal> clearGoalLocation = new ArrayList<Signal>();
+	public ArrayList<Signal> den = new ArrayList<Signal>();
+	public ArrayList<Signal> helpMe = new ArrayList<Signal>();
+	public ArrayList<Signal> shareDenLocation = new ArrayList<Signal>();
+	public ArrayList<Signal> deadDen = new ArrayList<Signal>();
+	public ArrayList<Signal> regularMessage = new ArrayList<Signal>();
+
+	
 	public Random rand;
 }
