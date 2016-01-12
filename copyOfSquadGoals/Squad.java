@@ -16,6 +16,7 @@ public class Squad {
 	public static int helpMeCode = 101;
 	public static int shareDenLocationCode = 102;
 	public static int deadDenCode = 105;
+	public static int foundEnemyCode = 106;
 
 	
 	
@@ -120,6 +121,11 @@ public class Squad {
 		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 10*messageRange(rc));
 	}
 	
+	public static void sendEnemyFoundCommand(RobotController rc, Brain brain, MapLocation enemy) throws GameActionException{
+		rc.broadcastMessageSignal(foundEnemyCode, Entity.convertMapToSignal(enemy), Math.max(5*messageRange(rc),
+				3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+	}
+	
 	/*
 	 * SendHelpMessage asks any nearby archons for help
 	 */
@@ -175,6 +181,10 @@ public class Squad {
 				} else if (message[0] == shareDenLocationCode){
 					MapLocation den = Entity.convertSignalToMap(message[1]);
 					brain.addDenLocation(den);
+				} else if (message[0] == foundEnemyCode){
+					MapLocation turret = Entity.convertSignalToMap(message[1]);
+					brain.storeEnemyTurret(turret);
+					rc.setIndicatorString(0, "Turret at : " + turret.toString());
 				}
 			}
 		}

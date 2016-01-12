@@ -5,8 +5,8 @@ import java.util.*;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import squadGoals.Brain;
 import battlecode.common.*;
+import squadGoals.Brain;
 /*
  * Entity contains functions that will be used by multiple types of units
  */

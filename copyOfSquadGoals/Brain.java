@@ -74,6 +74,12 @@ public class Brain {
 		buildHistory.put(type, buildHistory.get(type) +1);
 	}
 	
+	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
+
+	public void storeEnemyTurret(MapLocation loc){
+		enemyTurrets.add(loc);
+	}
+	
 	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
 	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
 	private int buildCount = 0;
