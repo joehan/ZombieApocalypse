@@ -42,8 +42,8 @@ public class Entity {
 	}
 	
 	public static void findPartsInRange(RobotController rc, Brain brain, int squaredRange){
-		MapLocation[] spacesInRange = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), squaredRange);
-		for (MapLocation space : spacesInRange){
+		MapLocation[] partLocations = rc.sensePartLocations(squaredRange);
+		for (MapLocation space : partLocations){
 			if (rc.senseParts(space) > 10 && rc.senseRubble(space)<GameConstants.RUBBLE_OBSTRUCTION_THRESH){
 				brain.addPartLocation(space);
 			}

@@ -59,20 +59,22 @@ public class Brain {
 	}
 	
 	//Remembering what you've built
-	public HashMap<RobotType, Integer> buildHistory; 
+//	public HashMap<RobotType, Integer> buildHistory; 
+//	
+//	public void initBuildHistory(){
+//		buildHistory = new HashMap<RobotType, Integer>();
+//		buildHistory.put(RobotType.GUARD, 0);
+//		buildHistory.put(RobotType.SCOUT, 0);
+//		buildHistory.put(RobotType.SOLDIER, 0);
+//		buildHistory.put(RobotType.TURRET, 0);
+//		buildHistory.put(RobotType.VIPER, 0);
+//	}
 	
-	public void initBuildHistory(){
-		buildHistory = new HashMap<RobotType, Integer>();
-		buildHistory.put(RobotType.GUARD, 0);
-		buildHistory.put(RobotType.SCOUT, 0);
-		buildHistory.put(RobotType.SOLDIER, 0);
-		buildHistory.put(RobotType.TURRET, 0);
-		buildHistory.put(RobotType.VIPER, 0);
-	}
+	public double lastTurnsHealth;
 	
-	public void iterateUnitInBuildHistory(RobotType type){
-		buildHistory.put(type, buildHistory.get(type) +1);
-	}
+//	public void iterateUnitInBuildHistory(RobotType type){
+//		buildHistory.put(type, buildHistory.get(type) +1);
+//	}
 	
 	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
 

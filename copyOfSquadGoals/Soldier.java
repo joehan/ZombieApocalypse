@@ -29,8 +29,7 @@ public class Soldier {
 				nearestEnemy = Entity.findClosestEnemy(rc, brain, opponents, rc.getLocation());
 			}
 			if (opponents.length > 0 && !(brain.leadersLastKnownLocation == null) 
-					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100 && 
-					rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
+					&& rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
 							rc, brain, opponents, rc.getLocation()).location) > 13){
 				rc.broadcastSignal(rc.getType().sensorRadiusSquared*2);
 			}
@@ -44,9 +43,9 @@ public class Soldier {
 				rc.setIndicatorString(1, "Attacking");
 			} else if (nearestEnemy != null && nearestEnemy.type == RobotType.TURRET){
 				Entity.moveTowards(rc, rc.getLocation().directionTo(nearestEnemy.location));
-			} else if (rc.getHealth() < rc.getType().maxHealth /3 && enemies.length > 0){
+			} else if (rc.getHealth() < rc.getType().maxHealth /2 && enemies.length > 0){
 					Entity.retreatMove(rc, brain, enemies);
-			} else if (rc.getHealth() < rc.getType().maxHealth /3 && brain.leadersLastKnownLocation != null) {
+			} else if (rc.getHealth() < rc.getType().maxHealth /2 && brain.leadersLastKnownLocation != null) {
 				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.leadersLastKnownLocation));
 			} else if (rc.isCoreReady() && inDanger){
 				Entity.moveRandomDirection(rc, brain);

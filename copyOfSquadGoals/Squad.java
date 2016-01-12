@@ -21,7 +21,11 @@ public class Squad {
 	
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
+		if (rc.getRoundNum()%10 == 0){
+			rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 5*72);
+		} else {
+			rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
+		}
 	}
 	
 	/*
