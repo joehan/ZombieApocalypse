@@ -6,17 +6,66 @@ import battlecode.common.*;
 
 public class Squad {
 	//Intrasquad codes
-	public static int recruitCode = 1;
-	public static int setGoalLocationCode = 2;
-	public static int clearGoalLocationCode = 3;
-	public static int denCode = 4;
+	public final static int recruitCode = 1;
+	public final static int setGoalLocationCode = 2;
+	public final static int clearGoalLocationCode = 3;
+	public final static int denCode = 4;
 	
 	//Intersquad codes
-	public static int intersquadCodeMinimum = 100;
-	public static int helpMeCode = 101;
-	public static int shareDenLocationCode = 102;
-	public static int deadDenCode = 105;
-
+	public final static int intersquadCodeMinimum = 100;
+	public final static int helpMeCode = 101;
+	public final static int shareDenLocationCode = 102;
+	public final static int deadDenCode = 105;
+	public final static int foundEnemyCode = 106;
+	public final static int enemyTurretCode = 107;
+	
+	public static void processMessages(RobotController rc, Brain brain){
+		Signal[] messages = rc.emptySignalQueue();
+		brain.resetMessages();
+		for (Signal signal : messages){
+			int[] message = signal.getMessage();
+			if (signal.getMessage() != null && brain.getSquadNum() == signal.getID()){
+				switch(message[0]){
+					case recruitCode:
+						brain.recruitMessages.add(signal);
+						break;
+					case setGoalLocationCode:
+						brain.setGoalLocation.add(signal);
+						break;
+					case clearGoalLocationCode:
+						brain.clearGoalLocation.add(signal);
+						break;
+					case denCode:
+						brain.den.add(signal);
+						break;
+				}
+			}
+			else if (signal.getMessage() != null){
+				switch(message[0]){
+					case recruitCode:
+						brain.recruitMessages.add(signal);
+						break;
+					case helpMeCode:
+						brain.helpMe.add(signal);
+						break;
+					case shareDenLocationCode:
+						brain.shareDenLocation.add(signal);
+						break;
+					case deadDenCode:
+						brain.deadDen.add(signal);
+						break;
+					case foundEnemyCode:
+						brain.foundEnemy.add(signal);
+						break;
+					case enemyTurretCode:
+						brain.enemyTurret.add(signal);
+						break;
+				}
+			} else {
+				brain.regularMessage.add(signal);
+			}
+		}
+	}
 	
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
@@ -41,10 +90,10 @@ public class Squad {
 	
 	public static void listenForRecruits(RobotController rc, Brain brain) throws GameActionException {
 		HashSet<Integer> potentialSquadmates = new HashSet<Integer>();
-		Signal[] signals = brain.thisTurnsSignals;
+//		Signal[] signals = brain.thisTurnsSignals;
 		//listen for signals from new bots
 		//Need to for a squad join
-		for (Signal signal : signals){
+		for (Signal signal : brain.regularMessage){
 			if (signal.getTeam()==rc.getTeam() && potentialSquadmates.contains(signal.getRobotID())
 					&& (signal.getMessage() == null)){
 				brain.addSquadMember(signal.getID());
@@ -57,7 +106,7 @@ public class Squad {
 	}
 	
 	public static void lookForASquad(RobotController rc, Brain brain, RobotInfo[] allies) throws GameActionException {
-		Signal[] signals = brain.thisTurnsSignals;
+//		Signal[] signals = brain.thisTurnsSignals;
 
 		int closestArchonDistance = 100;
 		for (RobotInfo ally: allies){
@@ -72,17 +121,15 @@ public class Squad {
 			}
 		}
 		if (closestArchonDistance < 100){
-			for (Signal signal: signals){
+			for (Signal signal: brain.recruitMessages){
 				//if its a recruiting signal from our team
-				if (signal.getTeam()==rc.getTeam() && (!(signal.getMessage() == null) && signal.getMessage()[0]==recruitCode)){
-					brain.setSquad(signal.getRobotID());
-					brain.setLeaderID(signal.getRobotID());
-					brain.leadersLastKnownLocation = signal.getLocation();
-					rc.broadcastSignal(closestArchonDistance + 1);
-					rc.broadcastSignal(closestArchonDistance + 1);
-					rc.setIndicatorString(2, "On squad" + brain.getSquadNum());
-					break;
-				}
+				brain.setSquad(signal.getRobotID());
+				brain.setLeaderID(signal.getRobotID());
+				brain.leadersLastKnownLocation = signal.getLocation();
+				rc.broadcastSignal(closestArchonDistance + 1);
+				rc.broadcastSignal(closestArchonDistance + 1);
+				rc.setIndicatorString(2, "On squad" + brain.getSquadNum());
+				break;
 			}
 		}
 	}
@@ -90,7 +137,7 @@ public class Squad {
 	 * findLeaderLocation updates the leadersLastKnownLocation to his current position, if he is in sight range
 	 */
 	public static void findLeaderLocation(RobotController rc, Brain brain) throws GameActionException {
-		for (Signal friend : brain.thisTurnsSignals) {
+		for (Signal friend : brain.recruitMessages) {
 			if (friend.getID() == brain.getLeaderID()){
 				brain.leadersLastKnownLocation = friend.getLocation();
 			}
@@ -136,30 +183,29 @@ public class Squad {
 	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = brain.thisTurnsSignals;
-		for (Signal signal : signals){
+//		Signal[] signals = brain.thisTurnsSignals;
+		for (Signal signal : brain.setGoalLocation){
 			//if it's from our leader,
 			int[] message = signal.getMessage();
-			if (signal.getID() == brain.getLeaderID() && (message!=null)){
-				brain.leadersLastKnownLocation = signal.getLocation();
-				if (message[0] == recruitCode){
-					continue;
-				} else if (message[0] == setGoalLocationCode) {
-					brain.goalLocation = Entity.convertSignalToMap(signal.getMessage()[1]);
-				} else if (message[0] == clearGoalLocationCode) {
-					brain.goalLocation = null;
-				} else if (message[0] == denCode) {
-					MapLocation den =Entity.convertSignalToMap(message[1]);
-					if (!(brain.isDenDead(den))){
-						brain.addDenLocation(den);
-						brain.goalLocation = den;
-					} else {
-						rc.setIndicatorString(0, "Ignoring den message at " + den.x + ", " + den.y);
-					}
-				} else if (message[0] == deadDenCode) {
-					brain.removeDenLocation(Entity.convertSignalToMap(message[1]));
-				}
+			brain.goalLocation = Entity.convertSignalToMap(signal.getMessage()[1]);
+		}
+		for (Signal signal : brain.clearGoalLocation){
+			int[] message = signal.getMessage();				
+			brain.goalLocation = null;
+		}
+		for (Signal signal : brain.den){
+			int[] message = signal.getMessage();
+			MapLocation den =Entity.convertSignalToMap(message[1]);
+			if (!(brain.isDenDead(den))){
+				brain.addDenLocation(den);
+				brain.goalLocation = den;
+			} else {
+				rc.setIndicatorString(0, "Ignoring den message at " + den.x + ", " + den.y);
 			}
+		}
+		for (Signal signal : brain.deadDen){
+			int[] message = signal.getMessage();
+			brain.removeDenLocation(Entity.convertSignalToMap(message[1]));
 		}
 	}
 	

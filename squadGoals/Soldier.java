@@ -12,7 +12,9 @@ public class Soldier {
 
 		while (true) {
 			//			if (rc.isCoreReady()) {
-			brain.thisTurnsSignals = rc.emptySignalQueue();
+//			brain.thisTurnsSignals = rc.emptySignalQueue();
+			Squad.processMessages(rc, brain);
+			
 
 			//IF you don't have a squad, get one
 			if (brain.getSquadNum() == -1){
@@ -26,27 +28,27 @@ public class Soldier {
 			Entity.updateDenLocations(rc, brain);
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 			RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
-			if (opponents.length > 0 && !(brain.leadersLastKnownLocation == null) 
-					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100 && 
-					rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
-							rc, brain, opponents, rc.getLocation()).location) > 13){
+			RobotInfo closestEnemy = null;
+			if (enemies.length > 0){
+				closestEnemy = Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation());
+			}
+
+			if (opponents.length > 0 && rc.getLocation().distanceSquaredTo(closestEnemy.location) > 13){
 				rc.broadcastSignal(rc.getType().sensorRadiusSquared*2);
 			}
 			boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), false);
 			if (inDanger){
 				Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
 			}
-			Boolean attack = Entity.attackHostiles(rc, enemies);
-			if (attack) {
-				rc.setIndicatorString(1, "Attacking");
-			} else if (rc.getHealth() < rc.getType().maxHealth /3 && enemies.length > 0){
-				Entity.retreatMove(rc, brain, enemies);
+			Entity.attackHostiles(rc, enemies);
+			if (rc.getHealth() < rc.getType().maxHealth /3 && enemies.length > 0){
+				Entity.retreatMove(rc, brain, enemies, closestEnemy);
 			} else if (rc.getHealth() < rc.getType().maxHealth /3 && brain.leadersLastKnownLocation != null) {
 				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.leadersLastKnownLocation));
 			} else if (rc.isCoreReady() && inDanger){
 				Entity.moveRandomDirection(rc, brain);
 			} else if (rc.isCoreReady() && enemies.length != 0){
-				boolean move= Entity.moveOptimalAttackRange(rc, brain, enemies);
+				boolean move= Entity.moveOptimalAttackRange(rc, brain, enemies, closestEnemy);
 				if (!move){
 					Entity.digInDirection(rc, brain, Entity.awayFromEnemies(rc, enemies, brain));
 				}
