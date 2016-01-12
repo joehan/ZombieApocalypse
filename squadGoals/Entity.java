@@ -11,6 +11,8 @@ import battlecode.common.*;
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	
 
 	
 	public static Direction[] bugDirectionsToTry(Direction dir){
@@ -26,9 +28,27 @@ public class Entity {
 		return ret;
 	}
 	
+	public static void scoutEnemy(RobotController rc, Brain brain, RobotInfo[] opponents) throws GameActionException{
+		if (opponents.length > 0){
+			for (RobotInfo opponent : opponents){
+				if ((opponent.type == RobotType.TURRET || opponent.type == RobotType.TTM) && !brain.isEnemyTurret()){
+					Squad.sendEnemyTurretCommand(rc, brain, opponent.location);
+					brain.setEnemyTurret();
+					break;
+				}
+			}
+			for (RobotInfo opponent : opponents){
+				if (opponent.type != RobotType.SCOUT){
+					Squad.sendEnemyFoundCommand(rc, brain, opponent.location);
+					return;
+				}
+			}
+		}
+	}
+	
 	public static void findPartsInRange(RobotController rc, Brain brain, int squaredRange){
-		MapLocation[] spacesInRange = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), squaredRange);
-		for (MapLocation space : spacesInRange){
+		MapLocation[] partLocations = rc.sensePartLocations(squaredRange);
+		for (MapLocation space : partLocations){
 			if (rc.senseParts(space) > 10 && rc.senseRubble(space)<GameConstants.RUBBLE_OBSTRUCTION_THRESH){
 				brain.addPartLocation(space);
 			}

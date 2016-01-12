@@ -21,7 +21,11 @@ public class Archon {
 
 			Entity.updateDenLocations(rc, brain);
 			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
-			if (Entity.inDanger(enemies, rc.getLocation(), true)){
+			if (brain.isEnemyTurret() && brain.enemyLocation.size() > 0){
+				brain.goalLocation = brain.getMostRecentEnemyLocation();
+				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+			}
+			else if (Entity.inDanger(enemies, rc.getLocation(), true)){
 				Squad.sendMoveCommand(rc, brain, rc.getLocation());
 			} else if (memberRequestedHelp) {
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);

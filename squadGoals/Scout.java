@@ -12,11 +12,15 @@ public class Scout {
 		Direction currentDir = randomDir;
 		
 		while (true) {
+			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+			RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			Entity.searchForDen(rc, brain);
+			Entity.scoutEnemy(rc, brain, opponents);
 			if (rc.isCoreReady()) {
-				RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-				boolean move = false;
 				
+				
+				
+				boolean move = false;
 				int randomNum = rand.nextInt(8);
 				int i = 0;
 				while (!move && i < 8){

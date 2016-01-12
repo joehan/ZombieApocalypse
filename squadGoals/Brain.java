@@ -182,9 +182,31 @@ public class Brain {
 		return squadMembers.contains(memberID);
 	}
 	
+	public boolean enemyIsTurret = true;
+	
+	public boolean isEnemyTurret(){
+		return enemyIsTurret;
+	}
+	
+	public void setEnemyTurret(){
+		enemyIsTurret = true;
+	}
+	
 	public Integer[] getSquadMembers(){
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
+	
+	public ArrayList<MapLocation> enemyLocation  = new ArrayList<MapLocation>();
+	
+	public void addEnemyLocation(MapLocation loc){
+		enemyLocation.add(loc);
+	}
+	
+	public MapLocation getMostRecentEnemyLocation(){
+		return enemyLocation.get(enemyLocation.size() - 1);
+	}
+	
+	
 	
 	public void resetMessages(){
 		recruitMessages = new ArrayList<Signal>();

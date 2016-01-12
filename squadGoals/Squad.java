@@ -164,7 +164,16 @@ public class Squad {
 	}
 	
 	public static void sendDeadDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
-		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 10*messageRange(rc));
+		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 2*rc.getLocation().distanceSquaredTo(brain.getStartingLocation()));
+	}
+	
+	public static void sendEnemyFoundCommand(RobotController rc, Brain brain, MapLocation enemy) throws GameActionException{
+		rc.broadcastMessageSignal(foundEnemyCode, Entity.convertMapToSignal(enemy), 2*rc.getLocation().distanceSquaredTo(brain.getStartingLocation()));
+	}
+	
+	public static void sendEnemyTurretCommand(RobotController rc, Brain brain, MapLocation enemy) throws GameActionException{
+		rc.broadcastMessageSignal(enemyTurretCode, Entity.convertMapToSignal(enemy), 
+				2*rc.getLocation().distanceSquaredTo(brain.getStartingLocation()));
 	}
 	
 	/*
@@ -210,8 +219,27 @@ public class Squad {
 	}
 	
 	public static void listenForIntersquadCommunication(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = brain.thisTurnsSignals;
-		for (Signal signal: signals){
+//		Signal[] signals = brain.thisTurnsSignals;
+		for (Signal signal : brain.helpMe){
+			MapLocation friend = signal.getLocation();
+			brain.goalLocation = friend;
+		}
+		for (Signal signal : brain.shareDenLocation){
+			MapLocation den = Entity.convertSignalToMap(signal.getMessage()[1]);
+			brain.addDenLocation(den);
+		}
+		for (Signal signal : brain.deadDen){
+			brain.removeDenLocation(Entity.convertSignalToMap(signal.getMessage()[1]));
+		}
+		for (Signal signal : brain.foundEnemy){
+			brain.addEnemyLocation(Entity.convertSignalToMap(signal.getMessage()[1]));
+		}
+		for (Signal signal : brain.enemyTurret){
+			brain.setEnemyTurret();
+			break;
+		}
+		
+		/*for (Signal signal: signals){
 			int[] message = signal.getMessage();
 			//if
 			if (signal.getTeam()==rc.getTeam() &&  !(message == null) && message[0]>intersquadCodeMinimum){
@@ -223,6 +251,6 @@ public class Squad {
 					brain.addDenLocation(den);
 				}
 			}
-		}
+		}*/
 	}
 }
