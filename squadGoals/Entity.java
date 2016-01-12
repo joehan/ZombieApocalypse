@@ -509,10 +509,6 @@ public class Entity {
         }
 	}
 	
-	public static void signalMessageLocation(RobotController rc, MapLocation loc, int distance) throws GameActionException {
-		rc.broadcastMessageSignal(loc.x, loc.y, distance);
-	}
-	
 	/*
 	 * listenForMessageLocation listens to the message queue, looking for location messages sent by the friendly team.
 	 * If it hears one, it returns the MapLocation described in the message
