@@ -1,11 +1,12 @@
-package copyOfSquadGoals;
+package gudTurretz;
 
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 import battlecode.common.*;
-
+import scala.tools.nsc.settings.RC;
 
 /*
  * Brain is used by robots to track information about the world around them.
@@ -74,8 +75,8 @@ public class Brain {
 		buildHistory.put(type, buildHistory.get(type) +1);
 	}
 	
-	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
-	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	private RobotType[] startBuildArray = {RobotType.TURRET};
+	private RobotType[] iterateBuildArray = {RobotType.TURRET};
 	private int buildCount = 0;
 	private Boolean initialIteration = true;
 	

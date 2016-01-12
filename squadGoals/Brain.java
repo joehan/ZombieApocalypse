@@ -62,18 +62,18 @@ public class Brain {
 	//Remembering what you've built
 	public HashMap<RobotType, Integer> buildHistory; 
 	
-	public void initBuildHistory(){
-		buildHistory = new HashMap<RobotType, Integer>();
-		buildHistory.put(RobotType.GUARD, 0);
-		buildHistory.put(RobotType.SCOUT, 0);
-		buildHistory.put(RobotType.SOLDIER, 0);
-		buildHistory.put(RobotType.TURRET, 0);
-		buildHistory.put(RobotType.VIPER, 0);
-	}
-	
-	public void iterateUnitInBuildHistory(RobotType type){
-		buildHistory.put(type, buildHistory.get(type) +1);
-	}
+//	public void initBuildHistory(){
+//		buildHistory = new HashMap<RobotType, Integer>();
+//		buildHistory.put(RobotType.GUARD, 0);
+//		buildHistory.put(RobotType.SCOUT, 0);
+//		buildHistory.put(RobotType.SOLDIER, 0);
+//		buildHistory.put(RobotType.TURRET, 0);
+//		buildHistory.put(RobotType.VIPER, 0);
+//	}
+//	
+//	public void iterateUnitInBuildHistory(RobotType type){
+//		buildHistory.put(type, buildHistory.get(type) +1);
+//	}
 	
 	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
 	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
@@ -182,19 +182,29 @@ public class Brain {
 		return squadMembers.contains(memberID);
 	}
 	
-	public boolean enemyIsTurret = true;
+	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
 	
-	public boolean isEnemyTurret(){
-		return enemyIsTurret;
+	
+	
+	public void storeEnemyTurret(MapLocation loc){
+		enemyTurrets.add(loc);
 	}
 	
-	public void setEnemyTurret(){
-		enemyIsTurret = true;
-	}
+//	public void setEnemyTurret(){
+//		enemyIsTurret = false;
+//	}
 	
+	public MapLocation swarmLoc = null;
+	public boolean attack = false;
+	
+	public double lastTurnHealth = 0;
+	
+	public Direction lastMovedDirection = null;
 	public Integer[] getSquadMembers(){
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
+	
+	public int startedSwarming = 3000;
 	
 	public ArrayList<MapLocation> enemyLocation  = new ArrayList<MapLocation>();
 	
@@ -206,8 +216,6 @@ public class Brain {
 		return enemyLocation.get(enemyLocation.size() - 1);
 	}
 	
-	
-	
 	public void resetMessages(){
 		recruitMessages = new ArrayList<Signal>();
 		setGoalLocation = new ArrayList<Signal>();
@@ -218,7 +226,9 @@ public class Brain {
 		deadDen = new ArrayList<Signal>();
 		regularMessage = new ArrayList<Signal>();
 		foundEnemy = new ArrayList<Signal>();
-		enemyTurret = new ArrayList<Signal>();
+//		enemyTurret = new ArrayList<Signal>();
+		swarmLocationMessage = new ArrayList<Signal>();
+		attackCode = new ArrayList<Signal>();
 	}
 	
 	public Signal[] thisTurnsSignals;
@@ -231,7 +241,9 @@ public class Brain {
 	public ArrayList<Signal> deadDen = new ArrayList<Signal>();
 	public ArrayList<Signal> regularMessage = new ArrayList<Signal>();
 	public ArrayList<Signal> foundEnemy = new ArrayList<Signal>();
-	public ArrayList<Signal> enemyTurret = new ArrayList<Signal>();
+//	public ArrayList<Signal> enemyTurret = new ArrayList<Signal>();
+	public ArrayList<Signal> swarmLocationMessage = new ArrayList<Signal>();
+	public ArrayList<Signal> attackCode = new ArrayList<Signal>();
 
 	
 	public Random rand;

@@ -1,18 +1,15 @@
-package squadGoals;
+package gudTurretz;
 
 import java.util.Arrays.*;
 import java.util.*;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import squadGoals.Brain;
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
-	
-	
 
 	
 	public static Direction[] bugDirectionsToTry(Direction dir){
@@ -28,45 +25,9 @@ public class Entity {
 		return ret;
 	}
 	
-	public static void scoutEnemy(RobotController rc, Brain brain, RobotInfo[] opponents) throws GameActionException{
-		if (opponents.length > 0){
-			for (RobotInfo opponent : opponents){
-				if ((opponent.type == RobotType.TURRET || opponent.type == RobotType.TTM) 
-						&& !brain.enemyTurrets.contains(opponent.location)){
-					Squad.sendEnemyFoundCommand(rc, brain, opponent.location);
-					brain.storeEnemyTurret(opponent.location);
-					brain.addEnemyLocation(opponent.location);
-					break;
-				}
-			}
-//			for (RobotInfo opponent : opponents){
-//				if (opponent.type != RobotType.SCOUT){
-//					Squad.sendEnemyFoundCommand(rc, brain, opponent.location);
-//					return;
-//				}
-//			}
-		}
-	}
-	
-	public static MapLocation getClosestPartWithinRange(RobotController rc, Brain brain, int range){
-		int closest = 100;
-		MapLocation part = rc.getLocation();
-		for (MapLocation partLoc : brain.getPartLocations()){
-			int dist = rc.getLocation().distanceSquaredTo(partLoc);
-			if (dist < range && dist < closest){
-				closest = dist;
-				part = partLoc;
-			}
-		}
-		if (closest < 99){
-			return part;
-		}
-		return null;
-	}
-	
 	public static void findPartsInRange(RobotController rc, Brain brain, int squaredRange){
-		MapLocation[] partLocations = rc.sensePartLocations(squaredRange);
-		for (MapLocation space : partLocations){
+		MapLocation[] spacesInRange = MapLocation.getAllMapLocationsWithinRadiusSq(rc.getLocation(), squaredRange);
+		for (MapLocation space : spacesInRange){
 			if (rc.senseParts(space) > 10 && rc.senseRubble(space)<GameConstants.RUBBLE_OBSTRUCTION_THRESH){
 				brain.addPartLocation(space);
 			}
@@ -312,7 +273,7 @@ public class Entity {
 					brain.addDenLocation(zombie.location);
 					if (rc.getType() == RobotType.SCOUT || rc.getType() == RobotType.ARCHON){
 						Squad.shareDenLocation(rc, brain, zombie.location, 
-							2*rc.getLocation().distanceSquaredTo(brain.getStartingLocation()));
+							(int) (1.3*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
 						rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
 					}
 
@@ -334,9 +295,9 @@ public class Entity {
 		return closestEnemy;
 	}
 	
-	public static boolean retreatMove(RobotController rc, Brain brain, RobotInfo[] enemies, RobotInfo closestEnemy) throws GameActionException{
+	public static boolean retreatMove(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
 		if (rc.isCoreReady()){
-			RobotInfo nearestEnemy = closestEnemy;
+			RobotInfo nearestEnemy = Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation());
 			Direction[] dirToTry = directionsToTry(rc.getLocation().directionTo(nearestEnemy.location).opposite());
 			int currentDistToEnemy = rc.getLocation().distanceSquaredTo(nearestEnemy.location);
 			if (nearestEnemy.type.attackRadiusSquared > 3){
@@ -375,15 +336,15 @@ public class Entity {
 		return false;
 	}
 	
-	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies,
-			RobotInfo closestEnemy) throws GameActionException{
+	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
 		if (rc.isCoreReady()){
 			int maxAttackRange = rc.getType().attackRadiusSquared;
 			MapLocation robotLocation = rc.getLocation();
-			RobotInfo enemy = closestEnemy;
+			RobotInfo enemy = Entity.findClosestEnemy(rc, brain, enemies, robotLocation);
 			MapLocation enemyLoc = enemy.location;
 			Direction dirToEnemy = robotLocation.directionTo(enemyLoc);
 			Direction[] dirToTri = directionsToTry(dirToEnemy.opposite());
+			int currentDistance = robotLocation.distanceSquaredTo(enemyLoc);
 			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13 &&
 					(enemy.coreDelay > 2.0 || !(enemy.team == Team.ZOMBIE) || enemy.type == RobotType.ZOMBIEDEN))){
 				for (Direction dir : dirToTri){
@@ -412,6 +373,7 @@ public class Entity {
 		}
 		return false;
 	}
+	
 	
 	public static void updateDenLocations(RobotController rc, Brain brain) throws GameActionException {
 		for (MapLocation den : brain.getDenLocations()){
@@ -488,53 +450,65 @@ public class Entity {
 			moveTowards(rc, towardLoc);
 		}
 	}
-	
-	public static boolean moveTowardBug(RobotController rc, Brain brain, Direction dir) throws GameActionException{
-		Direction currentDir = dir;
-		if (brain.lastMovedDirection == null){
-			brain.lastMovedDirection = dir;
-		}
-		if (brain.lastMovedDirection != dir && brain.lastMovedDirection != dir.rotateLeft()){
-			currentDir = brain.lastMovedDirection.rotateLeft();
-		}
-		for (int i = 0; i < 5; i ++){
-			if (rc.canMove(currentDir)){
-				brain.lastMovedDirection = currentDir;
-				rc.move(currentDir);
-				return true;
+	public static void moveTowards(RobotController rc, Direction dir){
+		if (rc.isCoreReady()){
+			try {
+				if (rc.canMove(dir)){
+					rc.move(dir);
+				}
+				else if (rc.canMove(dir.rotateLeft())){
+					rc.move(dir.rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateRight())){
+					rc.move(dir.rotateRight());
+				}
+				else if (rc.canMove(dir.rotateLeft().rotateLeft())){
+					rc.move(dir.rotateLeft().rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight());
+				}
 			}
-			else {
-				currentDir = currentDir.rotateRight();
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}
-		return false;
 	}
 	
-	public static boolean moveTowards(RobotController rc, Direction dir) throws GameActionException{
+	public static void bugTowards(RobotController rc, Direction dir){
 		if (rc.isCoreReady()){
-			if (rc.canMove(dir)){
-				rc.move(dir);
-				return true;
+			try {
+				if (rc.canMove(dir)){
+					rc.move(dir);
+				}
+				else if (rc.canMove(dir.rotateLeft())){
+					rc.move(dir.rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateLeft().rotateLeft())){
+					rc.move(dir.rotateLeft().rotateLeft());
+				}
+				else if (rc.canMove(dir.rotateLeft().rotateLeft().rotateLeft())){
+					rc.move(dir.rotateLeft().rotateLeft().rotateLeft());
+				}
+				else if (rc.canMove(dir.opposite())){
+					rc.move(dir.opposite());
+				} 
+				else if (rc.canMove(dir.opposite().rotateLeft())){
+					rc.move(dir.opposite().rotateLeft());
+				}
+				else if (rc.canMove(dir.opposite().rotateLeft().rotateLeft())){
+					rc.move(dir.opposite().rotateLeft().rotateLeft());
+				}
+				else if (rc.canMove(dir.opposite().rotateLeft().rotateLeft().rotateLeft())){
+					rc.move(dir.opposite().rotateLeft().rotateLeft().rotateLeft());
+				}
 			}
-			else if (rc.canMove(dir.rotateLeft())){
-				rc.move(dir.rotateLeft());
-				return true;
-			}
-			else if (rc.canMove(dir.rotateRight())){
-				rc.move(dir.rotateRight());
-				return true;
-			}
-			else if (rc.canMove(dir.rotateLeft().rotateLeft())){
-				rc.move(dir.rotateLeft().rotateLeft());
-				return true;
-
-			}
-			else if (rc.canMove(dir.rotateRight().rotateRight())){
-				rc.move(dir.rotateRight().rotateRight());
-				return true;
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}
-		return false;
 	}
 	
 	public static boolean moveInDirection(RobotController rc, Direction dir) throws GameActionException{

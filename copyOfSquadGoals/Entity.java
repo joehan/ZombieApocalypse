@@ -3,7 +3,7 @@ package copyOfSquadGoals;
 import java.util.Arrays.*;
 import java.util.*;
 
-//import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import battlecode.common.*;
 /*

@@ -1,4 +1,4 @@
-package squadGoals;
+package gudTurretz;
 
 import java.util.Random;
 
@@ -17,7 +17,6 @@ public class RobotPlayer {
 				Brain brain = new Brain();
 				brain.rand = new Random(rc.getID());
 				brain.setStartingLocation(rc.getLocation());
-				brain.lastTurnHealth = rc.getHealth();
 			    
 				if (type == RobotType.ARCHON) {
 					Archon archon = new Archon();

@@ -1,4 +1,4 @@
-package squadGoals;
+package gudTurretz;
 
 import java.util.Random;
 
@@ -12,19 +12,11 @@ public class Scout {
 		Direction currentDir = randomDir;
 		
 		while (true) {
-			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-			RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			Entity.searchForDen(rc, brain);
-			Entity.scoutEnemy(rc, brain, opponents);
-			
-			if (brain.enemyLocation.size()>0){
-				rc.setIndicatorString(0, brain.getMostRecentEnemyLocation().toString());
-			}
 			if (rc.isCoreReady()) {
-				
-				
-				
+				RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 				boolean move = false;
+				
 				int randomNum = rand.nextInt(8);
 				int i = 0;
 				while (!move && i < 8){
