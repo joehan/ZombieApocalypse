@@ -17,6 +17,7 @@ public class RobotPlayer {
 				Brain brain = new Brain();
 				brain.rand = new Random(rc.getID());
 				brain.setStartingLocation(rc.getLocation());
+				brain.lastTurnsHealth = rc.getHealth();
 			    
 				if (type == RobotType.ARCHON) {
 					Archon archon = new Archon();

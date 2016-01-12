@@ -41,6 +41,7 @@ public class Entity {
 		return ret;
 	}
 	
+
 	public static MapLocation[] findPartsInRange(RobotController rc, Brain brain){
 		MapLocation partLocations[] = rc.sensePartLocations(rc.getType().sensorRadiusSquared);
 		ArrayList<MapLocation> unobstructedParts = new ArrayList<MapLocation>();
