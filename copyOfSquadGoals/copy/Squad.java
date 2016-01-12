@@ -1,4 +1,4 @@
-package squadGoals;
+package copyOfSquadGoals.copy;
 
 import java.util.HashSet;
 
