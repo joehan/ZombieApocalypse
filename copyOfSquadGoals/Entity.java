@@ -5,11 +5,27 @@ import java.util.*;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import copyOfSquadGoals.Brain;
+import copyOfSquadGoals.Squad;
+
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static void scoutEnemy(RobotController rc, Brain brain, RobotInfo[] opponents) throws GameActionException{
+		if (opponents.length > 0){
+			for (RobotInfo opponent : opponents){
+				if ((opponent.type == RobotType.TURRET || opponent.type == RobotType.TTM) 
+						&& !brain.enemyTurrets.contains(opponent.location)){
+					Squad.sendEnemyFoundCommand(rc, brain, opponent.location);
+					brain.storeEnemyTurret(opponent.location);
+					break;
+				}
+			}
+		}
+	}
 
 	
 	public static Direction[] bugDirectionsToTry(Direction dir){

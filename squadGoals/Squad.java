@@ -10,6 +10,9 @@ public class Squad {
 	public final static int setGoalLocationCode = 2;
 	public final static int clearGoalLocationCode = 3;
 	public final static int denCode = 4;
+	public final static int squadAttackTurretCode = 5;
+	public final static int swarmLocationCode = 6;
+	public final static int attackCode = 7;
 	
 	//Intersquad codes
 	public final static int intersquadCodeMinimum = 100;
@@ -38,6 +41,28 @@ public class Squad {
 					case denCode:
 						brain.den.add(signal);
 						break;
+					case helpMeCode:
+						brain.helpMe.add(signal);
+						break;
+					case shareDenLocationCode:
+						brain.shareDenLocation.add(signal);
+						break;
+					case deadDenCode:
+						brain.deadDen.add(signal);
+						break;
+					case foundEnemyCode:
+						rc.setIndicatorString(1, "found an enemy");
+						brain.foundEnemy.add(signal);
+						break;
+//					case enemyTurretCode:
+//						brain.enemyTurret.add(signal);
+//						break;
+					case swarmLocationCode:
+						brain.swarmLocationMessage.add(signal);
+						break;
+					case attackCode:
+						brain.attackCode.add(signal);
+						break;
 				}
 			}
 			else if (signal.getMessage() != null){
@@ -54,11 +79,18 @@ public class Squad {
 					case deadDenCode:
 						brain.deadDen.add(signal);
 						break;
-					case foundEnemyCode:
-						brain.foundEnemy.add(signal);
+//					case foundEnemyCode:
+//						rc.setIndicatorString(1, "found an enemy");
+//						brain.foundEnemy.add(signal);
+//						break;
+//					case enemyTurretCode:
+//						brain.enemyTurret.add(signal);
+//						break;
+					case swarmLocationCode:
+						brain.swarmLocationMessage.add(signal);
 						break;
-					case enemyTurretCode:
-						brain.enemyTurret.add(signal);
+					case attackCode:
+						brain.attackCode.add(signal);
 						break;
 				}
 			} else {
@@ -69,7 +101,12 @@ public class Squad {
 	
 	
 	public static void recruit(RobotController rc, Brain brain) throws GameActionException {
-		rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
+		if (rc.getRoundNum()%10 == 0){
+			rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 10*messageRange(rc));
+		}
+		else {
+			rc.broadcastMessageSignal(recruitCode, brain.getSquadMembers().length, 72);
+		}
 	}
 	
 	/*
@@ -77,8 +114,8 @@ public class Squad {
 	 * all the squad messages
 	 */
 	public static boolean processSquadMessages(RobotController rc, Brain brain){
-		Signal[] signals = brain.thisTurnsSignals;
-		for (Signal signal : signals){
+		
+		for (Signal signal : brain.regularMessage){
 			if (brain.memberInSquad(signal.getID()) && (brain.goalLocation == null)){
 				Direction dirToFriend = rc.getLocation().directionTo(signal.getLocation());
 				brain.goalLocation = signal.getLocation().add(dirToFriend, 4);
@@ -164,7 +201,26 @@ public class Squad {
 	}
 	
 	public static void sendDeadDenCommand(RobotController rc, Brain brain, MapLocation den) throws GameActionException {
-		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 10*messageRange(rc));
+		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), Math.max(5*messageRange(rc),
+				2*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+	}
+	
+	public static void sendEnemyFoundCommand(RobotController rc, Brain brain, MapLocation enemy) throws GameActionException{
+		rc.broadcastMessageSignal(foundEnemyCode, Entity.convertMapToSignal(enemy), Math.max(5*messageRange(rc),
+				10*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+	}
+	
+	public static void sendSwarmCommand(RobotController rc, Brain brain, MapLocation swarmTo) throws GameActionException{
+		rc.broadcastMessageSignal(swarmLocationCode, Entity.convertMapToSignal(swarmTo), Math.max(5*messageRange(rc),
+				2*rc.getLocation().distanceSquaredTo(brain.getStartingLocation())));
+	}
+	
+	public static void sendEnemyTurretCommand(RobotController rc, Brain brain, MapLocation enemy) throws GameActionException{
+		rc.broadcastMessageSignal(enemyTurretCode, Entity.convertMapToSignal(enemy), 15*messageRange(rc));
+	}
+	
+	public static void sendAttackCommand(RobotController rc, Brain brain, MapLocation enemy) throws GameActionException{
+		rc.broadcastMessageSignal(attackCode, Entity.convertMapToSignal(enemy), 15*messageRange(rc));
 	}
 	
 	/*
@@ -186,11 +242,9 @@ public class Squad {
 //		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal : brain.setGoalLocation){
 			//if it's from our leader,
-			int[] message = signal.getMessage();
 			brain.goalLocation = Entity.convertSignalToMap(signal.getMessage()[1]);
 		}
 		for (Signal signal : brain.clearGoalLocation){
-			int[] message = signal.getMessage();				
 			brain.goalLocation = null;
 		}
 		for (Signal signal : brain.den){
@@ -207,22 +261,36 @@ public class Squad {
 			int[] message = signal.getMessage();
 			brain.removeDenLocation(Entity.convertSignalToMap(message[1]));
 		}
+		for (Signal signal : brain.swarmLocationMessage){
+			int[] message = signal.getMessage();
+			brain.swarmLoc = Entity.convertSignalToMap(message[1]);
+		}
+		for (Signal signal : brain.attackCode){
+			brain.attack = true;
+		}
 	}
 	
 	public static void listenForIntersquadCommunication(RobotController rc, Brain brain) throws GameActionException {
-		Signal[] signals = brain.thisTurnsSignals;
-		for (Signal signal: signals){
-			int[] message = signal.getMessage();
-			//if
-			if (signal.getTeam()==rc.getTeam() &&  !(message == null) && message[0]>intersquadCodeMinimum){
-				if (message[0] == helpMeCode){
-					MapLocation friend = signal.getLocation();
-					brain.goalLocation = friend;
-				} else if (message[0] == shareDenLocationCode){
-					MapLocation den = Entity.convertSignalToMap(message[1]);
-					brain.addDenLocation(den);
-				}
-			}
+//		Signal[] signals = brain.thisTurnsSignals;
+		for (Signal signal : brain.helpMe){
+			MapLocation friend = signal.getLocation();
+			brain.goalLocation = friend;
 		}
+		for (Signal signal : brain.shareDenLocation){
+			MapLocation den = Entity.convertSignalToMap(signal.getMessage()[1]);
+			brain.addDenLocation(den);
+		}
+		for (Signal signal : brain.deadDen){
+			brain.removeDenLocation(Entity.convertSignalToMap(signal.getMessage()[1]));
+		}
+		for (Signal signal : brain.foundEnemy){
+			brain.addEnemyLocation(Entity.convertSignalToMap(signal.getMessage()[1]));
+			brain.enemyTurrets.add(Entity.convertSignalToMap(signal.getMessage()[1]));
+		}
+//		for (Signal signal : brain.enemyTurret){
+//			brain.setEnemyTurret();
+//			break;
+//		}
+		
 	}
 }

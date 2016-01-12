@@ -2,6 +2,8 @@ package copyOfSquadGoals;
 
 import java.util.Random;
 
+import copyOfSquadGoals.Entity;
+
 import battlecode.common.*;
 
 public class Scout {
@@ -12,7 +14,10 @@ public class Scout {
 		Direction currentDir = randomDir;
 		
 		while (true) {
+			RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			Entity.searchForDen(rc, brain);
+			Entity.scoutEnemy(rc, brain, opponents);
+
 			if (rc.isCoreReady()) {
 				RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 				boolean move = false;

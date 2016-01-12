@@ -1,12 +1,11 @@
 package copyOfSquadGoals;
 
 import java.util.HashSet;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 import battlecode.common.*;
-import scala.tools.nsc.settings.RC;
+
 
 /*
  * Brain is used by robots to track information about the world around them.
@@ -73,6 +72,12 @@ public class Brain {
 	
 	public void iterateUnitInBuildHistory(RobotType type){
 		buildHistory.put(type, buildHistory.get(type) +1);
+	}
+	
+	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
+
+	public void storeEnemyTurret(MapLocation loc){
+		enemyTurrets.add(loc);
 	}
 	
 	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
