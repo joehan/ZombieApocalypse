@@ -144,6 +144,10 @@ public class Squad {
 		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , distance);
 	}
 	
+	public static void shareLocation(RobotController rc, Brain brain) throws GameActionException{
+		rc.broadcastMessageSignal(shareLocationCode, 0, 8 * rc.getType().sensorRadiusSquared);
+	}
+	
 	/*
 	 * callForBigAttackLocation asks all other squads to come and set up for an group attack on a location
 	 */

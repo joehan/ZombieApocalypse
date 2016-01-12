@@ -18,7 +18,22 @@ public class Archon {
 
 			Entity.updateDenLocations(rc, brain);
 			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
-			if (Entity.inDanger(enemies, rc.getLocation(), true)){
+			if (brain.enemyTurrets.size() > 2 && !brain.murderMode) {
+				Squad.callForBigAttackLocation(rc, brain, brain.getEnemyTurrets()[0]);
+				brain.murderMode = true;
+			} else if (brain.murderMode) {
+				Squad.shareLocation(rc,brain);
+				MapLocation[] leaderLocations = brain.getArchonLocations();
+				boolean timeToAttack = true;
+				for (MapLocation leader : leaderLocations) {
+					if (leader.distanceSquaredTo(brain.bigAttackTarget) > 99) {
+						timeToAttack = false;
+					}
+				}
+				if (timeToAttack) { 
+					Squad.sendMoveCommand(rc, brain, brain.bigAttackTarget.add(rc.getLocation().directionTo(brain.bigAttackTarget), 3));
+				}
+			} else if (Entity.inDanger(enemies, rc.getLocation(), true)){
 				Squad.sendMoveCommand(rc, brain, rc.getLocation());
 			} else if (memberRequestedHelp) {
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
@@ -52,7 +67,11 @@ public class Archon {
 			if (rc.isCoreReady()){
 				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), true);
 				boolean moved = false;
-				if (inDanger){
+				if (brain.murderMode){
+					if (rc.getLocation().distanceSquaredTo(brain.bigAttackTarget) > 80){
+						Entity.moveTowards(rc, rc.getLocation().directionTo(brain.bigAttackTarget));
+					}
+				} else if (inDanger){
 					Squad.sendHelpMessage(rc, brain, 10*rc.getType().sensorRadiusSquared);
 					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, true);
 					if (!moved){

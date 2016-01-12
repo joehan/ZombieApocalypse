@@ -15,7 +15,7 @@ import battlecode.common.*;
  */
 public class Brain {
 	
-	
+	public boolean murderMode = false;
 	//Remember where we've seen parts
 	private HashSet<MapLocation> partLocations = new HashSet<MapLocation>();
 	
@@ -75,6 +75,10 @@ public class Brain {
 	}
 	
 	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
+	
+	public MapLocation[] getEnemyTurrets(){
+		return enemyTurrets.toArray(new MapLocation[enemyTurrets.size()]);
+	}
 
 	public void storeEnemyTurret(MapLocation loc){
 		enemyTurrets.add(loc);
