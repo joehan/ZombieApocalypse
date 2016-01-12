@@ -186,6 +186,18 @@ public class Brain {
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
 	
+	public MapLocation bigAttackTarget = null;
+	
+	private HashMap<Integer, MapLocation> archonLocations = new HashMap<Integer, MapLocation>();
+	
+	public MapLocation[] getArchonLocations(){
+		return archonLocations.values().toArray(new MapLocation[archonLocations.size()]);
+	}
+	
+	public void updateArchonLocation(int archonID, MapLocation currentLoc){
+		archonLocations.put(archonID, currentLoc);
+	}
+	
 	public Signal[] thisTurnsSignals;
 	public Random rand;
 }

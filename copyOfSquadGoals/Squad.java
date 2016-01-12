@@ -15,7 +15,9 @@ public class Squad {
 	public static int intersquadCodeMinimum = 100;
 	public static int helpMeCode = 101;
 	public static int shareDenLocationCode = 102;
-	public static int deadDenCode = 105;
+	public static int deadDenCode = 103;
+	public static int bigAttackCode = 104;
+	public static int shareLocationCode = 105;
 
 	
 	
@@ -135,6 +137,13 @@ public class Squad {
 		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , distance);
 	}
 	
+	/*
+	 * callForBigAttackLocation asks all other squads to come and set up for an group attack on a location
+	 */
+	public static void callForBigAttackLocation(RobotController rc, Brain brain, MapLocation target) throws GameActionException {
+		rc.broadcastMessageSignal(bigAttackCode, Entity.convertMapToSignal(target), 31*rc.getType().sensorRadiusSquared);
+	}
+	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
 		Signal[] signals = brain.thisTurnsSignals;
 		for (Signal signal : signals){
@@ -175,6 +184,12 @@ public class Squad {
 				} else if (message[0] == shareDenLocationCode){
 					MapLocation den = Entity.convertSignalToMap(message[1]);
 					brain.addDenLocation(den);
+				} else if (message[0] == bigAttackCode) {
+					MapLocation target = Entity.convertSignalToMap(message[1]);
+					brain.bigAttackTarget = target;
+				} else if (message[0] == shareLocationCode) {
+					MapLocation otherArchon = Entity.convertSignalToMap(message[1]);
+					
 				}
 			}
 		}

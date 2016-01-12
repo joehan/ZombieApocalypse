@@ -35,7 +35,7 @@ public class Archon {
 				if (rc.getLocation().distanceSquaredTo(brain.goalLocation)>3){
 					Entity.bugTowards(rc, rc.getLocation().directionTo(brain.goalLocation));
 				} else {
-					tryBuildUnitInEmptySpace(rc,brain,typeToBuild, Direction.NORTH);
+					tryBuildUnitInEmptySpace(rc,brain,typeToBuild, Entity.directions[brain.rand.nextInt(8)]);
 				}
 			}
 			

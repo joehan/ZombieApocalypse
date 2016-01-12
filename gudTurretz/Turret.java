@@ -32,7 +32,7 @@ public class Turret {
 		}
 		if (!attacked && !attackedBySound && enemies.length == 0 && brain.getSquadNum()!=-1) {
 			Squad.findLeaderLocation(rc, brain);
-			if (rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) <= 3){
+			if (rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) <= 8){
 				rc.pack();
 			}
 		}
@@ -40,7 +40,8 @@ public class Turret {
 	
 	public void ttmRun(RobotController rc, Brain brain) throws GameActionException {
 		RobotInfo[] enemiesInRange = rc.senseHostileRobots(rc.getLocation(), RobotType.TURRET.sensorRadiusSquared);
-		if (enemiesInRange.length>0 || rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation)>3){
+		RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+		if (enemiesInRange.length>0 || rc.getLocation().distanceSquaredTo(Entity.findClosestArchon(rc, brain, allies))>8){
 			rc.unpack();
 		} else if (rc.isCoreReady()){
 			Direction dirToMove = brain.leadersLastKnownLocation.directionTo(rc.getLocation());
