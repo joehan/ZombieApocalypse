@@ -9,9 +9,12 @@ public class Archon {
 		brain.initBuildHistory();
 		Direction currentDirection = Entity.directions[brain.rand.nextInt(8)];
 		while (true) {
+			
 
 			RobotType typeToBuild = buildNextUnit(brain);
 			brain.thisTurnsSignals = rc.emptySignalQueue();
+			Squad.processMessages(rc, brain);
+
 			Squad.listenForIntersquadCommunication(rc, brain);
 			//Look for dens
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);

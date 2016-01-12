@@ -296,9 +296,9 @@ public class Entity {
 		return closestEnemy;
 	}
 	
-	public static boolean retreatMove(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
+	public static boolean retreatMove(RobotController rc, Brain brain, RobotInfo[] enemies, RobotInfo closestEnemy) throws GameActionException{
 		if (rc.isCoreReady()){
-			RobotInfo nearestEnemy = Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation());
+			RobotInfo nearestEnemy = closestEnemy;
 			Direction[] dirToTry = directionsToTry(rc.getLocation().directionTo(nearestEnemy.location).opposite());
 			int currentDistToEnemy = rc.getLocation().distanceSquaredTo(nearestEnemy.location);
 			if (nearestEnemy.type.attackRadiusSquared > 3){
@@ -337,15 +337,15 @@ public class Entity {
 		return false;
 	}
 	
-	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
+	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies,
+			RobotInfo closestEnemy) throws GameActionException{
 		if (rc.isCoreReady()){
 			int maxAttackRange = rc.getType().attackRadiusSquared;
 			MapLocation robotLocation = rc.getLocation();
-			RobotInfo enemy = Entity.findClosestEnemy(rc, brain, enemies, robotLocation);
+			RobotInfo enemy = closestEnemy;
 			MapLocation enemyLoc = enemy.location;
 			Direction dirToEnemy = robotLocation.directionTo(enemyLoc);
 			Direction[] dirToTri = directionsToTry(dirToEnemy.opposite());
-			int currentDistance = robotLocation.distanceSquaredTo(enemyLoc);
 			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13 &&
 					(enemy.coreDelay > 2.0 || !(enemy.team == Team.ZOMBIE) || enemy.type == RobotType.ZOMBIEDEN))){
 				for (Direction dir : dirToTri){
@@ -374,7 +374,6 @@ public class Entity {
 		}
 		return false;
 	}
-	
 	
 	public static void updateDenLocations(RobotController rc, Brain brain) throws GameActionException {
 		for (MapLocation den : brain.getDenLocations()){
