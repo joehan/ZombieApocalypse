@@ -18,22 +18,23 @@ public class Archon {
 
 			Entity.updateDenLocations(rc, brain);
 			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
-			if (brain.enemyTurrets.size() > 2 && !brain.murderMode) {
-				Squad.callForBigAttackLocation(rc, brain, brain.getEnemyTurrets()[0]);
-				brain.murderMode = true;
-			} else if (brain.murderMode) {
-				Squad.shareLocation(rc,brain);
-				MapLocation[] leaderLocations = brain.getArchonLocations();
-				boolean timeToAttack = true;
-				for (MapLocation leader : leaderLocations) {
-					if (leader.distanceSquaredTo(brain.bigAttackTarget) > 99) {
-						timeToAttack = false;
-					}
-				}
-				if (timeToAttack) { 
-					Squad.sendMoveCommand(rc, brain, brain.bigAttackTarget.add(rc.getLocation().directionTo(brain.bigAttackTarget), 3));
-				}
-			} else if (Entity.inDanger(enemies, rc.getLocation(), true)){
+//			if (brain.enemyTurrets.size() > 2 && !brain.murderMode) {
+//				Squad.callForBigAttackLocation(rc, brain, brain.getEnemyTurrets()[0]);
+//				brain.murderMode = true;
+//			} else if (brain.murderMode) {
+//				Squad.shareLocation(rc,brain);
+//				MapLocation[] leaderLocations = brain.getArchonLocations();
+//				boolean timeToAttack = true;
+//				for (MapLocation leader : leaderLocations) {
+//					if (leader.distanceSquaredTo(brain.bigAttackTarget) > 99) {
+//						timeToAttack = false;
+//					}
+//				}
+//				if (timeToAttack) { 
+//					Squad.sendMoveCommand(rc, brain, brain.bigAttackTarget.add(rc.getLocation().directionTo(brain.bigAttackTarget), 3));
+//				}
+//			} else 
+			if (Entity.inDanger(enemies, rc.getLocation(), true)){
 				Squad.sendMoveCommand(rc, brain, rc.getLocation());
 			} else if (memberRequestedHelp) {
 				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
@@ -63,13 +64,14 @@ public class Archon {
 			//shareInfo(rc,  brain);
 			
 			//Look for nearby parts
-			Entity.findPartsInRange(rc, brain, 35);
+			 
+			 MapLocation[] partLocations = Entity.findPartsInRange(rc, brain);
 			if (rc.isCoreReady()){
 				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), true);
 				boolean moved = false;
 				if (brain.murderMode){
 					if (rc.getLocation().distanceSquaredTo(brain.bigAttackTarget) > 80){
-						Entity.moveTowards(rc, rc.getLocation().directionTo(brain.bigAttackTarget));
+						Entity.moveTowardBug(rc, brain, rc.getLocation().directionTo(brain.bigAttackTarget));
 					}
 				} else if (inDanger){
 					Squad.sendHelpMessage(rc, brain, 10*rc.getType().sensorRadiusSquared);
@@ -91,7 +93,10 @@ public class Archon {
 					rc.setIndicatorString(0, "Activated Robot");
 				} else if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
-				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
+				} else if (partLocations.length > 0){
+					Entity.moveTowardBug(rc, brain, rc.getLocation().directionTo(partLocations[0]));
+				}
+				else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
 					Entity.moveTowards(rc, rc.getLocation().directionTo(brain.goalLocation));
 //					Entity.safeMove(rc, brain, enemies, brain.goalLocation, false);
 					brain.removePartLocation(rc.getLocation());

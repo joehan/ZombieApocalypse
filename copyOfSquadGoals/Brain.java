@@ -15,6 +15,7 @@ import battlecode.common.*;
  */
 public class Brain {
 	
+	public Direction lastMovedDirection = null;
 	public boolean murderMode = false;
 	//Remember where we've seen parts
 	private HashSet<MapLocation> partLocations = new HashSet<MapLocation>();

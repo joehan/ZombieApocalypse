@@ -56,7 +56,7 @@ public class Soldier {
 					Entity.digInDirection(rc, brain, Entity.awayFromEnemies(rc, enemies, brain));
 				}
 			} else if (brain.goalLocation != null && rc.isCoreReady() && enemies.length == 0){
-				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.goalLocation));
+				Entity.moveTowardBug(rc, brain, rc.getLocation().directionTo(brain.goalLocation));
 			} else if (rc.isCoreReady() &&
 					(brain.leadersLastKnownLocation!= null && 
 					rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) > 33)
