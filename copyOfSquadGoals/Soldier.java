@@ -8,8 +8,6 @@ public class Soldier {
 
 	public void run(RobotController rc, Brain brain) throws GameActionException{
 
-		Random rand = new Random(rc.getID());
-
 		while (true) {
 			//			if (rc.isCoreReady()) {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
@@ -26,12 +24,17 @@ public class Soldier {
 			Entity.updateDenLocations(rc, brain);
 			RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 			RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
+			RobotInfo nearestEnemy = null;
+			if (opponents.length>0){
+				nearestEnemy = Entity.findClosestEnemy(rc, brain, opponents, rc.getLocation());
+			}
 			if (opponents.length > 0 && !(brain.leadersLastKnownLocation == null) 
 					&& rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) < 100 && 
 					rc.getLocation().distanceSquaredTo(Entity.findClosestEnemy(
 							rc, brain, opponents, rc.getLocation()).location) > 13){
 				rc.broadcastSignal(rc.getType().sensorRadiusSquared*2);
 			}
+			
 			boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), false);
 			if (inDanger){
 				Entity.safeMove(rc, brain, enemies, Direction.NONE, false);
@@ -39,8 +42,10 @@ public class Soldier {
 			Boolean attack = Entity.attackHostiles(rc, enemies);
 			if (attack) {
 				rc.setIndicatorString(1, "Attacking");
+			} else if (nearestEnemy != null && nearestEnemy.type == RobotType.TURRET){
+				Entity.moveTowards(rc, rc.getLocation().directionTo(nearestEnemy.location));
 			} else if (rc.getHealth() < rc.getType().maxHealth /3 && enemies.length > 0){
-				Entity.retreatMove(rc, brain, enemies);
+					Entity.retreatMove(rc, brain, enemies);
 			} else if (rc.getHealth() < rc.getType().maxHealth /3 && brain.leadersLastKnownLocation != null) {
 				Entity.moveTowards(rc, rc.getLocation().directionTo(brain.leadersLastKnownLocation));
 			} else if (rc.isCoreReady() && inDanger){
