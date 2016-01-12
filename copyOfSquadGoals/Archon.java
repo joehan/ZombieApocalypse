@@ -37,8 +37,7 @@ public class Archon {
 					Squad.sendHelpMessage(rc, brain, 4*rc.getType().sensorRadiusSquared);
 				} else if (brain.goalLocation != null){
 					Squad.sendMoveCommand(rc, brain, brain.goalLocation);
-				}
-				if (memberRequestedHelp) {
+				} if (memberRequestedHelp) {
 					Squad.sendMoveCommand(rc, brain, brain.goalLocation);
 				} else if (brain.getDenLocations().length >0){
 					brain.goalLocation = Entity.getNearestDen(rc, brain);

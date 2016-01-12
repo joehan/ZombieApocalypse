@@ -106,7 +106,7 @@ public class Squad {
 	}
 	
 	public static int messageRange(RobotController rc){
-		if (rc.getRoundNum() % 80 == 0) {
+		if (rc.getRoundNum() % 40 == 0) {
 			return 31*rc.getType().sensorRadiusSquared;
 		} else {
 			return 2*rc.getType().sensorRadiusSquared;
