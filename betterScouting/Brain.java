@@ -1,7 +1,8 @@
 package betterScouting;
 
-import battlecode.common.MapLocation;
-import battlecode.common.RobotType;
+
+import battlecode.common.*;
+
 
 public class Brain {
 
@@ -45,7 +46,20 @@ public class Brain {
 	private double middleX = 0;
 	private double middleY = 0;
 	
+	private RobotInfo[] enemyInfo = new RobotInfo[10000];
 	
+	public boolean isArchon(int id){
+		return enemyInfo[id] != null && enemyInfo[id].type == RobotType.ARCHON;
+	}
+	
+	public void addArchon(RobotInfo archonInfo){
+		enemyInfo[archonInfo.ID] = archonInfo;
+	}
+	
+	/*
+	 * This method should be called on the first turn of a robot's existence in order to calculate the
+	 * map symmetry.  This method needs to be called before flipAcrossAxis can be called.
+	 */
 	public void getMapSymmetry(MapLocation[] ourTeam, MapLocation[] enemyTeam) {
 		int ourX = 0;
 		int ourY = 0;
@@ -93,6 +107,14 @@ public class Brain {
 		}
 	}
 	
+	/*
+	 * This method will get the map location that is symmetric about the axis of symmetry.  
+	 * This is useful for finding den locations, parts, and neutral robots as they will always
+	 * be symetric about this axes.
+	 * 
+	 * Note that there are some rounding errors and the MapLocation returned may be off by a coordinate
+	 * in any direction
+	 */
 	public MapLocation flipAcrossAxis(MapLocation loc){
 		double diffx;
 		double diffy;

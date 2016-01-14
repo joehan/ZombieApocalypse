@@ -7,6 +7,20 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+	/*
+	 * This method will look at all enemies in enemies, check if there are any archons, and if so
+	 * add them to the archon store in brain.
+	 */
+	public static void addArchonsToBrain(RobotController rc, RobotInfo[] enemies, Brain brain){
+		int enemiesLength = enemies.length;
+		for (int i = 0; i < enemiesLength; i ++){
+			if (enemies[i].type == RobotType.ARCHON){
+				brain.addArchon(enemies[i]);
+				rc.setIndicatorString(0, "found archon");
+			}
+		}
+	}
+	
 	public static void moveTowards(RobotController rc, Direction dir) throws GameActionException{
 		if (rc.isCoreReady()){
 			if (rc.canMove(dir)){
