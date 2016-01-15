@@ -41,13 +41,17 @@ public class Entity {
 		return ret;
 	}
 	
-	public static void findPartsInRange(RobotController rc, Brain brain, int squaredRange){
-		MapLocation[] partLocations = rc.sensePartLocations(squaredRange);
+
+	public static MapLocation[] findPartsInRange(RobotController rc, Brain brain){
+		MapLocation partLocations[] = rc.sensePartLocations(rc.getType().sensorRadiusSquared);
+		ArrayList<MapLocation> unobstructedParts = new ArrayList<MapLocation>();
 		for (MapLocation space : partLocations){
 			if (rc.senseParts(space) > 10 && rc.senseRubble(space)<GameConstants.RUBBLE_OBSTRUCTION_THRESH){
+				unobstructedParts.add(space);
 				brain.addPartLocation(space);
 			}
 		}
+		return unobstructedParts.toArray(new MapLocation[unobstructedParts.size()]);
 	}
 	
 	/*
@@ -243,15 +247,7 @@ public class Entity {
 		return false;
 	}
 	
-	public static int convertMapToSignal(MapLocation loc){
-		return (int) (loc.x + 16000 + (loc.y + 16000)*Math.pow(2, 16));
-	}
 	
-	public static MapLocation convertSignalToMap(int signal){
-		int x = (int) (signal % Math.pow(2, 16) - 16000);
-		int y = (int) (signal / Math.pow(2, 16) - 16000);
-		return new MapLocation(x, y);
-	}
 	
 	public static MapLocation getNearestDen(RobotController rc, Brain brain){
 		MapLocation[] zombieDens = brain.getDenLocations();
@@ -453,6 +449,27 @@ public class Entity {
 		return false;
 	}
 	
+	public static boolean moveTowardBug(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+		Direction currentDir = dir;
+		if (brain.lastMovedDirection == null){
+			brain.lastMovedDirection = dir;
+		}
+		if (brain.lastMovedDirection != dir && brain.lastMovedDirection != dir.rotateLeft()){
+			currentDir = brain.lastMovedDirection.rotateLeft();
+		}
+		for (int i = 0; i < 5; i ++){
+			if (rc.canMove(currentDir)){
+				brain.lastMovedDirection = currentDir;
+				rc.move(currentDir);
+				return true;
+			}
+			else {
+				currentDir = currentDir.rotateRight();
+			}
+		}
+		return false;
+	}
+	
 	public static void moveTowardLocation(RobotController rc, MapLocation loc) throws GameActionException{
 		Direction towardLoc = rc.getLocation().directionTo(loc);
 		if (rc.getLocation().distanceSquaredTo(loc) > 8){
@@ -599,5 +616,4 @@ public class Entity {
 		}
 		return new MapLocation(-1,-1);
 	}
-	
 }

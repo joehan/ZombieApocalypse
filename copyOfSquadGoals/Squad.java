@@ -15,8 +15,11 @@ public class Squad {
 	public static int intersquadCodeMinimum = 100;
 	public static int helpMeCode = 101;
 	public static int shareDenLocationCode = 102;
-	public static int deadDenCode = 105;
+	public static int deadDenCode = 103;
+	public static int bigAttackCode = 104;
+	public static int shareLocationCode = 105;
 	public static int foundEnemyCode = 106;
+
 
 	
 	
@@ -103,7 +106,7 @@ public class Squad {
 	}
 	
 	public static int messageRange(RobotController rc){
-		if (rc.getRoundNum() % 80 == 0) {
+		if (rc.getRoundNum() % 40 == 0) {
 			return 31*rc.getType().sensorRadiusSquared;
 		} else {
 			return 2*rc.getType().sensorRadiusSquared;
@@ -143,6 +146,17 @@ public class Squad {
 	public static void shareDenLocation(RobotController rc, Brain brain, MapLocation den, int distance
 			) throws GameActionException {
 		rc.broadcastMessageSignal(shareDenLocationCode, Entity.convertMapToSignal(den) , distance);
+	}
+	
+	public static void shareLocation(RobotController rc, Brain brain) throws GameActionException{
+		rc.broadcastMessageSignal(shareLocationCode, 0, 8 * rc.getType().sensorRadiusSquared);
+	}
+	
+	/*
+	 * callForBigAttackLocation asks all other squads to come and set up for an group attack on a location
+	 */
+	public static void callForBigAttackLocation(RobotController rc, Brain brain, MapLocation target) throws GameActionException {
+		rc.broadcastMessageSignal(bigAttackCode, Entity.convertMapToSignal(target), 31*rc.getType().sensorRadiusSquared);
 	}
 	
 	public static void listenForCommands(RobotController rc, Brain brain) throws GameActionException {
@@ -185,6 +199,12 @@ public class Squad {
 				} else if (message[0] == shareDenLocationCode){
 					MapLocation den = Entity.convertSignalToMap(message[1]);
 					brain.addDenLocation(den);
+				} else if (message[0] == bigAttackCode) {
+					MapLocation target = Entity.convertSignalToMap(message[1]);
+					brain.bigAttackTarget = target;
+					brain.updateArchonLocation(signal.getID(), signal.getLocation());
+				} else if (message[0] == shareLocationCode) {
+					brain.updateArchonLocation(signal.getID(), signal.getLocation());
 				} else if (message[0] == foundEnemyCode){
 					MapLocation turret = Entity.convertSignalToMap(message[1]);
 					brain.storeEnemyTurret(turret);

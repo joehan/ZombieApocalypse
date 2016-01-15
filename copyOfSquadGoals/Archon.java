@@ -23,8 +23,7 @@ public class Archon {
 				closestEnemy = Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation());
 			}
 			Entity.updateDenLocations(rc, brain);
-
-			
+			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
 			boolean archon = false;
 			for (RobotInfo enemy : enemies){
 				if (enemy.type == RobotType.ARCHON){
@@ -33,25 +32,21 @@ public class Archon {
 				}
 			}
 			if (!archon){
-			if (Entity.inDanger(enemies, rc.getLocation(), true)){
-				Squad.sendMoveCommand(rc, brain, rc.getLocation());
-				Squad.sendHelpMessage(rc, brain, 4*rc.getType().sensorRadiusSquared);
-			} else if (brain.goalLocation != null){
-				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+				if (Entity.inDanger(enemies, rc.getLocation(), true)){
+					Squad.sendMoveCommand(rc, brain, rc.getLocation());
+					Squad.sendHelpMessage(rc, brain, 4*rc.getType().sensorRadiusSquared);
+				} else if (brain.goalLocation != null){
+					Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+				} if (memberRequestedHelp) {
+					Squad.sendMoveCommand(rc, brain, brain.goalLocation);
+				} else if (brain.getDenLocations().length >0){
+					brain.goalLocation = Entity.getNearestDen(rc, brain);
+					Squad.sendAttackDenCommand(rc, brain, brain.goalLocation);
+				} else {
+					Squad.sendClearGoalLocationCommand(rc, brain);
+				}
 			}
-			boolean memberRequestedHelp = Squad.processSquadMessages(rc, brain);
-			if (memberRequestedHelp) {
-				Squad.sendMoveCommand(rc, brain, brain.goalLocation);
-			} else if (brain.getDenLocations().length >0){
-				brain.goalLocation = Entity.getNearestDen(rc, brain);
-				Squad.sendAttackDenCommand(rc, brain, brain.goalLocation);
-			} else {
-				Squad.sendClearGoalLocationCommand(rc, brain);
-			}
-			}
-//			if (!(brain.goalLocation == null) && rc.getLocation().distanceSquaredTo(brain.goalLocation) < 3){
-//				brain.goalLocation = null;
-//			}
+
 			//Repair a nearby unit, if there are any
 			repairUnits(rc);
 			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
@@ -59,15 +54,17 @@ public class Archon {
 			Squad.recruit(rc, brain);
 			Squad.listenForRecruits(rc, brain);
 			
-			//If you see another archon, share some info with him
-			//shareInfo(rc,  brain);
-			
 			//Look for nearby parts
-			Entity.findPartsInRange(rc, brain, 35);
+			 
+			 MapLocation[] partLocations = Entity.findPartsInRange(rc, brain);
 			if (rc.isCoreReady()){
 				boolean inDanger = Entity.inDanger(enemies, rc.getLocation(), true);
 				boolean moved = false;
-				if (inDanger){
+				if (brain.murderMode){
+					if (rc.getLocation().distanceSquaredTo(brain.bigAttackTarget) > 80){
+						Entity.moveTowardBug(rc, brain, rc.getLocation().directionTo(brain.bigAttackTarget));
+					}
+				} else if (inDanger){
 					Squad.sendHelpMessage(rc, brain, 10*rc.getType().sensorRadiusSquared);
 					moved = Entity.safeMove(rc, brain, enemies, Direction.NONE, true);
 					if (!moved){
@@ -88,6 +85,8 @@ public class Archon {
 				} else if (rc.hasBuildRequirements(typeToBuild)) {
 					tryBuildUnitInEmptySpace(rc, brain, typeToBuild,Direction.NORTH);
 					typeToBuild = buildNextUnit(brain);
+				} else if (partLocations.length > 0){
+					Entity.moveTowardBug(rc, brain, rc.getLocation().directionTo(partLocations[0]));	
 				} else if (brain.goalLocation!=null && rc.getLocation().distanceSquaredTo(brain.goalLocation) > rc.getType().sensorRadiusSquared){
 					Entity.moveTowards(rc, rc.getLocation().directionTo(brain.goalLocation));
 //					Entity.safeMove(rc, brain, enemies, brain.goalLocation, false);

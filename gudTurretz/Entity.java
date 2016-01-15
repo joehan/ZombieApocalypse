@@ -482,26 +482,26 @@ public class Entity {
 				if (rc.canMove(dir)){
 					rc.move(dir);
 				}
-				else if (rc.canMove(dir.rotateLeft())){
-					rc.move(dir.rotateLeft());
+				else if (rc.canMove(dir.rotateRight())){
+					rc.move(dir.rotateRight());
 				}
-				else if (rc.canMove(dir.rotateLeft().rotateLeft())){
-					rc.move(dir.rotateLeft().rotateLeft());
+				else if (rc.canMove(dir.rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight());
 				}
-				else if (rc.canMove(dir.rotateLeft().rotateLeft().rotateLeft())){
-					rc.move(dir.rotateLeft().rotateLeft().rotateLeft());
+				else if (rc.canMove(dir.rotateRight().rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight().rotateRight());
 				}
 				else if (rc.canMove(dir.opposite())){
 					rc.move(dir.opposite());
 				} 
-				else if (rc.canMove(dir.opposite().rotateLeft())){
-					rc.move(dir.opposite().rotateLeft());
+				else if (rc.canMove(dir.opposite().rotateRight())){
+					rc.move(dir.opposite().rotateRight());
 				}
-				else if (rc.canMove(dir.opposite().rotateLeft().rotateLeft())){
-					rc.move(dir.opposite().rotateLeft().rotateLeft());
+				else if (rc.canMove(dir.opposite().rotateRight().rotateRight())){
+					rc.move(dir.opposite().rotateRight().rotateRight());
 				}
-				else if (rc.canMove(dir.opposite().rotateLeft().rotateLeft().rotateLeft())){
-					rc.move(dir.opposite().rotateLeft().rotateLeft().rotateLeft());
+				else if (rc.canMove(dir.opposite().rotateRight().rotateRight().rotateRight())){
+					rc.move(dir.opposite().rotateRight().rotateRight().rotateRight());
 				}
 			}
 			catch (Exception e) {
@@ -543,27 +543,21 @@ public class Entity {
         }
 	}
 	
-	/*
-	 * listenForMessageLocation listens to the message queue, looking for location messages sent by the friendly team.
-	 * If it hears one, it returns the MapLocation described in the message
-	 * Otherwise, it returns the location of the current robot
-	 */
-	public static MapLocation listenForMessageLocation(RobotController rc) throws GameActionException {
-		Signal[] messages = rc.emptySignalQueue();
-		if (messages.length == 0){
-			return rc.getLocation();
-		} else {
-			for (Signal message : messages) {
-				if (message.getTeam() == rc.getTeam()){
-					int[] locMessage = messages[0].getMessage();
-					if (!(locMessage==null)){
-						MapLocation loc = new MapLocation(locMessage[0], locMessage[1]);
-						return loc;
-					} 
+	
+	public static MapLocation findClosestArchon(RobotController rc, Brain brain, RobotInfo[] allies){
+		MapLocation closestArchon = null;
+		int minDistance = 50000;
+		for (RobotInfo ally : allies){
+			if (ally.team==rc.getTeam() && ally.type==RobotType.ARCHON){
+				int distance = rc.getLocation().distanceSquaredTo(ally.location);
+				if (distance<minDistance){
+					minDistance = distance;
+					closestArchon = ally.location;
 				}
 			}
-			return  rc.getLocation();
 		}
+		return closestArchon;
+		
 	}
 	
 	public static boolean digInDirection(RobotController rc, Brain brain, Direction dir) throws GameActionException{

@@ -15,7 +15,8 @@ import battlecode.common.*;
  */
 public class Brain {
 	
-	
+	public Direction lastMovedDirection = null;
+	public boolean murderMode = false;
 	//Remember where we've seen parts
 	private HashSet<MapLocation> partLocations = new HashSet<MapLocation>();
 	
@@ -77,6 +78,10 @@ public class Brain {
 //	}
 	
 	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
+	
+	public MapLocation[] getEnemyTurrets(){
+		return enemyTurrets.toArray(new MapLocation[enemyTurrets.size()]);
+	}
 
 	public void storeEnemyTurret(MapLocation loc){
 		enemyTurrets.add(loc);
@@ -191,6 +196,18 @@ public class Brain {
 	
 	public Integer[] getSquadMembers(){
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
+	}
+	
+	public MapLocation bigAttackTarget = null;
+	
+	private HashMap<Integer, MapLocation> archonLocations = new HashMap<Integer, MapLocation>();
+	
+	public MapLocation[] getArchonLocations(){
+		return archonLocations.values().toArray(new MapLocation[archonLocations.size()]);
+	}
+	
+	public void updateArchonLocation(int archonID, MapLocation currentLoc){
+		archonLocations.put(archonID, currentLoc);
 	}
 	
 	public Signal[] thisTurnsSignals;
