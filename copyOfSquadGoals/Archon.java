@@ -123,7 +123,6 @@ public class Archon {
             // If possible, build in this direction
             if (rc.canBuild(dirToBuild, typeToBuild)) {
                 rc.build(dirToBuild, typeToBuild);
-//                brain.iterateUnitInBuildHistory(typeToBuild);
                 break;
             } else {
                 // Rotate the direction to try
@@ -227,7 +226,7 @@ public class Archon {
 			if(buildCount >= brain.getStartBuildLength()){
 				brain.setBuildCount(0);
 				brain.setInitialIteration(false);
-			}else{
+			} else {
 				brain.setBuildCount(buildCount);
 			}
 			return returnRobot;
