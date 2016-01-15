@@ -10,9 +10,12 @@ public class Viper {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
-			RobotInfo closestRobot = Entity.findClosestHostile(rc, enemies, zombies);
-			if (closestRobot != null ){
-				kite(rc, brain, closestRobot, enemies, zombies);
+			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
+			if (closestEnemy != null ){
+				kite(rc, brain, closestEnemy, enemies, zombies);
+			} else if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
+				Squad.listenForCommands(rc, brain);
+				Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection)), false);
 			}
 			Clock.yield();
 		}
@@ -68,7 +71,7 @@ public class Viper {
 		if (weaponDelay < 1){
 			attack(rc, enemies, zombies);
 		} else if (coreDelay < 1){
-			Entity.move(rc, brain, closestEnemy.location.directionTo(rc.getLocation()));
+			Entity.fleeEnemies(rc, brain, enemies, zombies, closestEnemy);
 		}
 		
 	}
