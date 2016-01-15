@@ -27,6 +27,8 @@ public class Soldier {
 				
 				//Then combat move
 				
+				
+				
 				//Then if not in combat non-combat move
 				
 				Clock.yield();
@@ -35,6 +37,19 @@ public class Soldier {
 			}
 		}
 	}
+	
+	
+	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, RobotInfo nearestEnemy){
+		if (rc.isCoreReady() && nearestEnemy != null){
+			//First check if health is low, and if it is retreat
+			if (rc.getHealth() < rc.getType().maxHealth/2){
+				
+			}
+		}
+		return false;
+	}
+	
+	
 	
 	public static RobotType[] orderToAttack = {RobotType.VIPER, RobotType.TURRET, RobotType.TTM,
 		RobotType.SOLDIER, RobotType.GUARD, RobotType.ARCHON, RobotType.RANGEDZOMBIE, RobotType.FASTZOMBIE, 
