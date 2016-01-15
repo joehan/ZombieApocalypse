@@ -1,4 +1,4 @@
-package copyOfSquadGoals.copy;
+package gudTurretz;
 
 import java.util.Random;
 

@@ -1,10 +1,8 @@
-package copyOfSquadGoals.copy;
-
-import java.util.Random;
+package betterScouting;
 
 import battlecode.common.*;
 
-public class Guard {
+public class Viper {
 	
 	public static void run(RobotController rc, Brain brain){
 		

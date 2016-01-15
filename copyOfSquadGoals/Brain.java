@@ -1,12 +1,11 @@
-package squadGoals;
+package copyOfSquadGoals;
 
 import java.util.HashSet;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 import battlecode.common.*;
-import scala.tools.nsc.settings.RC;
+
 
 /*
  * Brain is used by robots to track information about the world around them.
@@ -16,7 +15,8 @@ import scala.tools.nsc.settings.RC;
  */
 public class Brain {
 	
-	
+	public Direction lastMovedDirection = null;
+	public boolean murderMode = false;
 	//Remember where we've seen parts
 	private HashSet<MapLocation> partLocations = new HashSet<MapLocation>();
 	
@@ -60,8 +60,8 @@ public class Brain {
 	}
 	
 	//Remembering what you've built
-	public HashMap<RobotType, Integer> buildHistory; 
-	
+//	public HashMap<RobotType, Integer> buildHistory; 
+//	
 //	public void initBuildHistory(){
 //		buildHistory = new HashMap<RobotType, Integer>();
 //		buildHistory.put(RobotType.GUARD, 0);
@@ -70,15 +70,47 @@ public class Brain {
 //		buildHistory.put(RobotType.TURRET, 0);
 //		buildHistory.put(RobotType.VIPER, 0);
 //	}
-//	
+	
+	public double lastTurnsHealth;
+	
 //	public void iterateUnitInBuildHistory(RobotType type){
 //		buildHistory.put(type, buildHistory.get(type) +1);
 //	}
+	
+	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
+	
+	public MapLocation[] getEnemyTurrets(){
+		return enemyTurrets.toArray(new MapLocation[enemyTurrets.size()]);
+	}
+
+	public void storeEnemyTurret(MapLocation loc){
+		enemyTurrets.add(loc);
+	}
 	
 	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
 	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
 	private int buildCount = 0;
 	private Boolean initialIteration = true;
+	
+//	public RobotType buildNextUnit(RobotController rc){
+//		if(initialIteration){
+//			RobotType returnRobot = startBuildArray[buildCount];
+//			buildCount++;
+//			rc.setIndicatorString(1, "" + startBuildArray.length);
+//			if(buildCount >= startBuildArray.length){
+//				buildCount = 0;
+//				initialIteration = false;
+//			}
+//			return returnRobot;
+//		}else{
+//			RobotType returnRobot = iterateBuildArray[buildCount];
+//			buildCount++;
+//			if(buildCount >= iterateBuildArray.length){
+//				buildCount = 0;
+//			}
+//			return returnRobot;
+//		}
+//	}
 	
 	public int getBuildCount() {
 		return buildCount;
@@ -162,69 +194,22 @@ public class Brain {
 		return squadMembers.contains(memberID);
 	}
 	
-	public HashSet<MapLocation> enemyTurrets = new HashSet<MapLocation>();
-	
-	
-	
-	public void storeEnemyTurret(MapLocation loc){
-		enemyTurrets.add(loc);
-	}
-	
-//	public void setEnemyTurret(){
-//		enemyIsTurret = false;
-//	}
-	
-	public MapLocation swarmLoc = null;
-	public boolean attack = false;
-	
-	public double lastTurnHealth = 0;
-	
-	public Direction lastMovedDirection = null;
 	public Integer[] getSquadMembers(){
 		return squadMembers.toArray(new Integer[squadMembers.size()]);
 	}
 	
-	public int startedSwarming = 3000;
+	public MapLocation bigAttackTarget = null;
 	
-	public ArrayList<MapLocation> enemyLocation  = new ArrayList<MapLocation>();
+	private HashMap<Integer, MapLocation> archonLocations = new HashMap<Integer, MapLocation>();
 	
-	public void addEnemyLocation(MapLocation loc){
-		enemyLocation.add(loc);
+	public MapLocation[] getArchonLocations(){
+		return archonLocations.values().toArray(new MapLocation[archonLocations.size()]);
 	}
 	
-	public MapLocation getMostRecentEnemyLocation(){
-		return enemyLocation.get(enemyLocation.size() - 1);
-	}
-	
-	public void resetMessages(){
-		recruitMessages = new ArrayList<Signal>();
-		setGoalLocation = new ArrayList<Signal>();
-		clearGoalLocation = new ArrayList<Signal>();
-		den = new ArrayList<Signal>();
-		helpMe = new ArrayList<Signal>();
-		shareDenLocation = new ArrayList<Signal>();
-		deadDen = new ArrayList<Signal>();
-		regularMessage = new ArrayList<Signal>();
-		foundEnemy = new ArrayList<Signal>();
-//		enemyTurret = new ArrayList<Signal>();
-		swarmLocationMessage = new ArrayList<Signal>();
-		attackCode = new ArrayList<Signal>();
+	public void updateArchonLocation(int archonID, MapLocation currentLoc){
+		archonLocations.put(archonID, currentLoc);
 	}
 	
 	public Signal[] thisTurnsSignals;
-	public ArrayList<Signal> recruitMessages = new ArrayList<Signal>();
-	public ArrayList<Signal> setGoalLocation = new ArrayList<Signal>();
-	public ArrayList<Signal> clearGoalLocation = new ArrayList<Signal>();
-	public ArrayList<Signal> den = new ArrayList<Signal>();
-	public ArrayList<Signal> helpMe = new ArrayList<Signal>();
-	public ArrayList<Signal> shareDenLocation = new ArrayList<Signal>();
-	public ArrayList<Signal> deadDen = new ArrayList<Signal>();
-	public ArrayList<Signal> regularMessage = new ArrayList<Signal>();
-	public ArrayList<Signal> foundEnemy = new ArrayList<Signal>();
-//	public ArrayList<Signal> enemyTurret = new ArrayList<Signal>();
-	public ArrayList<Signal> swarmLocationMessage = new ArrayList<Signal>();
-	public ArrayList<Signal> attackCode = new ArrayList<Signal>();
-
-	
 	public Random rand;
 }

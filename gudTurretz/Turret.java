@@ -1,4 +1,4 @@
-package copyOfSquadGoals.copy;
+package gudTurretz;
 
 import java.util.Random;
 
@@ -8,6 +8,12 @@ public class Turret {
 	private Random rand = new Random();
 	public void run(RobotController rc, Brain brain) throws GameActionException{
 		while (true) {
+			brain.thisTurnsSignals = rc.emptySignalQueue();
+			if (brain.getSquadNum()!=-1){
+				Squad.findLeaderLocation(rc, brain);
+			} else {
+				Squad.lookForASquad(rc, brain, rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam()));
+			}
 			if (rc.getType() ==RobotType.TURRET) {
 				turretRun(rc,brain);
 			} else if (rc.getType() == RobotType.TTM) {
@@ -18,17 +24,28 @@ public class Turret {
 	}
 	public void turretRun(RobotController rc, Brain brain) throws GameActionException {
 		RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-		Boolean attack = turretAttack(rc, brain, enemies);
+		boolean attacked = turretAttack(rc, brain, enemies);
+		boolean attackedBySound = false;
+		if (brain.getSquadNum()==-1){
+			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+			Squad.lookForASquad(rc, brain, allies);
+		}
+		if (!attacked && !attackedBySound && enemies.length == 0 && brain.getSquadNum()!=-1) {
+			Squad.findLeaderLocation(rc, brain);
+			if (rc.getLocation().distanceSquaredTo(brain.leadersLastKnownLocation) <= 8){
+				rc.pack();
+			}
+		}
 	}
 	
 	public void ttmRun(RobotController rc, Brain brain) throws GameActionException {
-		RobotInfo[] adjacentFriends = rc.senseNearbyRobots(3, rc.getTeam());
 		RobotInfo[] enemiesInRange = rc.senseHostileRobots(rc.getLocation(), RobotType.TURRET.sensorRadiusSquared);
-		if (enemiesInRange.length>0 || adjacentFriends.length < 2){
+		RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+		if (enemiesInRange.length>0 || rc.getLocation().distanceSquaredTo(Entity.findClosestArchon(rc, brain, allies))>8){
 			rc.unpack();
 		} else if (rc.isCoreReady()){
-			Direction randomDir = Entity.directions[rand.nextInt(8)];
-			Entity.moveInDirection(rc, randomDir);
+			Direction dirToMove = brain.leadersLastKnownLocation.directionTo(rc.getLocation());
+			Entity.moveTowards(rc, dirToMove);
 		}
 	}
 	
@@ -52,6 +69,11 @@ public class Turret {
 				}
 			}
 		}
+		return false;
+	}
+	
+	public boolean attackBySound(RobotController rc, Brain brain) throws GameActionException {
+		
 		return false;
 	}
 }

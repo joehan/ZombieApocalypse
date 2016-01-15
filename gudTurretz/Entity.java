@@ -1,11 +1,10 @@
-package copyOfSquadGoals.copy;
+package gudTurretz;
 
 import java.util.Arrays.*;
 import java.util.*;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import squadGoals.Brain;
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
@@ -477,6 +476,41 @@ public class Entity {
 		}
 	}
 	
+	public static void bugTowards(RobotController rc, Direction dir){
+		if (rc.isCoreReady()){
+			try {
+				if (rc.canMove(dir)){
+					rc.move(dir);
+				}
+				else if (rc.canMove(dir.rotateRight())){
+					rc.move(dir.rotateRight());
+				}
+				else if (rc.canMove(dir.rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight());
+				}
+				else if (rc.canMove(dir.rotateRight().rotateRight().rotateRight())){
+					rc.move(dir.rotateRight().rotateRight().rotateRight());
+				}
+				else if (rc.canMove(dir.opposite())){
+					rc.move(dir.opposite());
+				} 
+				else if (rc.canMove(dir.opposite().rotateRight())){
+					rc.move(dir.opposite().rotateRight());
+				}
+				else if (rc.canMove(dir.opposite().rotateRight().rotateRight())){
+					rc.move(dir.opposite().rotateRight().rotateRight());
+				}
+				else if (rc.canMove(dir.opposite().rotateRight().rotateRight().rotateRight())){
+					rc.move(dir.opposite().rotateRight().rotateRight().rotateRight());
+				}
+			}
+			catch (Exception e) {
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public static boolean moveInDirection(RobotController rc, Direction dir) throws GameActionException{
 		boolean moved = false;
 		if (rc.canMove(dir)){
@@ -509,27 +543,21 @@ public class Entity {
         }
 	}
 	
-	/*
-	 * listenForMessageLocation listens to the message queue, looking for location messages sent by the friendly team.
-	 * If it hears one, it returns the MapLocation described in the message
-	 * Otherwise, it returns the location of the current robot
-	 */
-	public static MapLocation listenForMessageLocation(RobotController rc) throws GameActionException {
-		Signal[] messages = rc.emptySignalQueue();
-		if (messages.length == 0){
-			return rc.getLocation();
-		} else {
-			for (Signal message : messages) {
-				if (message.getTeam() == rc.getTeam()){
-					int[] locMessage = messages[0].getMessage();
-					if (!(locMessage==null)){
-						MapLocation loc = new MapLocation(locMessage[0], locMessage[1]);
-						return loc;
-					} 
+	
+	public static MapLocation findClosestArchon(RobotController rc, Brain brain, RobotInfo[] allies){
+		MapLocation closestArchon = null;
+		int minDistance = 50000;
+		for (RobotInfo ally : allies){
+			if (ally.team==rc.getTeam() && ally.type==RobotType.ARCHON){
+				int distance = rc.getLocation().distanceSquaredTo(ally.location);
+				if (distance<minDistance){
+					minDistance = distance;
+					closestArchon = ally.location;
 				}
 			}
-			return  rc.getLocation();
 		}
+		return closestArchon;
+		
 	}
 	
 	public static boolean digInDirection(RobotController rc, Brain brain, Direction dir) throws GameActionException{

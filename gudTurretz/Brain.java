@@ -1,4 +1,4 @@
-package copyOfSquadGoals.copy;
+package gudTurretz;
 
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -75,8 +75,8 @@ public class Brain {
 		buildHistory.put(type, buildHistory.get(type) +1);
 	}
 	
-	private RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER};
-	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	private RobotType[] startBuildArray = {RobotType.TURRET};
+	private RobotType[] iterateBuildArray = {RobotType.TURRET};
 	private int buildCount = 0;
 	private Boolean initialIteration = true;
 	

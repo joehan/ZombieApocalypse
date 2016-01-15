@@ -1,4 +1,4 @@
-package copyOfSquadGoals.copy;
+package gudTurretz;
 
 import java.util.HashSet;
 
@@ -16,6 +16,7 @@ public class Squad {
 	public static int helpMeCode = 101;
 	public static int shareDenLocationCode = 102;
 	public static int deadDenCode = 105;
+	public static int groupArchonsCode = 106;
 
 	
 	
@@ -120,6 +121,10 @@ public class Squad {
 		rc.broadcastMessageSignal(deadDenCode, Entity.convertMapToSignal(den), 10*messageRange(rc));
 	}
 	
+	public static void sendGroupArchonsMessage(RobotController rc, Brain brain) throws GameActionException {
+		rc.broadcastMessageSignal(groupArchonsCode, Entity.convertMapToSignal(rc.getLocation()), 31*rc.getType().sensorRadiusSquared);
+	}
+	
 	/*
 	 * SendHelpMessage asks any nearby archons for help
 	 */
@@ -175,6 +180,9 @@ public class Squad {
 				} else if (message[0] == shareDenLocationCode){
 					MapLocation den = Entity.convertSignalToMap(message[1]);
 					brain.addDenLocation(den);
+				}  else if (message[0] == groupArchonsCode){
+					MapLocation archonLoc = Entity.convertSignalToMap(message[1]);
+					brain.addArchonStart(archonLoc);
 				}
 			}
 		}
