@@ -9,7 +9,8 @@ public class Soldier {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			Squad.listenForCommands(rc, brain);
 			if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
-				Entity.move(rc, brain, brain.leaderMovingInDirection);
+				Direction dirToMove = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection));
+				Entity.move(rc, brain, dirToMove, false);
 			}
 			Clock.yield();
 		}
