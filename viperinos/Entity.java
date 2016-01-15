@@ -34,14 +34,24 @@ public class Entity {
 	}
 	
 	/*
-	 *move attempts to move in the closest possible direction to dir.
+	 *move attempts to move in dir.
+	 *if Bug is try, it uses bug movement. OTherwise, it uses closest direction movement.
 	 *Returns true if the robot moved, and false otherwise
 	 */
-	public static boolean move(RobotController rc, Brain brain, Direction dir) throws GameActionException{
-		Direction[] directionsToTry = {dir, dir.rotateLeft(), dir.rotateRight(),
-				dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
-				dir.opposite().rotateRight(), dir.opposite().rotateLeft(),
-				dir.opposite()};
+	public static boolean move(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
+		Direction[] directionsToTry;
+		if(bug){
+			Direction[] bugDirections = {dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+					dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+					dir.rotateRight().rotateRight(), dir.rotateRight()};
+			directionsToTry = bugDirections;
+		} else {
+			Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
+					dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
+					dir.opposite().rotateRight(), dir.opposite().rotateLeft(),
+					dir.opposite()};
+			directionsToTry = normalDirections;
+		}
 		for (Direction d : directionsToTry){
 			if (rc.canMove(d)){
 				rc.move(d);
@@ -52,4 +62,16 @@ public class Entity {
 		return false;
 	}
 	
+	/*
+	 * fleeEnemies looks for nearby enemies, and runs away from the closest one.
+	 * It returns true if the robot moved, and false otherwise
+	 */
+	public static boolean fleeEnemies(RobotController rc, Brain brain, RobotInfo[] enemies, RobotInfo[] zombies, RobotInfo closestEnemy) throws GameActionException{
+		boolean moved = false;
+		if (enemies.length > 0 || zombies.length > 0){
+			move(rc, brain, closestEnemy.location.directionTo(rc.getLocation()), false);
+			moved = true;
+		}
+		return moved;
+	}
 }

@@ -9,11 +9,20 @@ public class Archon {
 		RobotType typeToBuild = nextUnitToBuild(brain);
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		while (true){
+			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
+			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
+			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
+			
+			repair(rc, allies);
+			
 			if (rc.isCoreReady()){
 				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
 					typeToBuild = nextUnitToBuild(brain);
+				} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else {
-					Entity.move(rc, brain, brain.lastDirectionMoved);
+					Entity.move(rc, brain, brain.lastDirectionMoved, false);
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				}
 			}
@@ -70,4 +79,19 @@ public class Archon {
         }
 		return built;
 	}
+	
+	
+	/*
+	 * Repair looks through the array of nearby allies, and repairs the first injured robot it sees
+	 */
+	public void repair(RobotController rc, RobotInfo[] allies) throws GameActionException{
+		for (RobotInfo ally: allies){
+			if (ally.health < ally.maxHealth){
+				rc.repair(ally.location);
+				break;
+			}
+		}
+	}
+	
+	
 }

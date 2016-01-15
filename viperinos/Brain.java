@@ -20,7 +20,7 @@ public class Brain {
 	public Direction lastDirectionMoved;
 	
 	public RobotType[] startBuildArray = {};
-	public RobotType[] mainBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	public RobotType[] mainBuildArray = {RobotType.VIPER};
 	public int buildCount = 0;
 	public boolean initialIteration = true;
 	
