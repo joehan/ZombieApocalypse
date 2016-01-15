@@ -12,7 +12,12 @@ public class Archon {
 		while(true){
 			try {
 				RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-				tryBuildUnitInEmptySpace(rc, brain, typeToBuild, Direction.NORTH);
+				if (tryBuildUnitInEmptySpace(rc, brain, typeToBuild, Direction.NORTH)){
+					typeToBuild = buildNextUnit(brain);
+				}
+				if (rc.getTeamParts() < 30){
+					rc.broadcastMessageSignal(1, 0, 10000);
+				}
 				
 				
 				Clock.yield();
@@ -24,17 +29,18 @@ public class Archon {
 		}
 	}
 	
-	private static void tryBuildUnitInEmptySpace(RobotController rc, Brain brain, RobotType typeToBuild, Direction dirToBuild) throws GameActionException{
+	private static boolean tryBuildUnitInEmptySpace(RobotController rc, Brain brain, RobotType typeToBuild, Direction dirToBuild) throws GameActionException{
         for (int i = 0; i < 8; i++) {
             // If possible, build in this direction
             if (rc.canBuild(dirToBuild, typeToBuild)) {
                 rc.build(dirToBuild, typeToBuild);
-                break;
+                return true;
             } else {
                 // Rotate the direction to try
                 dirToBuild = dirToBuild.rotateLeft();
             }
         }
+        return false;
 	}
 	
 	public static RobotType buildNextUnit(Brain brain){

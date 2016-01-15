@@ -18,8 +18,10 @@ public class Scout {
 						rc.setIndicatorString(1, "saw an archon signal");
 					}
 				}
+				ZombieSpawnSchedule spawn = rc.getZombieSpawnSchedule();
 				
-				Entity.moveTowards(rc, rc.getLocation().directionTo(toGo));
+				
+//				boolean val = Entity.moveInDirection(rc, rc.getLocation().directionTo(toGo));
 				Entity.addArchonsToBrain(rc, enemies, brain);
 				Clock.yield();
 			}
