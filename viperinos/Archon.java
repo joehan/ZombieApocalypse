@@ -7,12 +7,17 @@ public class Archon {
 	
 	public void run(RobotController rc, Brain brain) throws GameActionException{
 		RobotType typeToBuild = nextUnitToBuild(brain);
+		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		while (true){
 			if (rc.isCoreReady()){
 				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
 					typeToBuild = nextUnitToBuild(brain);
+				} else {
+					Entity.move(rc, brain, brain.lastDirectionMoved);
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				}
 			}
+			Clock.yield();
 		}
 	}
 	
@@ -25,7 +30,7 @@ public class Archon {
 	 */
 	public RobotType nextUnitToBuild(Brain brain){
 		RobotType robotToBuild;
-		if(brain.initialIteration){
+		if(brain.initialIteration && brain.startBuildArray.length>0){
 			robotToBuild = brain.startBuildArray[brain.buildCount];
 			brain.buildCount++;
 			if(brain.buildCount >= brain.startBuildArray.length){

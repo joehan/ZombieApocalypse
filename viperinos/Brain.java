@@ -1,7 +1,6 @@
 package viperinos;
 
-import java.util.HashSet;
-import java.util.HashMap;
+
 import java.util.Random;
 
 import battlecode.common.*;
@@ -16,9 +15,17 @@ import battlecode.common.*;
 public class Brain {
 	
 	public Random rand;
+	public Signal[] thisTurnsSignals;
 	
-	public RobotType[] startBuildArray = {RobotType.SCOUT};
-	public RobotType[] mainBuildArray = {RobotType.SOLDIER};
+	public Direction lastDirectionMoved;
+	
+	public RobotType[] startBuildArray = {};
+	public RobotType[] mainBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
 	public int buildCount = 0;
 	public boolean initialIteration = true;
+	
+	public MapLocation leaderLocation = null;
+	public int distanceToLeader = 50000;
+	public Direction leaderMovingInDirection = null;
+	
 }
