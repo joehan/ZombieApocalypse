@@ -7,6 +7,51 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+	public static RobotInfo[] concat(RobotInfo[] a, RobotInfo[] b) {
+		   int aLen = a.length;
+		   int bLen = b.length;
+		   RobotInfo[] c= new RobotInfo[aLen+bLen];
+		   System.arraycopy(a, 0, c, 0, aLen);
+		   System.arraycopy(b, 0, c, aLen, bLen);
+		   return c;
+		}
+	
+	
+	public static RobotType[] orderToAttack = {RobotType.VIPER, RobotType.TURRET, RobotType.TTM,
+		RobotType.SOLDIER, RobotType.GUARD, RobotType.ARCHON, RobotType.RANGEDZOMBIE, RobotType.FASTZOMBIE, 
+		RobotType.BIGZOMBIE, RobotType.STANDARDZOMBIE, RobotType.SCOUT, RobotType.ZOMBIEDEN};
+	
+	/*
+	 * attackHostiles looks for hostile enemies within the current units attack range
+	 * and attacks the weakest of them
+	 * It returns true if the robot attacked, and false otherwise
+	 */
+	public static Boolean attackHostiles(RobotController rc, RobotInfo[] enemiesInAttackRange) throws GameActionException {
+//		Boolean attacked = false;
+		if (enemiesInAttackRange.length > 0){
+			if (rc.isWeaponReady()){
+				RobotInfo weakestSoFar=null;
+				double healthOfWeakest=1;
+				for (int i = 0; i < orderToAttack.length; i ++){
+					for (RobotInfo enemy : enemiesInAttackRange){
+						double currentHealth = enemy.health/enemy.maxHealth;
+						if ((weakestSoFar==null || currentHealth < healthOfWeakest) && enemy.type == orderToAttack[i]
+								&& rc.canAttackLocation(enemy.location)){
+							weakestSoFar=enemy;
+							healthOfWeakest = currentHealth;
+						}
+					}
+					if (!(weakestSoFar == null)){
+						rc.attackLocation(weakestSoFar.location);
+						return true;
+					}
+				}
+//				attacked = true;
+			}
+		}
+		return false;
+	}
+	
 	
 	public static boolean basicAttack(RobotController rc, MapLocation enemyLoc) throws GameActionException{
 		if (rc.canAttackLocation(enemyLoc) && rc.isWeaponReady()){

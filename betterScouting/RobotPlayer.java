@@ -1,5 +1,6 @@
 package betterScouting;
 
+
 import battlecode.common.*;
 
 /*
@@ -12,19 +13,30 @@ public class RobotPlayer {
 		Brain brain = new Brain();
 		
 		RobotType type = rc.getType();
-	    
-		if (type == RobotType.ARCHON) {
-			Archon.run(rc, brain);
-		} else if (type == RobotType.GUARD){
-			Guard.run(rc, brain);
-		} else if (type == RobotType.SOLDIER){
-			Soldier.run(rc);
-		} else if (type == RobotType.SCOUT){
-			Scout.run(rc, brain);
-		} else if (type == RobotType.TURRET){
-			Turret.run(rc);
-		} else if (type == RobotType.VIPER){
-			Viper.run(rc);
+	    try {
+			if (type == RobotType.ARCHON) {
+				Archon archon = new Archon();
+				archon.run(rc, brain);
+			} else if (type == RobotType.GUARD){
+				Guard guard = new Guard();
+				Guard.run(rc, brain);
+			} else if (type == RobotType.SOLDIER){
+				Soldier soldier = new Soldier();
+				soldier.run(rc, brain);
+			} else if (type == RobotType.SCOUT){
+				Scout scout = new Scout();
+				scout.run(rc, brain);
+			} else if (type == RobotType.TURRET || type == RobotType.TTM){
+				Turret turret = new Turret();
+				turret.run(rc, brain);
+			} else if (type == RobotType.VIPER){
+				Viper viper = new Viper();
+				viper.run(rc, brain);
+			}
+			Clock.yield();
+		} catch(Exception e){
+			System.out.println(e.getMessage());
+	        e.printStackTrace();
 		}
 	}
 	
