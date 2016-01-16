@@ -1,4 +1,4 @@
-package squadGoalsWithNeuts;
+package chickenArchon;
 
 import java.util.Random;
 
@@ -17,15 +17,9 @@ public class Turret {
 	
 	}
 	public void turretRun(RobotController rc, Brain brain) throws GameActionException {
-		Boolean attack = Entity.attackHostiles(rc, rc.senseNearbyRobots());
-		if (!attack) {
-			RobotInfo[] adjacentFriends = rc.senseNearbyRobots(3, rc.getTeam());
-			if (adjacentFriends.length >3){
-				rc.pack();
-			}
-		}
+		RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
+		Boolean attack = turretAttack(rc, brain, enemies);
 	}
-		
 	
 	public void ttmRun(RobotController rc, Brain brain) throws GameActionException {
 		RobotInfo[] adjacentFriends = rc.senseNearbyRobots(3, rc.getTeam());
@@ -36,5 +30,28 @@ public class Turret {
 			Direction randomDir = Entity.directions[rand.nextInt(8)];
 			Entity.moveInDirection(rc, randomDir);
 		}
+	}
+	
+	public boolean turretAttack(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException {
+		if (enemies.length > 0){
+			if (rc.isWeaponReady()){
+				RobotInfo weakestSoFar=null;
+				double healthOfWeakest=1;
+				
+				for (RobotInfo enemy : enemies){
+					double currentHealth = enemy.health/enemy.maxHealth;
+					if ((weakestSoFar==null || currentHealth < healthOfWeakest)
+							&& rc.canAttackLocation(enemy.location)){
+						weakestSoFar=enemy;
+						healthOfWeakest = currentHealth;
+					}
+				}
+				if (!(weakestSoFar == null)){
+					rc.attackLocation(weakestSoFar.location);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

@@ -1,15 +1,8 @@
-package scoutLure;
+package chickenArchon;
 
 import java.util.Random;
 
 import battlecode.common.*;
-import squadGoals.Archon;
-import squadGoals.Brain;
-import squadGoals.Guard;
-import squadGoals.Scout;
-import squadGoals.Soldier;
-import squadGoals.Turret;
-import squadGoals.Viper;
 
 /*
  * Entity contains functions that will be used by multiple types of units
