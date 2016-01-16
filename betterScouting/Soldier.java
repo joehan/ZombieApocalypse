@@ -13,9 +13,7 @@ public class Soldier {
 				RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 				RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 				RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
-				rc.setIndicatorString(0, String.valueOf(Clock.getBytecodeNum()));
 				RobotInfo[] enemies = Entity.concat(opponents, zombies);
-				rc.setIndicatorString(1, String.valueOf(Clock.getBytecodeNum()));
 
 				RobotInfo nearestEnemy =  enemies.length > 0 ? Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation()) : null;
 				
@@ -26,7 +24,10 @@ public class Soldier {
 				attack(rc, zombies, opponents);
 				
 				//Then combat move
-				
+				if (nearestEnemy != null){
+					combatMove(rc, opponents, enemies, brain, nearestEnemy);
+				}
+
 				
 				
 				//Then if not in combat non-combat move
@@ -39,11 +40,30 @@ public class Soldier {
 	}
 	
 	
-	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, RobotInfo nearestEnemy){
+	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, 
+			Brain brain, RobotInfo nearestEnemy) throws GameActionException{
 		if (rc.isCoreReady() && nearestEnemy != null){
 			//First check if health is low, and if it is retreat
 			if (rc.getHealth() < rc.getType().maxHealth/2){
-				
+				//Safe move towards nearest Archon unless fatally infected
+				if (rc.getViperInfectedTurns()*2 > rc.getHealth()){
+					if (nearestEnemy != null && nearestEnemy.team == rc.getTeam().opponent()){
+						Entity.moveToLocation(rc, nearestEnemy.location);
+					} else {
+						//Move away from nearest archon
+						//TODO implement nearest archon and moving away from it
+						Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location).opposite());
+					}
+				} else {
+					//Move towards nearest archon
+					//TODO implement nearest archon in brain and change direction to this
+					Entity.safeMove(rc, enemies, brain, rc.getLocation().directionTo(nearestEnemy.location));
+				}
+			}  else {
+				//Now we just want to stay at optimal move range for all enemies
+				//AvoidMelee move to optimal attack range
+//				Entity.moveOptimalAttackRange(rc, brain, enemies);
+				Entity.moveAvoidMelee(rc, brain, enemies, nearestEnemy);
 			}
 		}
 		return false;
