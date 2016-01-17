@@ -7,6 +7,7 @@ import battlecode.common.*;
 public class Brain {
 
 	
+	
 	private RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
 	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
 	private int buildCount = 0;
@@ -46,6 +47,13 @@ public class Brain {
 	private double middleX = 0;
 	private double middleY = 0;
 	
+//	public MapLocation getNearestArchon(){
+//		for (int i = numEnemyArchons)
+//	}
+	
+	private int[] archonIds = new int[8];
+	private int numEnemyArchons = 0;
+	
 	private RobotInfo[] enemyInfo = new RobotInfo[10000];
 	
 	public boolean isArchon(int id){
@@ -53,6 +61,10 @@ public class Brain {
 	}
 	
 	public void addArchon(RobotInfo archonInfo){
+		if (enemyInfo[archonInfo.ID] == null){
+			archonIds[numEnemyArchons] = archonInfo.ID;
+			numEnemyArchons ++;
+		}
 		enemyInfo[archonInfo.ID] = archonInfo;
 	}
 	

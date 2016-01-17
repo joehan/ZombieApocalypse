@@ -18,7 +18,7 @@ public class Archon {
 				if (rc.getTeamParts() < 30){
 					rc.broadcastMessageSignal(1, 0, 10000);
 				}
-				
+				repairUnits(rc);
 				
 				Clock.yield();
 			}
@@ -26,6 +26,24 @@ public class Archon {
 				//Do something?
 				
 			}
+		}
+	}
+	
+	private void repairUnits(RobotController rc) throws GameActionException {
+		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, rc.getTeam());
+		//Get lowest health enemy
+		double lowestHealth = 200;
+		MapLocation loc = rc.getLocation();
+		for (RobotInfo friendly : adjacentFriendlies){
+			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON && 
+					friendly.health < lowestHealth) {
+				lowestHealth = friendly.health;
+				loc = friendly.location;
+				break;
+			}
+		}
+		if (loc != rc.getLocation()){
+			rc.repair(loc);
 		}
 	}
 	

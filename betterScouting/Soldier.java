@@ -9,16 +9,14 @@ public class Soldier {
 		
 		while (true) {
 			try {
+				rc.setIndicatorString(2, String.valueOf(Clock.getBytecodeNum()));
+
 				//First get info, sense enemies, etc.
 				RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 				RobotInfo[] opponents = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 				RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
-				rc.setIndicatorString(0, String.valueOf(Clock.getBytecodeNum()));
 				RobotInfo[] enemies = Entity.concat(opponents, zombies);
-				rc.setIndicatorString(1, String.valueOf(Clock.getBytecodeNum()));
-
 				RobotInfo nearestEnemy =  enemies.length > 0 ? Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation()) : null;
-				
 				//Then do messaging
 				
 				
@@ -26,15 +24,54 @@ public class Soldier {
 				attack(rc, zombies, opponents);
 				
 				//Then combat move
-				
+				if (enemies.length>0){
+					combatMove(rc, opponents, enemies, brain, nearestEnemy);
+				}
 				//Then if not in combat non-combat move
 				
+				
+				//End the turn
 				Clock.yield();
 			} catch (Exception e){
-				
+				e.printStackTrace();
 			}
 		}
 	}
+	
+	
+	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, 
+			Brain brain, RobotInfo nearestEnemy) throws GameActionException {
+		if (rc.isCoreReady() && nearestEnemy != null){
+			//First check if health is low, and if it is retreat
+			//TODO change this to a reasonable value
+			if (rc.getHealth() < rc.getType().maxHealth/10) {
+				//Safe move towards nearest Archon unless fatally infected
+				if (rc.getViperInfectedTurns()*2 > rc.getHealth()){
+					if (nearestEnemy != null && nearestEnemy.team == rc.getTeam().opponent()){
+						Entity.moveToLocation(rc, nearestEnemy.location);
+					} else {
+						//Move away from nearest archon
+						//TODO implement nearest archon and moving away from it
+						Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location).opposite());
+					}
+				} else {
+					//Move towards nearest archon
+					//TODO implement nearest archon in brain and change direction to this
+					Entity.safeMove(rc, enemies, brain, rc.getLocation().directionTo(nearestEnemy.location));
+				}
+			} else {
+				//Now we just want to stay at optimal move range for all enemies
+				//AvoidMelee move to optimal attack range
+//				Entity.moveOptimalAttackRange(rc, brain, enemies);
+//				rc.setIndicatorString(0, String.valueOf(Clock.getBytecodeNum()));
+				Entity.moveAvoidMelee(rc, brain, enemies, nearestEnemy);
+//				rc.setIndicatorString(1, String.valueOf(Clock.getBytecodeNum()));
+			}
+		}
+		return false;
+	}
+	
+	
 	
 	public static RobotType[] orderToAttack = {RobotType.VIPER, RobotType.TURRET, RobotType.TTM,
 		RobotType.SOLDIER, RobotType.GUARD, RobotType.ARCHON, RobotType.RANGEDZOMBIE, RobotType.FASTZOMBIE, 
@@ -139,18 +176,17 @@ public class Soldier {
 			int bigZombieIndex = 0;
 			int standardZombieIndex = 0;
 			
-
 			for (int i = 0; i < enemyLength;  i++){
 				RobotInfo opponent = zombies[i];
 				if (rc.getLocation().distanceSquaredTo(opponent.location) <= 13){
 					switch(opponent.type){
 						case RANGEDZOMBIE:
 							rangedZombie[rangedZombieIndex] = opponent;
-							rangedZombieIndex++;
+							rangedZombieIndex ++;
 							break;
 						case FASTZOMBIE:
 							fastZombie[fastZombieIndex] = opponent;
-							fastZombieIndex++;
+							fastZombieIndex ++;
 							break;
 						case BIGZOMBIE:
 							bigZombie[bigZombieIndex] = opponent;
@@ -162,7 +198,7 @@ public class Soldier {
 							break;
 						case ZOMBIEDEN:
 							zombieDen[zombieDenIndex] = opponent;
-							standardZombieIndex++;
+							zombieDenIndex ++;
 							break;
 					}
 				}
@@ -170,12 +206,12 @@ public class Soldier {
 			RobotInfo[][] iterate = { rangedZombie, fastZombie, bigZombie, standardZombie, zombieDen};
 			int[] indexes = {rangedZombieIndex, fastZombieIndex, bigZombieIndex, standardZombieIndex, zombieDenIndex};
 			
-			double min = 10000;
+			double min = 100000;
 
 			MapLocation toAttack = null;
 			for (int j = 0; j < 5; j++){
 				RobotInfo[] currentList = iterate[j];
-				for (int i = 0; i < indexes[j]; i ++){
+				for (int i = 0; i < indexes[j]; i ++) {
 					RobotInfo current = currentList[i];
 					MapLocation loc = current.location;
 					if (current.health < min){
