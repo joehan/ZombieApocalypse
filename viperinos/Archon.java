@@ -86,7 +86,7 @@ public class Archon {
 	 */
 	public void repair(RobotController rc, RobotInfo[] allies) throws GameActionException{
 		for (RobotInfo ally: allies){
-			if (ally.health < ally.maxHealth){
+			if (ally.health < ally.maxHealth && ally.type !=RobotType.ARCHON && ally.location.distanceSquaredTo(rc.getLocation()) <= rc.getType().attackRadiusSquared){
 				rc.repair(ally.location);
 				break;
 			}
