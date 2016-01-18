@@ -20,7 +20,7 @@ public class Brain {
 	public Direction lastDirectionMoved;
 	
 	public RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
-	public RobotType[] mainBuildArray = {RobotType.VIPER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	public RobotType[] mainBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.VIPER};
 	public int buildCount = 0;
 	public boolean initialIteration = true;
 	
@@ -41,7 +41,7 @@ public class Brain {
 	public void addDeadDenLocation(MapLocation den){
 		MapLocation[] temp = new MapLocation[deadDens.length + 1];
 		System.arraycopy(deadDens, 0, temp, 0, deadDens.length);
-		temp[deadDens.length+1] = den;
+		temp[deadDens.length] = den;
 		deadDens = temp;
 	}
 	
