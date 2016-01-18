@@ -19,6 +19,8 @@ public class Soldier {
 				RobotInfo nearestEnemy =  enemies.length > 0 ? Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation()) : null;
 				//Then do messaging
 				
+				brain.thisTurnsSignals = rc.emptySignalQueue();
+				Squad.listenForCommands(rc, brain);
 				
 				//Then attack
 				attack(rc, zombies, opponents);
@@ -38,13 +40,12 @@ public class Soldier {
 		}
 	}
 	
-	
 	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, 
 			Brain brain, RobotInfo nearestEnemy) throws GameActionException {
 		if (rc.isCoreReady() && nearestEnemy != null){
 			//First check if health is low, and if it is retreat
 			//TODO change this to a reasonable value
-			if (rc.getHealth() < rc.getType().maxHealth/10) {
+			if (rc.getHealth() < rc.getType().maxHealth/3) {
 				//Safe move towards nearest Archon unless fatally infected
 				if (rc.getViperInfectedTurns()*2 > rc.getHealth()){
 					if (nearestEnemy != null && nearestEnemy.team == rc.getTeam().opponent()){
@@ -52,7 +53,11 @@ public class Soldier {
 					} else {
 						//Move away from nearest archon
 						//TODO implement nearest archon and moving away from it
-						Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location).opposite());
+						if (brain.leaderLocation != null){
+							Entity.moveInDirection(rc, rc.getLocation().directionTo(brain.leaderLocation));
+						} else {
+							Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location).opposite());
+						}
 					}
 				} else {
 					//Move towards nearest archon
@@ -62,10 +67,7 @@ public class Soldier {
 			} else {
 				//Now we just want to stay at optimal move range for all enemies
 				//AvoidMelee move to optimal attack range
-//				Entity.moveOptimalAttackRange(rc, brain, enemies);
-//				rc.setIndicatorString(0, String.valueOf(Clock.getBytecodeNum()));
-				Entity.moveAvoidMelee(rc, brain, enemies, nearestEnemy);
-//				rc.setIndicatorString(1, String.valueOf(Clock.getBytecodeNum()));
+				Entity.moveOptimalAttackRange(rc, brain, enemies, nearestEnemy);
 			}
 		}
 		return false;

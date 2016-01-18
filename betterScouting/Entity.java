@@ -1,11 +1,15 @@
 package betterScouting;
 
+
 import battlecode.common.*;
 
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
+        Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
 	public static boolean inDanger(RobotInfo[] enemies, MapLocation loc, boolean ranged){
 		if (ranged){
@@ -39,121 +43,42 @@ public class Entity {
 	}
 	
 	
-	public static boolean moveAvoidMelee(RobotController rc, Brain brain, RobotInfo[] enemies, 
-			RobotInfo nearestEnemy) throws GameActionException{
-		rc.setIndicatorString(0, String.valueOf(Clock.getBytecodeNum()));
-		Direction[] directions = directionsToTry(Direction.NORTH);
-		RobotInfo[] meleeEnemies = new RobotInfo[enemies.length];
-		int meleeEnemyLength = 0;
-		RobotInfo[] rangedEnemies = new RobotInfo[enemies.length];
-		int enemyLength = enemies.length;
-		for (int i = 0; i < enemies.length; i ++){
-			RobotInfo enemy = enemies[i];
-			if (enemy.type.attackRadiusSquared == 2){
-				meleeEnemies[meleeEnemyLength++] = enemy;
-			} else {
-				rangedEnemies[i - meleeEnemyLength] = enemy;
-			}
-		}
-		rc.setIndicatorString(1, String.valueOf(Clock.getBytecodeNum()));
-
-		int[] closestMeleeEnemy = new int[9];
-		boolean[] rangeEnemyInRange = new boolean[9];
-		for (int i = 0; i < 9; i ++){
-			Direction direction;
-			MapLocation newLoc;
-			if (i==8){
-				direction = Direction.NONE;
-				newLoc = rc.getLocation();
-			}else {
-				direction = directions[i];
-				newLoc = rc.getLocation().add(direction);
-			}
-			int lowest = 0;
-			if (rc.canMove(direction) && 
-					rc.senseRubble(rc.getLocation().add(direction)) < GameConstants.RUBBLE_SLOW_THRESH|| direction == Direction.NONE){
-				lowest = 100;
-				for (int j = 0; j < meleeEnemyLength; j ++){
-					int distance = newLoc.distanceSquaredTo(meleeEnemies[j].location);
-					if (distance < lowest){
-						lowest = distance;
+	public static boolean moveOptimalAttackRange(RobotController rc, Brain brain, RobotInfo[] enemies, RobotInfo enemy)
+			throws GameActionException{
+		if (rc.isCoreReady()){
+			int maxAttackRange = rc.getType().attackRadiusSquared;
+			MapLocation robotLocation = rc.getLocation();
+//			RobotInfo enemy = Entity.findClosestEnemy(rc, brain, enemies, robotLocation);
+			MapLocation enemyLoc = enemy.location;
+			Direction dirToEnemy = robotLocation.directionTo(enemyLoc);
+			Direction[] dirToTri = directionsToTry(dirToEnemy.opposite());
+			int currentDistance = robotLocation.distanceSquaredTo(enemyLoc);
+			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13 &&
+					(enemy.coreDelay > 2.0 || !(enemy.team == Team.ZOMBIE) || enemy.type == RobotType.ZOMBIEDEN))){
+				for (Direction dir : dirToTri){
+					if (!dir.isDiagonal() && rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
+						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
+						if (moveDistToEnemy <= maxAttackRange && moveDistToEnemy >= currentDistance){
+							boolean moved = Entity.safeMoveOneDirection(rc, enemies, brain, dir);
+							if (moved){
+								return true;
+							}
+						}
 					}
 				}
-				closestMeleeEnemy[i] = lowest;
-				int upperBound = enemyLength - meleeEnemyLength;
-				for (int j = 0; j < upperBound; j ++){
-					int distance = newLoc.distanceSquaredTo(rangedEnemies[j].location);
-					if (distance <= 13){
-						rangeEnemyInRange[i] = true;
-						break;
+				for (Direction dir : dirToTri){
+					if (rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH && dir.isDiagonal()){
+						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
+						if (moveDistToEnemy <= maxAttackRange && moveDistToEnemy >= currentDistance){
+							boolean moved = Entity.safeMoveOneDirection(rc, enemies, brain, dir);
+							if (moved){
+								return true;
+							}
+						}
 					}
 				}
 			}
-			closestMeleeEnemy[i] = lowest;
 		}
-		int maxIndex = 0;
-		Direction toMove = Direction.NONE;
-		for (int i = 0; i < 9; i++){
-			int closest = closestMeleeEnemy[i];
-			Direction dir = (i == 8) ? Direction.NONE : directions[i];
-			if (closest > maxIndex && (closest <= 13 || rangeEnemyInRange[i]) 
-					){
-				maxIndex = closest;
-				toMove = dir;
-			}
-		}
-		if (toMove != Direction.NONE){
-			rc.move(toMove);
-			return true;
-		}
-		
-		rc.setIndicatorString(2, String.valueOf(Clock.getBytecodeNum()));
-
-		for (int i = 0; i < 9; i ++){
-			Direction direction;
-			MapLocation newLoc;
-			if (i==8){
-				direction = Direction.NONE;
-				newLoc = rc.getLocation();
-			}else {
-				direction = directions[i];
-				newLoc = rc.getLocation().add(direction);
-			}
-			int lowest = 0;
-			if (rc.canMove(direction) &&
-					rc.senseRubble(rc.getLocation().add(direction)) >= GameConstants.RUBBLE_SLOW_THRESH|| direction == Direction.NONE){
-				lowest = 100;
-				for (int j = 0; j < meleeEnemyLength; j ++){
-					int distance = newLoc.distanceSquaredTo(meleeEnemies[j].location);
-					if (distance < lowest){
-						lowest = distance;
-					}
-				}
-				closestMeleeEnemy[i] = lowest;
-				int upperBound = enemyLength - meleeEnemyLength;
-				for (int j = 0; j < upperBound; j ++){
-					int distance = newLoc.distanceSquaredTo(rangedEnemies[j].location);
-					if (distance <= 13){
-						rangeEnemyInRange[i] = true;
-						break;
-					}
-				}
-			}
-			closestMeleeEnemy[i] = lowest;
-		}
-		for (int i = 0; i < 9; i++){
-			int closest = closestMeleeEnemy[i];
-			Direction dir = (i == 8) ? Direction.NONE : directions[i];
-			if (closest > maxIndex && (closest <= 13 || rangeEnemyInRange[i])){
-				maxIndex = closest;
-				toMove = dir;
-			}
-		}
-		if (toMove != Direction.NONE){
-			rc.move(toMove);
-			return true;
-		}
-
 		return false;
 	}
 	
@@ -373,5 +298,39 @@ public class Entity {
 		}
 		return false;
 	}
+	
+	public static boolean fleeEnemies(RobotController rc, Brain brain, RobotInfo[] enemies, RobotInfo[] zombies, RobotInfo closestEnemy) throws GameActionException{
+		boolean moved = false;
+		if (enemies.length > 0 || zombies.length > 0){
+			move(rc, brain, closestEnemy.location.directionTo(rc.getLocation()), false);
+			moved = true;
+		}
+		return moved;
+	}
+	
+	public static boolean move(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
+		Direction[] directionsToTry;
+		if(bug){
+			Direction[] bugDirections = {dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+					dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+					dir.rotateRight().rotateRight(), dir.rotateRight()};
+			directionsToTry = bugDirections;
+		} else {
+			Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
+					dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
+					dir.opposite().rotateRight(), dir.opposite().rotateLeft(),
+					dir.opposite()};
+			directionsToTry = normalDirections;
+		}
+		for (Direction d : directionsToTry){
+			if (rc.canMove(d)){
+				rc.move(d);
+				brain.lastDirectionMoved = d;
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	
 }

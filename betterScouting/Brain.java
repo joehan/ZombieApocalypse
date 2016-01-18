@@ -1,6 +1,7 @@
 package betterScouting;
 
 
+import java.util.Random;
 import battlecode.common.*;
 
 
@@ -8,10 +9,10 @@ public class Brain {
 
 	
 	
-	private RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
-	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
-	private int buildCount = 0;
-	private Boolean initialIteration = true;
+	public RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
+	public RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	public int buildCount = 0;
+	public Boolean initialIteration = true;
 	
 	public int getBuildCount() {
 		return buildCount;
@@ -37,6 +38,18 @@ public class Brain {
 	public int getIterateBuildLength() {
 		return iterateBuildArray.length;
 	}
+	
+	public Random rand;
+	public Signal[] thisTurnsSignals;
+	
+	public Direction lastDirectionMoved = Direction.NORTH;
+
+	
+	public MapLocation leaderLocation = null;
+	public int distanceToLeader = 50000;
+	public Direction leaderMovingInDirection = null;
+	
+	
 	
 	private boolean reflection = false;
 	
