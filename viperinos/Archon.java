@@ -16,7 +16,7 @@ public class Archon {
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
 			Entity.trackDens(rc, brain, zombies);
 			
-			repair(rc, allies);
+			repair(rc);
 			
 			if (rc.isCoreReady()){
 				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
@@ -90,14 +90,23 @@ public class Archon {
 	
 	
 	/*
-	 * Repair looks through the array of nearby allies, and repairs the first injured robot it sees
+	 * repairUnits looks for damaged, adjacent friendly units, and repairs the non-archon unit it sees
 	 */
-	public void repair(RobotController rc, RobotInfo[] allies) throws GameActionException{
-		for (RobotInfo ally: allies){
-			if (ally.health < ally.maxHealth && ally.type !=RobotType.ARCHON && ally.location.distanceSquaredTo(rc.getLocation()) <= rc.getType().attackRadiusSquared){
-				rc.repair(ally.location);
+	private void repair(RobotController rc) throws GameActionException {
+		RobotInfo[] adjacentFriendlies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, rc.getTeam());
+		//Get lowest health enemy
+		double lowestHealth = 200;
+		MapLocation loc = rc.getLocation();
+		for (RobotInfo friendly : adjacentFriendlies){
+			if (friendly.health < friendly.type.maxHealth && friendly.type!=RobotType.ARCHON && 
+					friendly.health < lowestHealth) {
+				lowestHealth = friendly.health;
+				loc = friendly.location;
 				break;
 			}
+		}
+		if (loc != rc.getLocation()){
+			rc.repair(loc);
 		}
 	}
 	

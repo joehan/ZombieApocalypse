@@ -94,12 +94,12 @@ public class Entity {
 			Direction dirToEnemy = robotLocation.directionTo(enemyLoc);
 			Direction[] dirToTri = directionsToTry(dirToEnemy.opposite());
 			int currentDistance = robotLocation.distanceSquaredTo(enemyLoc);
-			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13 &&
-					(enemy.coreDelay > 2.0 || !(enemy.team == Team.ZOMBIE) || enemy.type == RobotType.ZOMBIEDEN))){
+			if (robotLocation.distanceSquaredTo(enemyLoc) < 8 || (robotLocation.distanceSquaredTo(enemyLoc) > 13)){
 				for (Direction dir : dirToTri){
-					if (!dir.isDiagonal() && rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
+					if (rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
 						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
-						if (moveDistToEnemy <= maxAttackRange && moveDistToEnemy >= currentDistance){
+						if (moveDistToEnemy <= maxAttackRange && 
+								(moveDistToEnemy >= currentDistance || currentDistance > maxAttackRange)){
 							boolean moved = Entity.safeMoveOneDirection(rc, enemies, brain, dir);
 							if (moved){
 								return true;
@@ -108,9 +108,10 @@ public class Entity {
 					}
 				}
 				for (Direction dir : dirToTri){
-					if (rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH && dir.isDiagonal()){
+					if (rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
 						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
-						if (moveDistToEnemy <= maxAttackRange && moveDistToEnemy >= currentDistance){
+						if (moveDistToEnemy <= maxAttackRange && 
+								(moveDistToEnemy >= currentDistance || currentDistance > maxAttackRange)){
 							boolean moved = Entity.safeMoveOneDirection(rc, enemies, brain, dir);
 							if (moved){
 								return true;
