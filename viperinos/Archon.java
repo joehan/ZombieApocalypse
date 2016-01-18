@@ -12,7 +12,9 @@ public class Archon {
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
+			Entity.trackDens(rc, brain, zombies);
 			
 			repair(rc, allies);
 			
@@ -20,6 +22,12 @@ public class Archon {
 				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
 					typeToBuild = nextUnitToBuild(brain);
 				} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+				} else if (activateNeutrals(rc,brain,neutrals)){
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+				} else if (grabParts(rc, brain)){
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+				} else if (huntDens(rc,brain)){
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else {
 					Entity.move(rc, brain, brain.lastDirectionMoved, false);
@@ -93,5 +101,74 @@ public class Archon {
 		}
 	}
 	
+	/*
+	 * grabParts looks for locations with parts within sensor range, and bugs toward the closest location.
+	 * It returns true if the robot moved, and fasle otherwise
+	 */
+	public boolean grabParts(RobotController rc, Brain brain) throws GameActionException{
+		boolean moved = false;
+		MapLocation[] parts = rc.sensePartLocations(rc.getType().sensorRadiusSquared);
+		MapLocation closestPart = null;
+		int minDistance = 5000;
+		for (MapLocation loc : parts){
+			int distanceTo = rc.getLocation().distanceSquaredTo(loc);
+			if (distanceTo < minDistance && rc.senseRubble(loc) < GameConstants.RUBBLE_OBSTRUCTION_THRESH){
+				distanceTo = minDistance;
+				closestPart = loc;
+			}
+		}
+		if (closestPart != null){
+			Entity.move(rc, brain, rc.getLocation().directionTo(closestPart), true);
+			moved = true;
+		}
+		return moved;
+	}
 	
+	/*
+	 * activateNeutrals takes a list of nearby neutral robots, and activates any that are in range. Otherwise, it moves toward the closest neutral.
+	 * It reutrns true if the robot moved or activated a robot, and false otherwise
+	 */
+	public boolean activateNeutrals(RobotController rc, Brain brain, RobotInfo[] neutrals) throws GameActionException{
+		boolean activated = false;
+		RobotInfo closestNeutral = null;
+		int distanceToClosest = 5000;
+		for (RobotInfo neutral:neutrals){
+			int distanceTo = rc.getLocation().distanceSquaredTo(neutral.location);
+			if ( distanceTo <= 2){
+				rc.activate(neutral.location);
+				activated = true;
+				break;
+			} else if (distanceTo < distanceToClosest){
+				distanceToClosest = distanceTo;
+				closestNeutral = neutral;
+			}
+		}
+		if (!activated && closestNeutral != null){
+			Entity.move(rc, brain, rc.getLocation().directionTo(closestNeutral.location), true);
+			activated = true;
+		}
+		return activated;
+	}
+	
+	/*
+	 * huntDens moves toward the closest non dead den
+	 */
+	public boolean huntDens(RobotController rc, Brain brain) throws GameActionException{
+		boolean moved = false;
+		MapLocation closestDen = null;
+		int minDistance = 50000;
+		for (MapLocation den : brain.denLocations){
+			if (!brain.isDenDead(den)){
+				int distanceTo = rc.getLocation().distanceSquaredTo(den);
+				if (distanceTo < minDistance){
+					closestDen = den;
+				}
+			}
+		}
+		if (closestDen!=null ){
+			Entity.move(rc, brain, rc.getLocation().directionTo(closestDen), true);
+			moved = true;
+		}
+		return moved;
+	}
 }
