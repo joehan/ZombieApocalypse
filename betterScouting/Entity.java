@@ -309,6 +309,11 @@ public class Entity {
 		return moved;
 	}
 	
+	/*
+	 *move attempts to move in dir.
+	 *if Bug is try, it uses bug movement. OTherwise, it uses closest direction movement.
+	 *Returns true if the robot moved, and false otherwise
+	 */
 	public static boolean move(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
 		Direction[] directionsToTry;
 		if(bug){
