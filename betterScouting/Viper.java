@@ -73,18 +73,24 @@ public class Viper {
 		return attacked;
 	}
 	
+	
 	private void kite(RobotController rc, Brain brain, RobotInfo closestEnemy, RobotInfo[] enemies, RobotInfo[] zombies) throws GameActionException {
 		double coreDelay = rc.getCoreDelay();
 		double weaponDelay = rc.getWeaponDelay();
 		
-		if (weaponDelay < 1){
-			attack(rc, enemies, zombies);
-		} else if (coreDelay < 1){
-			int distanceToClosest = rc.getLocation().distanceSquaredTo(closestEnemy.location);
-			if (distanceToClosest<16){
-				Entity.fleeEnemies(rc, brain, enemies, zombies, closestEnemy);
-			}
+		int distToNearestEnemy = rc.getLocation().distanceSquaredTo(closestEnemy.location);
+		if (distToNearestEnemy <= 13){
+//			move()
 		}
+		
+//		if (weaponDelay < 1){
+//			attack(rc, enemies, zombies);
+//		} else if (coreDelay < 1){
+//			int distanceToClosest = rc.getLocation().distanceSquaredTo(closestEnemy.location);
+//			if (distanceToClosest<16){
+//				Entity.fleeEnemies(rc, brain, enemies, zombies, closestEnemy);
+//			}
+//		}
 		
 	}
 }
