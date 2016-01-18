@@ -9,7 +9,7 @@ public class Soldier {
 		
 		while (true) {
 			try {
-				rc.setIndicatorString(2, String.valueOf(Clock.getBytecodeNum()));
+//				rc.setIndicatorString(2, String.valueOf(Clock.getBytecodeNum()));
 
 				//First get info, sense enemies, etc.
 				RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
