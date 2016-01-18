@@ -41,7 +41,7 @@ public class Entity {
 	
 	public static boolean moveAvoidMelee(RobotController rc, Brain brain, RobotInfo[] enemies, 
 			RobotInfo nearestEnemy) throws GameActionException{
-
+		rc.setIndicatorString(0, String.valueOf(Clock.getBytecodeNum()));
 		Direction[] directions = directionsToTry(Direction.NORTH);
 		RobotInfo[] meleeEnemies = new RobotInfo[enemies.length];
 		int meleeEnemyLength = 0;
@@ -55,6 +55,8 @@ public class Entity {
 				rangedEnemies[i - meleeEnemyLength] = enemy;
 			}
 		}
+		rc.setIndicatorString(1, String.valueOf(Clock.getBytecodeNum()));
+
 		int[] closestMeleeEnemy = new int[9];
 		boolean[] rangeEnemyInRange = new boolean[9];
 		for (int i = 0; i < 9; i ++){
@@ -68,7 +70,8 @@ public class Entity {
 				newLoc = rc.getLocation().add(direction);
 			}
 			int lowest = 0;
-			if (rc.canMove(direction) || direction == Direction.NONE){
+			if (rc.canMove(direction) && 
+					rc.senseRubble(rc.getLocation().add(direction)) < GameConstants.RUBBLE_SLOW_THRESH|| direction == Direction.NONE){
 				lowest = 100;
 				for (int j = 0; j < meleeEnemyLength; j ++){
 					int distance = newLoc.distanceSquaredTo(meleeEnemies[j].location);
@@ -77,7 +80,8 @@ public class Entity {
 					}
 				}
 				closestMeleeEnemy[i] = lowest;
-				for (int j = 0; j < enemyLength - meleeEnemyLength; j ++){
+				int upperBound = enemyLength - meleeEnemyLength;
+				for (int j = 0; j < upperBound; j ++){
 					int distance = newLoc.distanceSquaredTo(rangedEnemies[j].location);
 					if (distance <= 13){
 						rangeEnemyInRange[i] = true;
@@ -87,22 +91,62 @@ public class Entity {
 			}
 			closestMeleeEnemy[i] = lowest;
 		}
-//		String meleeRange = "";
-//		String directionToGo = "";
-//		for (int i = 0; i < 8; i ++){
-//			meleeRange += closestMeleeEnemy[i] + ", ";
-//			directionToGo += directions[i].toString() + ", ";
-//		}
-//		meleeRange += closestMeleeEnemy[8];
-//		rc.setIndicatorString(0, meleeRange);
-//		rc.setIndicatorString(1, directionToGo);
 		int maxIndex = 0;
 		Direction toMove = Direction.NONE;
 		for (int i = 0; i < 9; i++){
 			int closest = closestMeleeEnemy[i];
+			Direction dir = (i == 8) ? Direction.NONE : directions[i];
+			if (closest > maxIndex && (closest <= 13 || rangeEnemyInRange[i]) 
+					){
+				maxIndex = closest;
+				toMove = dir;
+			}
+		}
+		if (toMove != Direction.NONE){
+			rc.move(toMove);
+			return true;
+		}
+		
+		rc.setIndicatorString(2, String.valueOf(Clock.getBytecodeNum()));
+
+		for (int i = 0; i < 9; i ++){
+			Direction direction;
+			MapLocation newLoc;
+			if (i==8){
+				direction = Direction.NONE;
+				newLoc = rc.getLocation();
+			}else {
+				direction = directions[i];
+				newLoc = rc.getLocation().add(direction);
+			}
+			int lowest = 0;
+			if (rc.canMove(direction) &&
+					rc.senseRubble(rc.getLocation().add(direction)) >= GameConstants.RUBBLE_SLOW_THRESH|| direction == Direction.NONE){
+				lowest = 100;
+				for (int j = 0; j < meleeEnemyLength; j ++){
+					int distance = newLoc.distanceSquaredTo(meleeEnemies[j].location);
+					if (distance < lowest){
+						lowest = distance;
+					}
+				}
+				closestMeleeEnemy[i] = lowest;
+				int upperBound = enemyLength - meleeEnemyLength;
+				for (int j = 0; j < upperBound; j ++){
+					int distance = newLoc.distanceSquaredTo(rangedEnemies[j].location);
+					if (distance <= 13){
+						rangeEnemyInRange[i] = true;
+						break;
+					}
+				}
+			}
+			closestMeleeEnemy[i] = lowest;
+		}
+		for (int i = 0; i < 9; i++){
+			int closest = closestMeleeEnemy[i];
+			Direction dir = (i == 8) ? Direction.NONE : directions[i];
 			if (closest > maxIndex && (closest <= 13 || rangeEnemyInRange[i])){
 				maxIndex = closest;
-				toMove = (i == 8) ? Direction.NONE : directions[i];
+				toMove = dir;
 			}
 		}
 		if (toMove != Direction.NONE){
