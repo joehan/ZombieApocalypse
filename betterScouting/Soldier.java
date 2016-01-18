@@ -30,7 +30,7 @@ public class Soldier {
 					combatMove(rc, opponents, enemies, brain, nearestEnemy);
 				}
 				//Then if not in combat non-combat move
-				if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
+				if (rc.isCoreReady() && brain.leaderMovingInDirection!=null && enemies.length == 0){
 					Direction dirToMove = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection));
 					Entity.move(rc, brain, dirToMove, false);
 				}
@@ -45,27 +45,28 @@ public class Soldier {
 	
 	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, 
 			Brain brain, RobotInfo nearestEnemy) throws GameActionException {
-		if (rc.isCoreReady() && nearestEnemy != null){
+		if (rc.isCoreReady()){
 			//First check if health is low, and if it is retreat
-			//TODO change this to a reasonable value
-			if (rc.getHealth() < rc.getType().maxHealth/3) {
+			if (rc.getHealth() < rc.getType().maxHealth/2) {
 				//Safe move towards nearest Archon unless fatally infected
 				if (rc.getViperInfectedTurns()*2 > rc.getHealth()){
 					if (nearestEnemy != null && nearestEnemy.team == rc.getTeam().opponent()){
 						Entity.moveToLocation(rc, nearestEnemy.location);
 					} else {
 						//Move away from nearest archon
-						//TODO implement nearest archon and moving away from it
 						if (brain.leaderLocation != null){
-							Entity.moveInDirection(rc, rc.getLocation().directionTo(brain.leaderLocation));
+							Entity.moveInDirection(rc, rc.getLocation().directionTo(brain.leaderLocation).opposite());
 						} else {
 							Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location).opposite());
 						}
 					}
 				} else {
 					//Move towards nearest archon
-					//TODO implement nearest archon in brain and change direction to this
-					Entity.safeMove(rc, enemies, brain, rc.getLocation().directionTo(nearestEnemy.location));
+					if (brain.leaderLocation != null){
+						Entity.moveInDirection(rc, rc.getLocation().directionTo(brain.leaderLocation));
+					} else {
+						Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location));
+					}
 				}
 			} else {
 				//Now we just want to stay at optimal move range for all enemies
