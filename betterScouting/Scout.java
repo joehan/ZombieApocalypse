@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Scout {
 	
-	public static void run(RobotController rc, Brain brain){
+	public void run(RobotController rc, Brain brain){
 		brain.getMapSymmetry(rc.getInitialArchonLocations(rc.getTeam()), 
 				rc.getInitialArchonLocations(rc.getTeam().opponent()));
 		

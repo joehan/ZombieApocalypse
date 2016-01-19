@@ -1,16 +1,18 @@
 package betterScouting;
 
 
+import java.util.Random;
 import battlecode.common.*;
 
 
 public class Brain {
 
 	
-	private RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
-	private RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
-	private int buildCount = 0;
-	private Boolean initialIteration = true;
+	
+	public RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
+	public RobotType[] iterateBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER};
+	public int buildCount = 0;
+	public Boolean initialIteration = true;
 	
 	public int getBuildCount() {
 		return buildCount;
@@ -37,6 +39,18 @@ public class Brain {
 		return iterateBuildArray.length;
 	}
 	
+	public Random rand;
+	public Signal[] thisTurnsSignals;
+	
+	public Direction lastDirectionMoved = Direction.NORTH;
+
+	
+	public MapLocation leaderLocation = null;
+	public int distanceToLeader = 50000;
+	public Direction leaderMovingInDirection = null;
+	
+	
+	
 	private boolean reflection = false;
 	
 	public enum Axis  {horizontal, vertical, highDiagonal, lowDiagonal, none};
@@ -46,6 +60,13 @@ public class Brain {
 	private double middleX = 0;
 	private double middleY = 0;
 	
+//	public MapLocation getNearestArchon(){
+//		for (int i = numEnemyArchons)
+//	}
+	
+	private int[] archonIds = new int[8];
+	private int numEnemyArchons = 0;
+	
 	private RobotInfo[] enemyInfo = new RobotInfo[10000];
 	
 	public boolean isArchon(int id){
@@ -53,6 +74,10 @@ public class Brain {
 	}
 	
 	public void addArchon(RobotInfo archonInfo){
+		if (enemyInfo[archonInfo.ID] == null){
+			archonIds[numEnemyArchons] = archonInfo.ID;
+			numEnemyArchons ++;
+		}
 		enemyInfo[archonInfo.ID] = archonInfo;
 	}
 	
