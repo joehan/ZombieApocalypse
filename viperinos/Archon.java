@@ -24,7 +24,10 @@ public class Archon {
 			repair(rc);
 			
 			if (rc.isCoreReady()){
-				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
+				if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
+					rc.setIndicatorString(1, "fleeing zombie");
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+				} else if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
 					rc.setIndicatorString(1, "building robot");
 					typeToBuild = nextUnitToBuild(brain, allies);
 				} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
@@ -233,7 +236,7 @@ public class Archon {
 			}
 		}
 		if (closestDen!=null && minDistance > 20){
-			Entity.move(rc, brain, rc.getLocation().directionTo(closestDen), true);
+			Entity.moveLimited(rc, brain, rc.getLocation().directionTo(closestDen));
 			moved = true;
 		} else if (minDistance <= 20){
 			moved=true;
@@ -250,7 +253,7 @@ public class Archon {
 			for (int id : brain.archonIds){
 				if (id != 0 ){
 					RobotInfo lastKnownDenInfo = brain.enemyInfo[id];
-					Entity.move(rc, brain, rc.getLocation().directionTo(lastKnownDenInfo.location), false);
+					Entity.moveLimited(rc, brain, rc.getLocation().directionTo(lastKnownDenInfo.location));
 					moved = true;
 					break;
 				}
