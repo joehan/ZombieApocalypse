@@ -124,6 +124,24 @@ public class Entity {
 		return closestHostile;
 	}
 	
+	public static boolean moveLimited(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+		Direction[] directionsToTry;
+
+		Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
+				dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight()};
+		directionsToTry = normalDirections;
+		for (Direction d : directionsToTry){
+			if (rc.canMove(d)){
+				rc.move(d);
+				brain.lastDirectionMoved = d;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	
+	
 	/*
 	 *move attempts to move in dir.
 	 *if Bug is try, it uses bug movement. OTherwise, it uses closest direction movement.
