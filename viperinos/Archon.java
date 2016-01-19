@@ -16,6 +16,7 @@ public class Archon {
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
 			Entity.trackDens(rc, brain, zombies);
 			Entity.trackArchons(rc, brain, enemies);
+			Squad.listenForInformation(rc, brain);
 			rc.setIndicatorString(0, "archons left : " + brain.numArchons);
 			
 			repair(rc);

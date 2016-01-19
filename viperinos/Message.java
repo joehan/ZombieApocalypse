@@ -28,4 +28,5 @@ public class Message {
 		return Entity.directions[signal];
 	}
 	
+	
 }
