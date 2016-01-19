@@ -53,6 +53,9 @@ public class Archon {
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				}
 			}
+			if (rc.isCoreReady()){
+				Entity.digInDirection(rc, brain, brain.lastDirectionMoved != null ? brain.lastDirectionMoved : Direction.NORTH);
+			}
 			rc.setIndicatorString(0, "Dens at : " + brain.locListToString(brain.denLocations));
 			rc.setIndicatorString(1, "Archons : " + brain.archonsToString());
 			Clock.yield();
