@@ -13,7 +13,7 @@ public class Archon {
 		}
 
 		while (true){
-
+			try {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
@@ -32,31 +32,40 @@ public class Archon {
 			
 			if (rc.isCoreReady()){
 				if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
-						rc.setIndicatorString(1, "fleeing zombie");
+						rc.setIndicatorString(2, "fleeing zombie");
 						Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (activateNeutrals(rc,brain,brain.neutrals)){
-					rc.setIndicatorString(1, "activating neutrals");
+					rc.setIndicatorString(2, "activating neutrals");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
-					rc.setIndicatorString(1, "building robot");
+					rc.setIndicatorString(2, "building robot");
 					typeToBuild = nextUnitToBuild(brain, allies);
 				} else if (grabParts(rc, brain)){
-					rc.setIndicatorString(1, "grabbing parts");
+					rc.setIndicatorString(2, "grabbing parts");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
-				} else if (huntDens(rc,brain)){
-					rc.setIndicatorString(1, "hunting dens");
+				} else if (huntDens(rc,brain, allies)){
+					rc.setIndicatorString(2, "hunting dens");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (chaseArchons(rc,brain, allies)){
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+					rc.setIndicatorString(2, "chasing archons");
+
 				} else {
-					rc.setIndicatorString(1, "just chillin");
+					rc.setIndicatorString(2, "just chillin");
 					Entity.move(rc, brain, brain.lastDirectionMoved, false);
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				}
 			}
+			if (rc.isCoreReady()){
+				Entity.digInDirection(rc, brain, brain.lastDirectionMoved != null ? brain.lastDirectionMoved : Direction.NORTH);
+			}
 			rc.setIndicatorString(0, "Dens at : " + brain.locListToString(brain.denLocations));
 			rc.setIndicatorString(1, "Archons : " + brain.archonsToString());
 			Clock.yield();
+			} catch (Exception e){
+				e.printStackTrace();
+				System.out.println(rc.getRoundNum());
+			}
 		}
 	}
 	
@@ -232,7 +241,7 @@ public class Archon {
 	/*
 	 * huntDens moves toward the closest non dead den
 	 */
-	public boolean huntDens(RobotController rc, Brain brain) throws GameActionException{
+	public boolean huntDens(RobotController rc, Brain brain, RobotInfo[] allies) throws GameActionException{
 		boolean moved = false;
 		MapLocation closestDen = null;
 		int minDistance = 50000;
@@ -245,7 +254,7 @@ public class Archon {
 				}
 			}
 		}
-		if (closestDen!=null && minDistance > 20){
+		if (closestDen!=null && minDistance > 20 && allies.length > 8){
 			Entity.moveLimited(rc, brain, rc.getLocation().directionTo(closestDen));
 			moved = true;
 		} else if (minDistance <= 20){
