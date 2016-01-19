@@ -2,6 +2,7 @@ package viperinos;
 
 import java.util.Random;
 
+
 import battlecode.common.*;
 
 public class Scout {
@@ -20,9 +21,12 @@ public class Scout {
 				try {
 					RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
 					Signal[] signals = rc.emptySignalQueue();
+					Entity.searchForDen(rc, brain);
+
 					for (Signal signal : signals){
 						if (brain.isArchon(signal.getID())){
 							rc.setIndicatorString(1, "saw an archon signal");
+							
 						}
 					}
 					ZombieSpawnSchedule spawn = rc.getZombieSpawnSchedule();

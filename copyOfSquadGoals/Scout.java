@@ -36,7 +36,7 @@ public class Scout {
 					Entity.moveRandomDirection(rc, brain);
 				}
 				
-				rc.setIndicatorString(1, "Moving Random "+ randomDir.toString());
+//				rc.setIndicatorString(1, "Moving Random "+ randomDir.toString());
 			}
 			Clock.yield();
 		}

@@ -1,10 +1,54 @@
 package viperinos;
 
+
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static MapLocation getNearestDen(RobotController rc, Brain brain){
+		MapLocation[] zombieDens = brain.denLocations;
+		if (zombieDens.length > 0){
+			int min = 10000;
+			MapLocation closest = zombieDens[0];
+			for (MapLocation den : zombieDens){
+				int distance = rc.getLocation().distanceSquaredTo(den);
+				if (rc.getLocation().distanceSquaredTo(den) < min){
+					closest = den;
+					min = distance;
+				}
+			}
+			return closest;
+		}
+		return null;
+	}
+	
+	public static void searchForDen(RobotController rc, Brain brain) throws GameActionException {
+		MapLocation closestDen = Entity.getNearestDen(rc, brain);
+		if (rc.getType() == RobotType.SCOUT && !(closestDen == null) && rc.getLocation().distanceSquaredTo(closestDen) < 
+				rc.getType().sensorRadiusSquared){
+			RobotInfo robotAtLoc = rc.senseRobotAtLocation(closestDen);
+			if ((!(robotAtLoc == null) && robotAtLoc.type != RobotType.ZOMBIEDEN || robotAtLoc == null) &&
+					!brain.isDenDead(closestDen)){
+				brain.addDeadDenLocation(closestDen);
+				Squad.shareDeadDen(rc, closestDen, 5000);
+			}
+		}
+		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
+		for (RobotInfo zombie : zombiesWithinRange) {
+			if (zombie.type == RobotType.ZOMBIEDEN) {
+				if (!brain.isDenKnown(zombie.location)){
+					brain.addDenLocation(zombie.location);
+					if (rc.getType() == RobotType.SCOUT || rc.getType() == RobotType.ARCHON){
+						Squad.shareDenLocation(rc, zombie.location, 5000);
+						rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+					}
+
+				}
+			}
+		}
+	}
 	
 	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{
 		if (rc.isCoreReady()){

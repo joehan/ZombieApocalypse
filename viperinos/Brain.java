@@ -4,7 +4,6 @@ package viperinos;
 import java.util.Random;
 
 import battlecode.common.*;
-import betterScouting.Brain.Axis;
 
 
 /*

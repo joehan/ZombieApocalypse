@@ -9,6 +9,9 @@ public class Archon {
 		RobotType typeToBuild = nextUnitToBuild(brain);
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		while (true){
+			
+			brain.thisTurnsSignals = rc.emptySignalQueue();
+			
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
