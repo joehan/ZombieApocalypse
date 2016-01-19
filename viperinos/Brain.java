@@ -86,9 +86,11 @@ public class Brain {
 		enemyInfo[r.ID] = r.location;
 	}
 	
+	
+	public int turnsSinceScoutSignal = 0;
 
 	
-private boolean reflection = false;
+	private boolean reflection = false;
 	
 	public enum Axis  {horizontal, vertical, highDiagonal, lowDiagonal, none};
 	

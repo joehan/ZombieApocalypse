@@ -77,6 +77,7 @@ public class Entity {
 			}
 		}
 	}
+
 	
 	public static boolean canSenseArchon(RobotController rc, RobotInfo[] allies){
 		int alliesLength = 0;
@@ -149,10 +150,24 @@ public class Entity {
 	 */
 	public static boolean move(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
 		Direction[] directionsToTry;
+		
 		if(bug){
-			Direction[] bugDirections = {dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
-					dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
-					dir.rotateRight().rotateRight(), dir.rotateRight()};
+			Direction[] bugDirections;
+			if (brain.lastDirectionMoved != null && 
+					(brain.lastDirectionMoved == dir || brain.lastDirectionMoved.rotateLeft() == dir)){
+				bugDirections =  new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+						dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+						dir.rotateRight().rotateRight(), dir.rotateRight()};
+			} else if (brain.lastDirectionMoved != null){
+				dir = brain.lastDirectionMoved;
+				bugDirections =  new Direction[]{dir.rotateRight(), dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+						dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+						dir.rotateRight().rotateRight()};
+			} else {
+				bugDirections = new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+						dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+						dir.rotateRight().rotateRight(), dir.rotateRight()};
+			}
 			directionsToTry = bugDirections;
 		} else {
 			Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
@@ -378,6 +393,7 @@ public class Entity {
 	 */
 	public static void trackArchons(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
 		for (RobotInfo enemy : enemies){
+			if(enemy.type==RobotType.ARCHON)
 			brain.addEnemyInfo(enemy);
 		}
 	}

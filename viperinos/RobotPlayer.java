@@ -22,7 +22,7 @@ public class RobotPlayer {
 					archon.run(rc, brain);
 				} else if (type == RobotType.GUARD){
 					Guard guard = new Guard();
-					Guard.run(rc, brain);
+					guard.run(rc, brain);
 				} else if (type == RobotType.SOLDIER){
 					Soldier soldier = new Soldier();
 					soldier.run(rc, brain);

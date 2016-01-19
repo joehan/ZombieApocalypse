@@ -27,8 +27,8 @@ public class Viper {
 			if (superAggroMode){
 				rc.setIndicatorString(0, "super aggro mode");
 				superAggroAttack(rc, brain, opponents, zombies, closestEnemy, enemyStartLocations);
-			}else if (closestEnemy != null ){
-				kite(rc, brain, closestEnemy, opponents, zombies, allies);
+			}else if (closestEnemy != null && closestEnemy.type != RobotType.ZOMBIEDEN){
+				kite(rc, brain, closestEnemy, opponents, zombies, allies, false);
 			} else if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
 				Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4)), false);
 			}
@@ -54,10 +54,10 @@ public class Viper {
 			}
 		}
 		if (closestEnemy != null){
-			kite(rc, brain, closestEnemy, opponents, zombies, new RobotInfo[0]);
+			kite(rc, brain, closestEnemy, opponents, zombies, new RobotInfo[0], true);
 		} else if (closestArchon != null && rc.isCoreReady()){
 			rc.setIndicatorString(1, closestArchon.toString());
-			Entity.move(rc, brain, rc.getLocation().directionTo(closestArchon), true);
+			Entity.move(rc, brain, rc.getLocation().directionTo(closestArchon), false);
 		}
 	}
 	
@@ -71,7 +71,8 @@ public class Viper {
 	 * 
 	 * it returns true if the robot attacked, and false otherwise
 	 */
-	private boolean attack(RobotController rc, RobotInfo[] enemies, RobotInfo[] zombies) throws GameActionException{
+	private boolean attack(RobotController rc, RobotInfo[] enemies, RobotInfo[] zombies, boolean avoidDens
+			) throws GameActionException{
 		
 		boolean attacked = false;
 		if (rc.isWeaponReady()){
@@ -99,15 +100,21 @@ public class Viper {
 						distanceToClosest = distanceToZombie;
 					}
 				}
-				rc.attackLocation(closestZombie.location);
-				attacked = true;
+				if (!avoidDens){
+					rc.attackLocation(closestZombie.location);
+					attacked = true;
+				} else if (closestZombie.type != RobotType.ZOMBIEDEN){
+					rc.attackLocation(closestZombie.location);
+					attacked = true;
+				}
+				
 			}
 		}
 		return attacked;
 	}
 	
 	private void kite(RobotController rc, Brain brain, RobotInfo closestEnemy, RobotInfo[] enemies, RobotInfo[] zombies,
-			RobotInfo[] allies) throws GameActionException {
+			RobotInfo[] allies, boolean avoidDens) throws GameActionException {
 		RobotInfo nearestOpponent = Entity.findClosestHostile(rc, enemies, new RobotInfo[0]);
 		RobotInfo nearestZombie = Entity.findClosestHostile(rc, new RobotInfo[0], zombies);
 //		int distanceToNearestEnemy = rc.getLocation().distanceSquaredTo(closestEnemy.location);
@@ -123,7 +130,7 @@ public class Viper {
 			//TODO check to see if moving makes enemy still in sight range
 			Entity.move(rc, brain, rc.getLocation().directionTo(closestEnemy.location).opposite(), false);
 		} else if (rc.isWeaponReady()){
-			attack(rc, enemies, zombies);
+			attack(rc, enemies, zombies, avoidDens);
 		}
 	}
 	
