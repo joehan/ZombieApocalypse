@@ -68,14 +68,15 @@ public class Archon {
 			robotToBuild = brain.startBuildArray[brain.buildCount];
 			brain.buildCount++;
 			if(brain.buildCount >= brain.startBuildArray.length){
-				brain.buildCount = 0;
 				brain.initialIteration =false;
 			}
-		}else{
-			if(allies.length == 0){
+		} else if (brain.buildCount % 15 == 0){
+			robotToBuild = RobotType.SCOUT;
+			brain.buildCount++;
+		} else {
+			if (allies.length == 0) {
 				robotToBuild = RobotType.SOLDIER;
-			}
-			else{
+			} else {
 				Double[] currentDist = calculateCurrentDist(allies);
 				int maxIndex = 0;
 				Double maxDiff = 0.0;
@@ -88,6 +89,7 @@ public class Archon {
 				}
 				robotToBuild = brain.robotsToBuild[maxIndex];
 			}
+			brain.buildCount++;
 		}
 		return robotToBuild;
 	}
