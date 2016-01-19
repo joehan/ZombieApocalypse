@@ -19,42 +19,47 @@ public class Scout {
 			
 			while (true){
 				try {
-					RobotInfo[] enemies = rc.senseHostileRobots(rc.getLocation(), rc.getType().sensorRadiusSquared);
-					Signal[] signals = rc.emptySignalQueue();
-					Entity.searchForDen(rc, brain);
-
-					for (Signal signal : signals){
-						if (brain.isArchon(signal.getID()) && 
-								brain.enemyInfo[signal.getID()].location != signal.getLocation()){
-							rc.setIndicatorString(1, "saw an archon signal");
-							//TODO Fix this fucking shit
-							RobotInfo r = new RobotInfo(signal.getID(), rc.getTeam().opponent(), RobotType.ARCHON, signal.getLocation(), 0.,0.,0.,RobotType.ARCHON.maxHealth,RobotType.ARCHON.maxHealth,0,0);
-							brain.addEnemyInfo(r);
-							Squad.shareArchonInfo(rc, signal.getLocation(), signal.getID(), 5000);
-						}
-					}
-					ZombieSpawnSchedule spawn = rc.getZombieSpawnSchedule();
+					RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
+					RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
+					
+					brain.thisTurnsSignals = rc.emptySignalQueue();
+					
+					Entity.trackDens(rc, brain, zombies);
+					Entity.trackArchons(rc, brain, enemies);
+					spy(rc,brain);
 					
 					boolean move = false;
 					int randomNum = rand.nextInt(8);
 					int i = 0;
 					while (!move && i < 8 && rc.isCoreReady()){
-						move = Entity.safeMoveOneDirectionRanged(rc, enemies, brain, currentDir);
+						move = Entity.safeMoveOneDirectionRanged(rc, Entity.concat(enemies, zombies), brain, currentDir);
 						if (!move){
 							currentDir = Entity.directions[(randomNum + i)%8];
 						}
-						i ++;
+						i++;
 					}
 					if (!move){
 						//scout is trapped
 						Entity.moveRandomDirection(rc, brain);
 					}
-//					boolean val = Entity.moveInDirection(rc, rc.getLocation().directionTo(toGo));
-					Entity.addArchonsToBrain(rc, enemies, brain);
 					Clock.yield();
 				}
 				catch (Exception e){
 					
+				}
+			}
+		}
+		
+		
+		public void spy(RobotController rc, Brain brain) throws GameActionException{
+			for (Signal signal : brain.thisTurnsSignals){
+				if (brain.isArchon(signal.getID()) && 
+						brain.enemyInfo[signal.getID()].location != signal.getLocation()){
+					rc.setIndicatorString(1, "saw an archon signal");
+					//TODO Fix this fucking shit
+					RobotInfo r = new RobotInfo(signal.getID(), rc.getTeam().opponent(), RobotType.ARCHON, signal.getLocation(), 0.,0.,0.,RobotType.ARCHON.maxHealth,RobotType.ARCHON.maxHealth,0,0);
+					brain.addEnemyInfo(r);
+					Squad.shareArchonInfo(rc, signal.getLocation(), signal.getID(), 5000);
 				}
 			}
 		}

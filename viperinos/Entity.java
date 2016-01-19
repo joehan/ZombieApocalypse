@@ -64,19 +64,7 @@ public class Entity {
 		return false;
 	}
 	
-	/*
-	 * This method will look at all enemies in enemies, check if there are any archons, and if so
-	 * add them to the archon store in brain.
-	 */
-	public static void addArchonsToBrain(RobotController rc, RobotInfo[] enemies, Brain brain){
-		int enemiesLength = enemies.length;
-		for (int i = 0; i < enemiesLength; i ++){
-			if (enemies[i].type == RobotType.ARCHON){
-				brain.addArchon(enemies[i]);
-				rc.setIndicatorString(0, "found archon");
-			}
-		}
-	}
+	
 	
 	public static boolean canSenseArchon(RobotController rc, RobotInfo[] allies){
 		int alliesLength = 0;
@@ -378,6 +366,7 @@ public class Entity {
 	 */
 	public static void trackArchons(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
 		for (RobotInfo enemy : enemies){
+			if(enemy.type==RobotType.ARCHON)
 			brain.addEnemyInfo(enemy);
 		}
 	}
