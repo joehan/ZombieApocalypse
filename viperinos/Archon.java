@@ -7,6 +7,8 @@ public class Archon {
 	
 	public void run(RobotController rc, Brain brain) throws GameActionException{
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
+		RobotType typeToBuild = nextUnitToBuild(brain, new RobotInfo[0]);
+
 		while (true){
 
 			brain.thisTurnsSignals = rc.emptySignalQueue();
@@ -14,7 +16,6 @@ public class Archon {
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
-			RobotType typeToBuild = nextUnitToBuild(brain, allies);
 			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
 			Entity.trackDens(rc, brain, zombies);
