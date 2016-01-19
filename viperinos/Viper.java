@@ -142,7 +142,8 @@ public class Viper {
 				Entity.move(rc, brain, rc.getLocation().directionTo(closestEnemy.location).opposite(), false);
 			}
 		} else if (rc.isCoreReady() && ((zombies.length > 0 && distanceToNearestZombie <= 13) || 
-				(enemies.length > 0 && rc.getLocation().distanceSquaredTo(nearestOpponent.location) <= 13))){
+				(enemies.length > 0 && rc.getLocation().distanceSquaredTo(nearestOpponent.location) <= 13 && 
+				closestEnemy.type != RobotType.TURRET))){
 			//TODO check to see if moving makes enemy still in sight range
 			Entity.move(rc, brain, rc.getLocation().directionTo(closestEnemy.location).opposite(), false);
 		} else if (rc.isWeaponReady()){

@@ -192,14 +192,14 @@ public class Entity {
 	 */
 	public static boolean follow(RobotController rc, Brain brain) throws GameActionException{
 		if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
-			Direction dir = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4));
+			Direction dir = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 2));
 			
 			Direction[] directionsToTry = {dir, dir.rotateLeft(), dir.rotateRight(),
 					dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
 					dir.opposite().rotateRight(), dir.opposite().rotateLeft(),
 					dir.opposite()};
 			for (Direction d : directionsToTry){
-				if (rc.canMove(d) && rc.getLocation().add(d).distanceSquaredTo(brain.leaderLocation) > 2){
+				if (rc.canMove(d) && rc.getLocation().add(d).distanceSquaredTo(brain.leaderLocation) > 1){
 					rc.move(d);
 					brain.lastDirectionMoved = d;
 					return true;
