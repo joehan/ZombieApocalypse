@@ -6,6 +6,34 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dir = directions[i%8];
+				if (rc.canMove(dir)){
+					rc.move(dir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * This method will look at all enemies in enemies, check if there are any archons, and if so
+	 * add them to the archon store in brain.
+	 */
+	public static void addArchonsToBrain(RobotController rc, RobotInfo[] enemies, Brain brain){
+		int enemiesLength = enemies.length;
+		for (int i = 0; i < enemiesLength; i ++){
+			if (enemies[i].type == RobotType.ARCHON){
+				brain.addArchon(enemies[i]);
+				rc.setIndicatorString(0, "found archon");
+			}
+		}
+	}
+	
 	public static boolean canSenseArchon(RobotController rc, RobotInfo[] allies){
 		int alliesLength = 0;
 		for (int i = 0; i < alliesLength; i++){
@@ -153,6 +181,21 @@ public class Entity {
 			dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft(),
 			dir.opposite()};
 		return ret;
+	}
+	
+	
+	public static boolean safeMoveOneDirectionRanged(RobotController rc, RobotInfo[] enemies,
+			Brain brain, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			MapLocation robotLocation = rc.getLocation();
+			Direction currentDir = dir;
+			MapLocation newLoc = robotLocation.add(currentDir);
+			if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir)){
+				rc.move(currentDir);
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public static boolean safeMove(RobotController rc, RobotInfo[] enemies, Brain brain, Direction dir
