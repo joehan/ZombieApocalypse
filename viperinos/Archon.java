@@ -54,7 +54,7 @@ public class Archon {
 	
 	
 	/*
-	 * buildNextUnit builds the next unit up in your build order.
+	 * nextUnitToBuild builds the next unit up in your build order.
 	 * First, it iterates through startBuildArray once, and then
 	 * it repeatedly builds through mainBuildArray
 	 */
