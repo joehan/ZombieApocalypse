@@ -110,6 +110,22 @@ public class Entity {
 		return closestHostile;
 	}
 	
+	public static boolean moveSuperLimited(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+		Direction[] directionsToTry;
+
+		Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
+				};
+		directionsToTry = normalDirections;
+		for (Direction d : directionsToTry){
+			if (rc.canMove(d)){
+				rc.move(d);
+				brain.lastDirectionMoved = d;
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static boolean moveLimited(RobotController rc, Brain brain, Direction dir) throws GameActionException{
 		Direction[] directionsToTry;
 
@@ -135,10 +151,24 @@ public class Entity {
 	 */
 	public static boolean move(RobotController rc, Brain brain, Direction dir, boolean bug) throws GameActionException{
 		Direction[] directionsToTry;
+		
 		if(bug){
-			Direction[] bugDirections = {dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
-					dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
-					dir.rotateRight().rotateRight(), dir.rotateRight()};
+			Direction[] bugDirections;
+			if (brain.lastDirectionMoved != null && 
+					(brain.lastDirectionMoved == dir || brain.lastDirectionMoved.rotateLeft() == dir)){
+				bugDirections =  new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+						dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+						dir.rotateRight().rotateRight(), dir.rotateRight()};
+			} else if (brain.lastDirectionMoved != null){
+				dir = brain.lastDirectionMoved;
+				bugDirections =  new Direction[]{dir.rotateRight(), dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+						dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+						dir.rotateRight().rotateRight()};
+			} else {
+				bugDirections = new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(),
+						dir.opposite().rotateRight(), dir.opposite(), dir.opposite().rotateLeft(),
+						dir.rotateRight().rotateRight(), dir.rotateRight()};
+			}
 			directionsToTry = bugDirections;
 		} else {
 			Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
