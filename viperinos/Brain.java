@@ -34,6 +34,10 @@ public class Brain {
 	public MapLocation[] denLocations = {};
 	public MapLocation[] deadDens = {};
 	
+	public string locListToString(MapLocation[] locs){
+		string 
+	}
+	
 	public void addDenLocation(MapLocation den){
 		if (!isDenKnown(den)){
 			MapLocation[] temp = new MapLocation[denLocations.length + 1];

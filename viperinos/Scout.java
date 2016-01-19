@@ -42,6 +42,8 @@ public class Scout {
 						//scout is trapped
 						Entity.moveRandomDirection(rc, brain);
 					}
+					
+					rc.setIndicatorString(0, );
 					Clock.yield();
 				}
 				catch (Exception e){
