@@ -42,15 +42,17 @@ public class Squad {
 	}
 	
 	public static void listenForInformation(RobotController rc, Brain brain){
-		for (Signal signal : brain.thisTurnsSignals){
-			if (signal.getTeam()==rc.getTeam() && signal.getMessage()!=null){
-				int[] message = signal.getMessage();
-				if (message[0]==shareDenLocationCode){
-					MapLocation den = Message.convertSignalToMap(message[1]);
-					brain.addDenLocation(den);
-				} else if (message[0] == shareDeadDenCode){
-					MapLocation den = Message.convertSignalToMap(message[1]);
-					brain.addDeadDenLocation(den);
+		if(brain.thisTurnsSignals != null){
+			for (Signal signal : brain.thisTurnsSignals){
+				if (signal.getTeam()==rc.getTeam() && signal.getMessage()!=null){
+					int[] message = signal.getMessage();
+					if (message[0]==shareDenLocationCode){
+						MapLocation den = Message.convertSignalToMap(message[1]);
+						brain.addDenLocation(den);
+					} else if (message[0] == shareDeadDenCode){
+						MapLocation den = Message.convertSignalToMap(message[1]);
+						brain.addDeadDenLocation(den);
+					}
 				}
 			}
 		}

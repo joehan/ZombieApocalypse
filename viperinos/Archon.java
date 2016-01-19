@@ -6,12 +6,12 @@ import battlecode.common.*;
 public class Archon {
 	
 	public void run(RobotController rc, Brain brain) throws GameActionException{
-		RobotType typeToBuild = nextUnitToBuild(brain);
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		while (true){
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
+			RobotType typeToBuild = nextUnitToBuild(brain, allies);
 			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
 			Entity.trackDens(rc, brain, zombies);
@@ -24,7 +24,7 @@ public class Archon {
 			if (rc.isCoreReady()){
 				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
 					rc.setIndicatorString(1, "building robot");
-					typeToBuild = nextUnitToBuild(brain);
+					typeToBuild = nextUnitToBuild(brain, allies);
 				} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
 					rc.setIndicatorString(1, "fleeing zombie");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
@@ -56,7 +56,7 @@ public class Archon {
 	 * First, it iterates through startBuildArray once, and then
 	 * it repeatedly builds through mainBuildArray
 	 */
-	public RobotType nextUnitToBuild(Brain brain){
+	public RobotType nextUnitToBuild(Brain brain, RobotInfo[] allies){
 		RobotType robotToBuild;
 		if(brain.initialIteration && brain.startBuildArray.length>0){
 			robotToBuild = brain.startBuildArray[brain.buildCount];
@@ -66,13 +66,57 @@ public class Archon {
 				brain.initialIteration =false;
 			}
 		}else{
-			robotToBuild = brain.mainBuildArray[brain.buildCount];
-			brain.buildCount++;
-			if(brain.buildCount >= brain.mainBuildArray.length){
-				brain.buildCount = 0;
+			if(allies.length == 0){
+				robotToBuild = RobotType.SOLDIER;
+			}
+			else{
+				Double[] currentDist = calculateCurrentDist(allies);
+				int maxIndex = 0;
+				Double maxDiff = 0.0;
+				for(int i = 0; i < 5; i++){
+					double diff = brain.buildDist[i] - currentDist[i];
+					if(diff > maxDiff){
+						maxDiff = diff;
+						maxIndex = i;
+					}
+				}
+				robotToBuild = brain.robotsToBuild[maxIndex];
 			}
 		}
 		return robotToBuild;
+	}
+	
+	public Double[] calculateCurrentDist(RobotInfo[] allies){
+		int totalAllies = allies.length;
+		double soldierCount = 0.0;
+		double viperCount = 0.0;
+		double guardCount = 0.0;
+		double scoutCount = 0.0;
+		double turretCount = 0.0;
+		for(RobotInfo ally : allies){
+			switch (ally.type) {
+			case GUARD:
+				guardCount++;
+				break;
+			case SCOUT:
+				scoutCount++;
+				break;
+			case SOLDIER:
+				soldierCount++;
+				break;
+			case TTM:
+			case TURRET:
+				turretCount++;
+				break;
+			case VIPER:
+				viperCount++;
+				break;
+			default:
+				break;
+			}
+		}
+		Double[] returnArray = {soldierCount/totalAllies, viperCount/totalAllies, guardCount/totalAllies, scoutCount/totalAllies, turretCount/totalAllies};
+		return returnArray;
 	}
 	
 	/*

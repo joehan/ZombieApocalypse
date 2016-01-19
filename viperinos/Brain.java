@@ -20,7 +20,9 @@ public class Brain {
 	public Direction lastDirectionMoved;
 	
 	public RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER};
-	public RobotType[] mainBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.VIPER};
+	public RobotType[] robotsToBuild = {RobotType.SOLDIER, RobotType.VIPER, RobotType.GUARD, RobotType.SCOUT, RobotType.TURRET};
+	public Double[] buildDist = {0.75, 0.25, 0.0, 0.0, 0.0};
+	
 	public int buildCount = 0;
 	public boolean initialIteration = true;
 	
