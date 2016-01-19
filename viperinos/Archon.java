@@ -8,6 +8,9 @@ public class Archon {
 	public void run(RobotController rc, Brain brain) throws GameActionException{
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		RobotType typeToBuild = nextUnitToBuild(brain, new RobotInfo[0]);
+		if (rc.getTeamParts() > 250){
+			tryToBuild(rc, RobotType.VIPER, Direction.NORTH);
+		}
 
 		while (true){
 

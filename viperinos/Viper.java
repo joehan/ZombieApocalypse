@@ -7,7 +7,15 @@ public class Viper {
 	public void run(RobotController rc, Brain brain) throws GameActionException{
 		boolean superAggroMode = false;
 		MapLocation[] enemyStartLocations = rc.getInitialArchonLocations(rc.getTeam().opponent());
-		if (rc.getRoundNum() < 50){
+		MapLocation closestArchon = null;
+		int distance = 4000;
+		for (MapLocation enemyArchon : enemyStartLocations){
+			if (enemyArchon != null && rc.getLocation().distanceSquaredTo(enemyArchon) < distance){
+				closestArchon = enemyArchon;
+				distance = rc.getLocation().distanceSquaredTo(enemyArchon);
+			}
+		}
+		if (rc.getRoundNum() < 50 && closestArchon != null){
 			superAggroMode = true;
 
 			for (int i = 0; i < enemyStartLocations.length; i ++){
@@ -17,6 +25,9 @@ public class Viper {
 		
 		
 		while (true){
+			if (rc.getRoundNum() > 300){
+				superAggroMode = false;
+			}
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 
 			Squad.listenForCommands(rc, brain);
@@ -26,38 +37,43 @@ public class Viper {
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, opponents, zombies);
 			if (superAggroMode){
 				rc.setIndicatorString(0, "super aggro mode");
-				superAggroAttack(rc, brain, opponents, zombies, closestEnemy, enemyStartLocations);
-			}else if (closestEnemy != null && closestEnemy.type != RobotType.ZOMBIEDEN){
+				superAggroAttack(rc, brain, opponents, zombies, closestEnemy);
+			}else if (closestEnemy != null ){
 				kite(rc, brain, closestEnemy, opponents, zombies, allies, false);
 			} else if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
 				Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4)), false);
+			} else if (rc.isCoreReady()){
+				Entity.digInDirection(rc, brain, Direction.NORTH);
 			}
 			Clock.yield();
 		}
 	}
 	
 	private void superAggroAttack(RobotController rc, Brain brain, RobotInfo[] opponents, RobotInfo[] zombies,
-			RobotInfo closestEnemy, MapLocation[] enemyArchonLocations) throws GameActionException{
+			RobotInfo closestEnemy) throws GameActionException{
 
 		for (int id : brain.archonIds){
 			MapLocation lastKnownArchonInfo = brain.enemyInfo[id];
-			if (rc.getLocation().equals(lastKnownArchonInfo)){
-				brain.enemyInfo[id] = null;
+			if ( lastKnownArchonInfo != null && rc.getLocation().distanceSquaredTo(lastKnownArchonInfo) < 5){
+				brain.enemyInfo[id] = null;				
 			}
 		}
 		MapLocation closestArchon = null;
 		int distance = 4000;
-		for (MapLocation archonLocation : enemyArchonLocations){
-			if (rc.getLocation().distanceSquaredTo(archonLocation) < distance){
-				closestArchon = archonLocation;
-				distance = rc.getLocation().distanceSquaredTo(archonLocation);
+		for (int id : brain.archonIds){
+			if (brain.enemyInfo[id] != null && rc.getLocation().distanceSquaredTo(brain.enemyInfo[id]) < distance){
+				closestArchon = brain.enemyInfo[id];
+				distance = rc.getLocation().distanceSquaredTo(brain.enemyInfo[id]);
 			}
 		}
-		if (closestEnemy != null){
-			kite(rc, brain, closestEnemy, opponents, zombies, new RobotInfo[0], true);
+		if (closestEnemy != null && closestEnemy.type != RobotType.ZOMBIEDEN){
+			kite(rc, brain, closestEnemy, opponents, zombies, new RobotInfo[0], false);
 		} else if (closestArchon != null && rc.isCoreReady()){
 			rc.setIndicatorString(1, closestArchon.toString());
-			Entity.move(rc, brain, rc.getLocation().directionTo(closestArchon), false);
+			Entity.moveSuperLimited(rc, brain, rc.getLocation().directionTo(closestArchon));
+			if (rc.isCoreReady()){
+				Entity.digInDirection(rc, brain, rc.getLocation().directionTo(closestArchon));
+			}
 		}
 	}
 	

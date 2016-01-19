@@ -125,6 +125,22 @@ public class Entity {
 		return closestHostile;
 	}
 	
+	public static boolean moveSuperLimited(RobotController rc, Brain brain, Direction dir) throws GameActionException{
+		Direction[] directionsToTry;
+
+		Direction[] normalDirections = {dir, dir.rotateLeft(), dir.rotateRight(),
+				};
+		directionsToTry = normalDirections;
+		for (Direction d : directionsToTry){
+			if (rc.canMove(d)){
+				rc.move(d);
+				brain.lastDirectionMoved = d;
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static boolean moveLimited(RobotController rc, Brain brain, Direction dir) throws GameActionException{
 		Direction[] directionsToTry;
 
