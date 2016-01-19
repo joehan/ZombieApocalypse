@@ -72,7 +72,7 @@ public class Entity {
 		int enemiesLength = enemies.length;
 		for (int i = 0; i < enemiesLength; i ++){
 			if (enemies[i].type == RobotType.ARCHON){
-				brain.addArchon(enemies[i]);
+				brain.addArchon(enemies[i].location, enemies[i].ID);
 				rc.setIndicatorString(0, "found archon");
 			}
 		}

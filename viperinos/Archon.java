@@ -26,17 +26,14 @@ public class Archon {
 			
 			if (rc.isCoreReady()){
 				if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
-					rc.setIndicatorString(1, "fleeing zombie");
+						rc.setIndicatorString(1, "fleeing zombie");
+						Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+				} else if (activateNeutrals(rc,brain,neutrals)){
+					rc.setIndicatorString(1, "activating neutrals");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
 					rc.setIndicatorString(1, "building robot");
 					typeToBuild = nextUnitToBuild(brain, allies);
-				} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
-					rc.setIndicatorString(1, "fleeing zombie");
-					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
-				} else if (activateNeutrals(rc,brain,neutrals)){
-					rc.setIndicatorString(1, "activating neutrals");
-					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (grabParts(rc, brain)){
 					rc.setIndicatorString(1, "grabbing parts");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
@@ -253,10 +250,10 @@ public class Archon {
 		if (allies.length > 8){
 			for (int id : brain.archonIds){
 				if (id != 0 ){
-					RobotInfo lastKnownArchonInfo = brain.enemyInfo[id];
+					MapLocation lastKnownArchonInfo = brain.enemyInfo[id];
 					if (lastKnownArchonInfo != null){
-						Entity.moveLimited(rc, brain, rc.getLocation().directionTo(lastKnownArchonInfo.location));
-						if (rc.getLocation().equals(lastKnownArchonInfo.location)){
+						Entity.moveLimited(rc, brain, rc.getLocation().directionTo(lastKnownArchonInfo));
+						if (rc.getLocation().equals(lastKnownArchonInfo)){
 							brain.enemyInfo[id] = null;
 						}
 						moved = true;
