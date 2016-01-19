@@ -9,7 +9,7 @@ public class Archon {
 		RobotType typeToBuild = nextUnitToBuild(brain);
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		while (true){
-			
+
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 			
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
@@ -20,7 +20,6 @@ public class Archon {
 			Entity.trackDens(rc, brain, zombies);
 			Entity.trackArchons(rc, brain, enemies);
 			Squad.listenForInformation(rc, brain);
-			rc.setIndicatorString(0, "archons left : " + brain.numArchons);
 			
 			repair(rc);
 			
@@ -185,12 +184,15 @@ public class Archon {
 				int distanceTo = rc.getLocation().distanceSquaredTo(den);
 				if (distanceTo < minDistance){
 					closestDen = den;
+					minDistance = distanceTo;
 				}
 			}
 		}
-		if (closestDen!=null ){
+		if (closestDen!=null && minDistance > 20){
 			Entity.move(rc, brain, rc.getLocation().directionTo(closestDen), true);
 			moved = true;
+		} else if (minDistance <= 20){
+			moved=true;
 		}
 		return moved;
 	}

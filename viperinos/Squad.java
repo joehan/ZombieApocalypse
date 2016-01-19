@@ -25,7 +25,6 @@ public class Squad {
 						brain.leaderLocation = signal.getLocation();
 						brain.distanceToLeader = distanceToMessager;
 						brain.leaderMovingInDirection = Message.convertSignalToDirection(message[1]);
-				
 					}
 				}
 				
@@ -41,6 +40,10 @@ public class Squad {
 		rc.broadcastMessageSignal(shareDeadDenCode, Message.convertMapToSignal(den), distance);
 	}
 	
+	public static void shareArchonInfo(RobotController rc, MapLocation archonLoc, int archonId, int distance) throws GameActionException{
+		rc.broadcastMessageSignal(Message.convertIDToSignal(archonId, shareArchonInfoCode), Message.convertMapToSignal(archonLoc), distance);
+	}
+	
 	public static void listenForInformation(RobotController rc, Brain brain){
 		for (Signal signal : brain.thisTurnsSignals){
 			if (signal.getTeam()==rc.getTeam() && signal.getMessage()!=null){
@@ -51,6 +54,11 @@ public class Squad {
 				} else if (message[0] == shareDeadDenCode){
 					MapLocation den = Message.convertSignalToMap(message[1]);
 					brain.addDeadDenLocation(den);
+				} else if (Message.getCodeFromSignal(message[0]) == shareArchonInfoCode){
+					int id = Message.convertSignalToID(message[0]);
+					MapLocation loc = Message.convertSignalToMap(message[1]);
+					RobotInfo r = new RobotInfo(id, rc.getTeam().opponent(), RobotType.ARCHON, loc, 0.,0.,0.,RobotType.ARCHON.maxHealth,RobotType.ARCHON.maxHealth,0,0);
+					brain.addEnemyInfo(r);
 				}
 			}
 		}
