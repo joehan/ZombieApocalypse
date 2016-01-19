@@ -158,6 +158,29 @@ public class Entity {
 	}
 	
 	/*
+	 * follow attempts to follow your leader without blocking his path
+	 */
+	public static boolean follow(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
+			Direction dir = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4));
+			
+			Direction[] directionsToTry = {dir, dir.rotateLeft(), dir.rotateRight(),
+					dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(),
+					dir.opposite().rotateRight(), dir.opposite().rotateLeft(),
+					dir.opposite()};
+			for (Direction d : directionsToTry){
+				if (rc.canMove(d) && rc.getLocation().add(d).distanceSquaredTo(brain.leaderLocation) > 2){
+					rc.move(d);
+					brain.lastDirectionMoved = d;
+					return true;
+				}
+			}
+			
+		}
+		return false;
+	}
+	
+	/*
 	 * fleeEnemies looks for nearby enemies, and runs away from the closest one.
 	 * It returns true if the robot moved, and false otherwise
 	 */

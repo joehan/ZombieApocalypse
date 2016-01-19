@@ -29,8 +29,10 @@ public class Viper {
 				superAggroAttack(rc, brain, opponents, zombies, closestEnemy, enemyStartLocations);
 			}else if (closestEnemy != null ){
 				kite(rc, brain, closestEnemy, opponents, zombies, allies);
-			} else if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
-				Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4)), false);
+			} else if (Entity.follow(rc, brain)){
+				
+			} else if (rc.isCoreReady()){
+				Entity.digInDirection(rc, brain, brain.lastDirectionMoved);
 			}
 			Clock.yield();
 		}

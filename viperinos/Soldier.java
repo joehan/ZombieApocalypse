@@ -37,13 +37,11 @@ public class Soldier {
 				}
 				//Then if not in combat non-combat move
 				boolean moved = false;
-				if (rc.isCoreReady() && brain.leaderMovingInDirection!=null && enemies.length == 0){
-					Direction dirToMove = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4));
-					moved = Entity.move(rc, brain, dirToMove, false);
-					
+				if (Entity.follow(rc, brain)){
+					moved = true;
 				}
 				if (!moved && rc.isCoreReady()){
-					Entity.digInDirection(rc, brain, Direction.NORTH);
+					Entity.digInDirection(rc, brain, brain.lastDirectionMoved);
 				}
 				//End the turn
 				Clock.yield();

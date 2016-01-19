@@ -17,7 +17,7 @@ public class Brain {
 	public Random rand;
 	public Signal[] thisTurnsSignals;
 	
-	public Direction lastDirectionMoved;
+	public Direction lastDirectionMoved = Direction.NORTH;
 	
 	public RobotType[] startBuildArray = {RobotType.VIPER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER,
 			RobotType.SOLDIER, RobotType.SOLDIER};
