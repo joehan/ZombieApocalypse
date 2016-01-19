@@ -64,8 +64,6 @@ public class Entity {
 		return false;
 	}
 	
-	
-	
 	public static boolean canSenseArchon(RobotController rc, RobotInfo[] allies){
 		int alliesLength = 0;
 		for (int i = 0; i < alliesLength; i++){

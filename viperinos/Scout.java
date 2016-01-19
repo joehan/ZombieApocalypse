@@ -43,7 +43,8 @@ public class Scout {
 						Entity.moveRandomDirection(rc, brain);
 					}
 					
-					rc.setIndicatorString(0, );
+					rc.setIndicatorString(0, "Dens at : " + brain.locListToString(brain.denLocations));
+					rc.setIndicatorString(1, "Archons : " + brain.archonsToString());
 					Clock.yield();
 				}
 				catch (Exception e){
@@ -56,7 +57,7 @@ public class Scout {
 		public void spy(RobotController rc, Brain brain) throws GameActionException{
 			for (Signal signal : brain.thisTurnsSignals){
 				if (brain.isArchon(signal.getID()) && 
-						brain.enemyInfo[signal.getID()].location != signal.getLocation()){
+						brain.enemyInfo[signal.getID()] != signal.getLocation()){
 					rc.setIndicatorString(1, "saw an archon signal");
 					//TODO Fix this fucking shit
 					RobotInfo r = new RobotInfo(signal.getID(), rc.getTeam().opponent(), RobotType.ARCHON, signal.getLocation(), 0.,0.,0.,RobotType.ARCHON.maxHealth,RobotType.ARCHON.maxHealth,0,0);

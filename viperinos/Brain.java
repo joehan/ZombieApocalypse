@@ -19,7 +19,7 @@ public class Brain {
 	
 	public Direction lastDirectionMoved;
 	
-	public RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER,
+	public RobotType[] startBuildArray = {RobotType.VIPER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER,
 			RobotType.SOLDIER, RobotType.SOLDIER};
 	public RobotType[] robotsToBuild = {RobotType.SOLDIER, RobotType.VIPER, RobotType.GUARD, RobotType.SCOUT, RobotType.TURRET};
 	public Double[] buildDist = {0.65, 0.35, 0.0, 0.0, 0.0};
@@ -34,8 +34,12 @@ public class Brain {
 	public MapLocation[] denLocations = {};
 	public MapLocation[] deadDens = {};
 	
-	public string locListToString(MapLocation[] locs){
-		string 
+	public String locListToString(MapLocation[] locs){
+		String ret = "";
+		for (MapLocation loc : locs){
+			ret += "(" + loc.x +", " + loc.y+ "), ";
+		}
+		return ret;
 	}
 	
 	public void addDenLocation(MapLocation den){
@@ -80,18 +84,26 @@ public class Brain {
 	
 	public int[] archonIds = new int[8];
 	public int numArchons = 0;
-	public RobotInfo[] enemyInfo = new RobotInfo[10000];
+	public MapLocation[] enemyInfo = new MapLocation[10000];
 	
 	public void addEnemyInfo(RobotInfo r){
 		if (r.type == RobotType.ARCHON && !inArchonIds(r.ID)){
 			archonIds[numArchons] = r.ID;
 			++numArchons;
 		}
-		enemyInfo[r.ID] = r;
+		enemyInfo[r.ID] = r.location;
 	}
 	
-	
-	public int turnsSinceScoutSignal = 0;
+	public String archonsToString(){
+		String ret = "";
+		for (int archonId : archonIds){
+			if (archonId != 0){
+				MapLocation loc = enemyInfo[archonId];
+				ret += "(" + archonId + " at " + loc.x +", " + loc.y+ "), ";
+			}
+		}
+		return ret;
+	}
 
 	
 	private boolean reflection = false;
@@ -111,15 +123,15 @@ public class Brain {
 	
 	
 	public boolean isArchon(int id){
-		return enemyInfo[id] != null && enemyInfo[id].type == RobotType.ARCHON;
+		return enemyInfo[id] != null;
 	}
 	
-	public void addArchon(RobotInfo archonInfo){
-		if (enemyInfo[archonInfo.ID] == null){
-			archonIds[numEnemyArchons] = archonInfo.ID;
+	public void addArchon(MapLocation loc, int id){
+		if (enemyInfo[id] == null){
+			archonIds[numEnemyArchons] = id;
 			numEnemyArchons ++;
 		}
-		enemyInfo[archonInfo.ID] = archonInfo;
+		enemyInfo[id] = loc;
 	}
 	
 	/*
