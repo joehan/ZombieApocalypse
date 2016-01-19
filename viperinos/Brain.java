@@ -32,17 +32,21 @@ public class Brain {
 	public MapLocation[] deadDens = {};
 	
 	public void addDenLocation(MapLocation den){
-		MapLocation[] temp = new MapLocation[denLocations.length + 1];
-		System.arraycopy(denLocations, 0, temp, 0, denLocations.length);
-		temp[denLocations.length] = den;
-		denLocations = temp;
+		if (!isDenKnown(den)){
+			MapLocation[] temp = new MapLocation[denLocations.length + 1];
+			System.arraycopy(denLocations, 0, temp, 0, denLocations.length);
+			temp[denLocations.length] = den;
+			denLocations = temp;
+		}
 	}
 	
 	public void addDeadDenLocation(MapLocation den){
-		MapLocation[] temp = new MapLocation[deadDens.length + 1];
-		System.arraycopy(deadDens, 0, temp, 0, deadDens.length);
-		temp[deadDens.length] = den;
-		deadDens = temp;
+		if (!isDenDead(den)){
+			MapLocation[] temp = new MapLocation[deadDens.length + 1];
+			System.arraycopy(deadDens, 0, temp, 0, deadDens.length);
+			temp[deadDens.length] = den;
+			deadDens = temp;
+		}
 	}
 	
 	public boolean isDenKnown(MapLocation den){
@@ -71,13 +75,11 @@ public class Brain {
 	public int numArchons = 0;
 	public RobotInfo[] enemyInfo = new RobotInfo[10000];
 	public void addEnemyInfo(RobotInfo r){
-		if (enemyInfo[r.ID] == null){
-			enemyInfo[r.ID] = r;
-			if (r.type == RobotType.ARCHON){
-				archonIds[numArchons] = r.ID;
-				++numArchons;
-			}
+		if (r.type == RobotType.ARCHON && enemyInfo[r.ID]==null){
+			archonIds[numArchons] = r.ID;
+			++numArchons;
 		}
+		enemyInfo[r.ID] = r;
 	}
 	
 }
