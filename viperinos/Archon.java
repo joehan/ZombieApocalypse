@@ -15,21 +15,31 @@ public class Archon {
 			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
 			Entity.trackDens(rc, brain, zombies);
+			Entity.trackArchons(rc, brain, enemies);
+			rc.setIndicatorString(0, "archons left : " + brain.numArchons);
 			
 			repair(rc);
 			
 			if (rc.isCoreReady()){
 				if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
+					rc.setIndicatorString(1, "building robot");
 					typeToBuild = nextUnitToBuild(brain);
 				} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
+					rc.setIndicatorString(1, "fleeing zombie");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (activateNeutrals(rc,brain,neutrals)){
+					rc.setIndicatorString(1, "activating neutrals");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (grabParts(rc, brain)){
+					rc.setIndicatorString(1, "grabbing parts");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (huntDens(rc,brain)){
+					rc.setIndicatorString(1, "hunting dens");
+					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+				} else if (chaseArchons(rc,brain, allies)){
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else {
+					rc.setIndicatorString(1, "just chillin");
 					Entity.move(rc, brain, brain.lastDirectionMoved, false);
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				}
@@ -135,7 +145,7 @@ public class Archon {
 	
 	/*
 	 * activateNeutrals takes a list of nearby neutral robots, and activates any that are in range. Otherwise, it moves toward the closest neutral.
-	 * It reutrns true if the robot moved or activated a robot, and false otherwise
+	 * It returns true if the robot moved or activated a robot, and false otherwise
 	 */
 	public boolean activateNeutrals(RobotController rc, Brain brain, RobotInfo[] neutrals) throws GameActionException{
 		boolean activated = false;
@@ -177,6 +187,24 @@ public class Archon {
 		if (closestDen!=null ){
 			Entity.move(rc, brain, rc.getLocation().directionTo(closestDen), true);
 			moved = true;
+		}
+		return moved;
+	}
+	
+	/*
+	 * 
+	 */
+	public boolean chaseArchons(RobotController rc, Brain brain, RobotInfo[] allies) throws GameActionException{
+		boolean moved = false;
+		if (allies.length > 7){
+			for (int id : brain.archonIds){
+				if (id != 0 ){
+					RobotInfo lastKnownDenInfo = brain.enemyInfo[id];
+					Entity.move(rc, brain, rc.getLocation().directionTo(lastKnownDenInfo.location), false);
+					moved = true;
+					break;
+				}
+			}
 		}
 		return moved;
 	}

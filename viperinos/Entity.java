@@ -77,7 +77,7 @@ public class Entity {
 	 */
 	public static boolean fleeEnemies(RobotController rc, Brain brain, RobotInfo[] enemies, RobotInfo[] zombies, RobotInfo closestEnemy) throws GameActionException{
 		boolean moved = false;
-		if (enemies.length > 0 || zombies.length > 0){
+		if (enemies.length > 0 || zombies.length > 0 && closestEnemy.type!=RobotType.ZOMBIEDEN){
 			move(rc, brain, closestEnemy.location.directionTo(rc.getLocation()), false);
 			moved = true;
 		}
@@ -239,6 +239,15 @@ public class Entity {
 			if (zombie.type==RobotType.ZOMBIEDEN && !brain.isDenKnown(zombie.location)){
 				brain.addDenLocation(zombie.location);
 			}
+		}
+	}
+	
+	/*
+	 * 
+	 */
+	public static void trackArchons(RobotController rc, Brain brain, RobotInfo[] enemies) throws GameActionException{
+		for (RobotInfo enemy : enemies){
+			brain.addEnemyInfo(enemy);
 		}
 	}
 }

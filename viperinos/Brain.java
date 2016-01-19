@@ -67,5 +67,17 @@ public class Brain {
 		return isDead;
 	}
 	
+	public int[] archonIds = new int[8];
+	public int numArchons = 0;
+	public RobotInfo[] enemyInfo = new RobotInfo[10000];
+	public void addEnemyInfo(RobotInfo r){
+		if (enemyInfo[r.ID] == null){
+			enemyInfo[r.ID] = r;
+			if (r.type == RobotType.ARCHON){
+				archonIds[numArchons] = r.ID;
+				++numArchons;
+			}
+		}
+	}
 	
 }
