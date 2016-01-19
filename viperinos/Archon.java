@@ -21,8 +21,11 @@ public class Archon {
 			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 			RobotInfo[] neutrals = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.NEUTRAL);
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
+			
 			Entity.trackDens(rc, brain, zombies);
 			Entity.trackArchons(rc, brain, enemies);
+			Entity.trackNeutrals(rc, brain, neutrals);
+			
 			Squad.listenForInformation(rc, brain);
 			
 			repair(rc);
@@ -31,7 +34,7 @@ public class Archon {
 				if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
 						rc.setIndicatorString(1, "fleeing zombie");
 						Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
-				} else if (activateNeutrals(rc,brain,neutrals)){
+				} else if (activateNeutrals(rc,brain,brain.neutrals)){
 					rc.setIndicatorString(1, "activating neutrals");
 					Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
 				} else if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
@@ -207,17 +210,19 @@ public class Archon {
 		RobotInfo closestNeutral = null;
 		int distanceToClosest = 5000;
 		for (RobotInfo neutral:neutrals){
-			int distanceTo = rc.getLocation().distanceSquaredTo(neutral.location);
-			if ( distanceTo <= 2){
-				rc.activate(neutral.location);
-				activated = true;
-				break;
-			} else if (distanceTo < distanceToClosest){
-				distanceToClosest = distanceTo;
-				closestNeutral = neutral;
+			if(neutral!=null){
+				int distanceTo = rc.getLocation().distanceSquaredTo(neutral.location);
+				if ( distanceTo <= 2){
+					rc.activate(neutral.location);
+					activated = true;
+					break;
+				} else if (distanceTo < distanceToClosest){
+					distanceToClosest = distanceTo;
+					closestNeutral = neutral;
+				}
 			}
 		}
-		if (!activated && closestNeutral != null){
+		if (!activated && closestNeutral != null && distanceToClosest <= 100){
 			Entity.move(rc, brain, rc.getLocation().directionTo(closestNeutral.location), true);
 			activated = true;
 		}

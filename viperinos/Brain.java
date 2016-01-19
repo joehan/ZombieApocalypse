@@ -103,7 +103,32 @@ public class Brain {
 		}
 		return ret;
 	}
-
+	
+	public RobotInfo[] neutrals = {};
+	public void addNeutral(RobotInfo neutral){
+		if (!isNeutralKnown(neutral)){
+			RobotInfo[] temp = new RobotInfo[neutrals.length+1];
+			System.arraycopy(neutrals, 0, temp, 0, neutrals.length);
+			temp[neutrals.length] = neutral;
+			neutrals = temp;
+		}
+	}
+	public boolean isNeutralKnown(RobotInfo aNeutral){
+		for (RobotInfo neutral : neutrals){
+			if (neutral != null && neutral.ID == aNeutral.ID){
+				return true;
+			}
+		}
+		return false;
+	}
+	public void removeNeutral(RobotInfo aNeutral){
+		for (int i = 0; i < neutrals.length; i++){
+			RobotInfo neutral = neutrals[i];
+			if (neutral != null && neutral.ID == aNeutral.ID){
+				neutrals[i] = null;
+			}
+		}
+	}
 	
 	private boolean reflection = false;
 	

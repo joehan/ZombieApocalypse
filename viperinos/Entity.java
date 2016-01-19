@@ -421,4 +421,18 @@ public class Entity {
 			brain.addEnemyInfo(enemy);
 		}
 	}
+	
+	public static void trackNeutrals(RobotController rc, Brain brain, RobotInfo[] neutrals) throws GameActionException{
+		for (RobotInfo n : brain.neutrals){
+			if (n!=null && rc.canSense(n.location)){
+				RobotInfo maybeNeutral = rc.senseRobotAtLocation(n.location);
+				if (maybeNeutral == null || !maybeNeutral.team.equals(Team.NEUTRAL)){
+					brain.removeNeutral(n);
+				}
+			}
+		}
+		for (RobotInfo n : neutrals) {
+			brain.addNeutral(n);
+		}
+	}
 }
