@@ -1,10 +1,82 @@
 package viperinos;
 
+
 import battlecode.common.*;
 /*
  * Entity contains functions that will be used by multiple types of units
  */
 public class Entity {
+	
+	public static MapLocation getNearestDen(RobotController rc, Brain brain){
+		MapLocation[] zombieDens = brain.denLocations;
+		if (zombieDens.length > 0){
+			int min = 10000;
+			MapLocation closest = zombieDens[0];
+			for (MapLocation den : zombieDens){
+				int distance = rc.getLocation().distanceSquaredTo(den);
+				if (rc.getLocation().distanceSquaredTo(den) < min){
+					closest = den;
+					min = distance;
+				}
+			}
+			return closest;
+		}
+		return null;
+	}
+	
+	public static void searchForDen(RobotController rc, Brain brain) throws GameActionException {
+		MapLocation closestDen = Entity.getNearestDen(rc, brain);
+		if (rc.getType() == RobotType.SCOUT && !(closestDen == null) && rc.getLocation().distanceSquaredTo(closestDen) < 
+				rc.getType().sensorRadiusSquared){
+			RobotInfo robotAtLoc = rc.senseRobotAtLocation(closestDen);
+			if ((!(robotAtLoc == null) && robotAtLoc.type != RobotType.ZOMBIEDEN || robotAtLoc == null) &&
+					!brain.isDenDead(closestDen)){
+				brain.addDeadDenLocation(closestDen);
+				Squad.shareDeadDen(rc, closestDen, 5000);
+			}
+		}
+		RobotInfo[] zombiesWithinRange = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
+		for (RobotInfo zombie : zombiesWithinRange) {
+			if (zombie.type == RobotType.ZOMBIEDEN) {
+				if (!brain.isDenKnown(zombie.location)){
+					brain.addDenLocation(zombie.location);
+					if (rc.getType() == RobotType.SCOUT || rc.getType() == RobotType.ARCHON){
+						Squad.shareDenLocation(rc, zombie.location, 5000);
+						rc.setIndicatorString(1, "Found den at " + zombie.location.x + ", " + zombie.location.y);
+					}
+
+				}
+			}
+		}
+	}
+	
+	public static boolean moveRandomDirection(RobotController rc, Brain brain) throws GameActionException{
+		if (rc.isCoreReady()){
+			int start = brain.rand.nextInt(8);
+			for (int i = start; i < start + 8; i ++){
+				Direction dir = directions[i%8];
+				if (rc.canMove(dir)){
+					rc.move(dir);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * This method will look at all enemies in enemies, check if there are any archons, and if so
+	 * add them to the archon store in brain.
+	 */
+	public static void addArchonsToBrain(RobotController rc, RobotInfo[] enemies, Brain brain){
+		int enemiesLength = enemies.length;
+		for (int i = 0; i < enemiesLength; i ++){
+			if (enemies[i].type == RobotType.ARCHON){
+				brain.addArchon(enemies[i]);
+				rc.setIndicatorString(0, "found archon");
+			}
+		}
+	}
 	
 	public static boolean canSenseArchon(RobotController rc, RobotInfo[] allies){
 		int alliesLength = 0;
@@ -153,6 +225,21 @@ public class Entity {
 			dir.rotateRight().rotateRight().rotateRight(), dir.rotateLeft().rotateLeft().rotateLeft(),
 			dir.opposite()};
 		return ret;
+	}
+	
+	
+	public static boolean safeMoveOneDirectionRanged(RobotController rc, RobotInfo[] enemies,
+			Brain brain, Direction dir) throws GameActionException{
+		if (rc.isCoreReady()){
+			MapLocation robotLocation = rc.getLocation();
+			Direction currentDir = dir;
+			MapLocation newLoc = robotLocation.add(currentDir);
+			if (!inDanger(enemies, newLoc, true) && rc.canMove(currentDir)){
+				rc.move(currentDir);
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public static boolean safeMove(RobotController rc, RobotInfo[] enemies, Brain brain, Direction dir

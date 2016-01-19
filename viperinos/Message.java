@@ -5,12 +5,12 @@ import battlecode.common.*;
 public class Message {
 
 	public static int convertMapToSignal(MapLocation loc){
-		return (int) (loc.x + 16000 + (loc.y + 16000)*Math.pow(2, 16));
+		return (int) (loc.x + (loc.y)*Math.pow(2, 10));
 	}
 	
 	public static MapLocation convertSignalToMap(int signal){
-		int x = (int) (signal % Math.pow(2, 16) - 16000);
-		int y = (int) (signal / Math.pow(2, 16) - 16000);
+		int x = (int) (signal % Math.pow(2, 10));
+		int y = (int) (signal / Math.pow(2, 10));
 		return new MapLocation(x, y);
 	}
 	
@@ -26,6 +26,19 @@ public class Message {
 	
 	public static Direction convertSignalToDirection(int signal){
 		return Entity.directions[signal];
+	}
+	
+	public static int convertIDToSignal(int ID, int code){
+		return (int) (ID*Math.pow(2, 10) + code);
+	}
+	
+	public static int convertSignalToID(int signal){
+		int id = (int) (signal/Math.pow(2, 10));
+		return id;
+	}
+	
+	public static int getCodeFromSignal(int signal){
+		return (int) (signal % Math.pow(2, 10));
 	}
 	
 	

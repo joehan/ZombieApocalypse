@@ -20,10 +20,11 @@ public class Archon {
 				repairUnits(rc);
 				
 				if (rc.isCoreReady()){
-					if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
-						typeToBuild = nextUnitToBuild(brain);
-					} else if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
+					if (Entity.fleeEnemies(rc,brain,enemies,zombies, closestEnemy)){
 						Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
+					} 
+					else if (tryToBuild(rc, typeToBuild, Direction.NORTH)){
+						typeToBuild = nextUnitToBuild(brain);
 					} else {
 						Entity.move(rc, brain, brain.lastDirectionMoved, false);
 						Squad.sendDirectionToMove(rc, brain, brain.lastDirectionMoved);
