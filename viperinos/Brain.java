@@ -74,12 +74,22 @@ public class Brain {
 	public int[] archonIds = new int[8];
 	public int numArchons = 0;
 	public RobotInfo[] enemyInfo = new RobotInfo[10000];
+	
 	public void addEnemyInfo(RobotInfo r){
-		if (r.type == RobotType.ARCHON && enemyInfo[r.ID]==null){
+		if (r.type == RobotType.ARCHON && !inArchonIds(r.ID)){
 			archonIds[numArchons] = r.ID;
 			++numArchons;
 		}
 		enemyInfo[r.ID] = r;
+	}
+	
+	public boolean inArchonIds(int id){
+		for (int archonId : archonIds){
+			if (id == archonId){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 }

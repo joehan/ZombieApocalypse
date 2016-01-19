@@ -9,6 +9,13 @@ public class Archon {
 		RobotType typeToBuild = nextUnitToBuild(brain);
 		brain.lastDirectionMoved = Entity.directions[brain.rand.nextInt(8)];
 		while (true){
+			int signal = Message.convertArchonToSignal(rc.getID(), rc.getLocation());
+			int id = Message.convertSignalToID(signal);
+			MapLocation loc = Message.convertSignalToArchonLocation(signal);
+			rc.setIndicatorString(0, signal + " equals " + id + " at " + loc.x + ", " + loc.y);
+			
+			brain.thisTurnsSignals = rc.emptySignalQueue();
+			
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
@@ -17,7 +24,6 @@ public class Archon {
 			Entity.trackDens(rc, brain, zombies);
 			Entity.trackArchons(rc, brain, enemies);
 			Squad.listenForInformation(rc, brain);
-			rc.setIndicatorString(0, "archons left : " + brain.numArchons);
 			
 			repair(rc);
 			
