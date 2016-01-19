@@ -250,13 +250,18 @@ public class Archon {
 	 */
 	public boolean chaseArchons(RobotController rc, Brain brain, RobotInfo[] allies) throws GameActionException{
 		boolean moved = false;
-		if (allies.length > 7){
+		if (allies.length > 8){
 			for (int id : brain.archonIds){
 				if (id != 0 ){
-					RobotInfo lastKnownDenInfo = brain.enemyInfo[id];
-					Entity.moveLimited(rc, brain, rc.getLocation().directionTo(lastKnownDenInfo.location));
-					moved = true;
-					break;
+					RobotInfo lastKnownArchonInfo = brain.enemyInfo[id];
+					if (lastKnownArchonInfo != null){
+						Entity.moveLimited(rc, brain, rc.getLocation().directionTo(lastKnownArchonInfo.location));
+						if (rc.getLocation().equals(lastKnownArchonInfo.location)){
+							brain.enemyInfo[id] = null;
+						}
+						moved = true;
+						break;
+					}
 				}
 			}
 		}

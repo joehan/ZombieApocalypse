@@ -361,12 +361,14 @@ public class Entity {
 				RobotInfo maybeDen = rc.senseRobotAtLocation(denLocation);
 				if (maybeDen == null || maybeDen.type  != RobotType.ZOMBIEDEN){
 					brain.addDeadDenLocation(denLocation);
+					Squad.shareDeadDen(rc, denLocation, 8*rc.getType().sensorRadiusSquared);
 				}
 			}
 		}
 		for (RobotInfo zombie:zombies){
 			if (zombie.type==RobotType.ZOMBIEDEN && !brain.isDenKnown(zombie.location)){
 				brain.addDenLocation(zombie.location);
+				Squad.shareDenLocation(rc, zombie.location, 8*rc.getType().sensorRadiusSquared);
 			}
 		}
 	}
