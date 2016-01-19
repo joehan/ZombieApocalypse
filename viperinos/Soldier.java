@@ -37,7 +37,7 @@ public class Soldier {
 				}
 				//Then if not in combat non-combat move
 				if (rc.isCoreReady() && brain.leaderMovingInDirection!=null && enemies.length == 0){
-					Direction dirToMove = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection));
+					Direction dirToMove = rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection, 4));
 					Entity.move(rc, brain, dirToMove, false);
 				}
 				
