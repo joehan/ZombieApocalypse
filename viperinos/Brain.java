@@ -22,7 +22,7 @@ public class Brain {
 	public RobotType[] startBuildArray = {RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER,
 			RobotType.SCOUT};
 	public RobotType[] robotsToBuild = {RobotType.SOLDIER, RobotType.VIPER, RobotType.GUARD, RobotType.SCOUT, RobotType.TURRET};
-	public Double[] buildDist = {0.65, 0.35, 0.0, 0.0, 0.0};
+	public Double[] buildDist = {0.7, 0.3, 0.0, 0.0, 0.0};
 	
 	public int buildCount = 0;
 	public boolean initialIteration = true;
