@@ -10,11 +10,12 @@ public class Viper {
 			brain.thisTurnsSignals = rc.emptySignalQueue();
 
 			Squad.listenForCommands(rc, brain);
+			RobotInfo[] allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam());
 			RobotInfo[] enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, rc.getTeam().opponent());
 			RobotInfo[] zombies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, Team.ZOMBIE);
 			RobotInfo closestEnemy = Entity.findClosestHostile(rc, enemies, zombies);
 			if (closestEnemy != null ){
-				kite(rc, brain, closestEnemy, enemies, zombies);
+				kite(rc, brain, closestEnemy, enemies, zombies, allies);
 			} else if (rc.isCoreReady() && brain.leaderMovingInDirection!=null){
 				Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation.add(brain.leaderMovingInDirection)), false);
 			}
@@ -39,12 +40,14 @@ public class Viper {
 			if (enemies.length >0){
 				for (RobotInfo enemy : enemies){
 					if (enemy.viperInfectedTurns == 0){
+						//TODO attack enemy with lowest health first
 						rc.attackLocation(enemy.location);
 						attacked = true;
 						break;
 					}
 				}
 				if (!attacked){
+					//TODO attack enemy with least time left on viper timer
 					rc.attackLocation(enemies[0].location);
 					attacked = true;
 				}
@@ -65,18 +68,25 @@ public class Viper {
 		return attacked;
 	}
 	
-	private void kite(RobotController rc, Brain brain, RobotInfo closestEnemy, RobotInfo[] enemies, RobotInfo[] zombies) throws GameActionException {
-		double coreDelay = rc.getCoreDelay();
-		double weaponDelay = rc.getWeaponDelay();
-		
-		if (weaponDelay < 1){
-			attack(rc, enemies, zombies);
-		} else if (coreDelay < 1){
-			int distanceToClosest = rc.getLocation().distanceSquaredTo(closestEnemy.location);
-			if (distanceToClosest<16){
-				Entity.fleeEnemies(rc, brain, enemies, zombies, closestEnemy);
+	private void kite(RobotController rc, Brain brain, RobotInfo closestEnemy, RobotInfo[] enemies, RobotInfo[] zombies,
+			RobotInfo[] allies) throws GameActionException {
+		RobotInfo nearestOpponent = Entity.findClosestHostile(rc, enemies, new RobotInfo[0]);
+		RobotInfo nearestZombie = Entity.findClosestHostile(rc, new RobotInfo[0], zombies);
+//		int distanceToNearestEnemy = rc.getLocation().distanceSquaredTo(closestEnemy.location);
+		int distanceToNearestZombie = zombies.length > 0 ? rc.getLocation().distanceSquaredTo(nearestZombie.location) : 100;
+		if (rc.getHealth() < rc.getType().maxHealth/3 && rc.isCoreReady()){
+			if (brain.leaderLocation != null){
+				Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation), false);
+			} else {
+				Entity.move(rc, brain, rc.getLocation().directionTo(closestEnemy.location).opposite(), false);
 			}
+		} else if (rc.isCoreReady() && ((zombies.length > 0 && distanceToNearestZombie <= 13) || 
+				(enemies.length > 0 && rc.getLocation().distanceSquaredTo(nearestOpponent.location) <= 13))){
+			//TODO check to see if moving makes enemy still in sight range
+			Entity.move(rc, brain, rc.getLocation().directionTo(closestEnemy.location).opposite(), false);
+		} else if (rc.isWeaponReady()){
+			attack(rc, enemies, zombies);
 		}
-		
 	}
+	
 }

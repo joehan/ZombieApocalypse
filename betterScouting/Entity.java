@@ -8,6 +8,16 @@ import battlecode.common.*;
  */
 public class Entity {
 	
+	public static boolean canSenseArchon(RobotController rc, RobotInfo[] allies){
+		int alliesLength = 0;
+		for (int i = 0; i < alliesLength; i++){
+			if (allies[i].type == RobotType.ARCHON){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST,
         Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	
@@ -67,7 +77,7 @@ public class Entity {
 					}
 				}
 				for (Direction dir : dirToTri){
-					if (rc.senseRubble(robotLocation.add(dir)) < GameConstants.RUBBLE_SLOW_THRESH){
+					if (rc.senseRubble(robotLocation.add(dir)) >= GameConstants.RUBBLE_SLOW_THRESH){
 						int moveDistToEnemy = robotLocation.add(dir).distanceSquaredTo(enemyLoc);
 						if (moveDistToEnemy <= maxAttackRange && 
 								(moveDistToEnemy >= currentDistance || currentDistance > maxAttackRange)){

@@ -19,15 +19,23 @@ public class Soldier {
 				RobotInfo nearestEnemy =  enemies.length > 0 ? Entity.findClosestEnemy(rc, brain, enemies, rc.getLocation()) : null;
 				//Then do messaging
 				
+				if (brain.leaderLocation != null && rc.getLocation().distanceSquaredTo(brain.leaderLocation) < 5){
+					if (!Entity.canSenseArchon(rc, allies)){
+						brain.leaderLocation = null;
+						brain.distanceToLeader = 50000;
+					}
+				}
 				brain.thisTurnsSignals = rc.emptySignalQueue();
 				Squad.listenForCommands(rc, brain);
+				
 				
 				//Then attack
 				attack(rc, zombies, opponents);
 				
 				//Then combat move
 				if (enemies.length>0){
-					combatMove(rc, opponents, enemies, brain, nearestEnemy);
+					combatMove(rc, enemies, brain, nearestEnemy);
+					rc.setIndicatorString(0, "just finishe combat move");
 				}
 				//Then if not in combat non-combat move
 				if (rc.isCoreReady() && brain.leaderMovingInDirection!=null && enemies.length == 0){
@@ -43,34 +51,37 @@ public class Soldier {
 		}
 	}
 	
-	public boolean combatMove(RobotController rc, RobotInfo[] opponents, RobotInfo[] enemies, 
+	public boolean combatMove(RobotController rc, RobotInfo[] enemies, 
 			Brain brain, RobotInfo nearestEnemy) throws GameActionException {
 		if (rc.isCoreReady()){
 			//First check if health is low, and if it is retreat
 			if (rc.getHealth() < rc.getType().maxHealth/2) {
 				//Safe move towards nearest Archon unless fatally infected
-				if (rc.getViperInfectedTurns()*2 > rc.getHealth()){
+				if (rc.getViperInfectedTurns()*2 >= rc.getHealth()){
 					if (nearestEnemy != null && nearestEnemy.team == rc.getTeam().opponent()){
-						Entity.moveToLocation(rc, nearestEnemy.location);
+						Entity.move(rc, brain, rc.getLocation().directionTo(nearestEnemy.location), false);
 					} else {
 						//Move away from nearest archon
 						if (brain.leaderLocation != null){
-							Entity.moveInDirection(rc, rc.getLocation().directionTo(brain.leaderLocation).opposite());
+							Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation).opposite(), false);
 						} else {
-							Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location).opposite());
+							Entity.move(rc, brain, rc.getLocation().directionTo(nearestEnemy.location), false);
 						}
 					}
 				} else {
 					//Move towards nearest archon
 					if (brain.leaderLocation != null){
-						Entity.moveInDirection(rc, rc.getLocation().directionTo(brain.leaderLocation));
+						rc.setIndicatorString(1, "leaders location is known and at: " + brain.leaderLocation.toString());
+						Entity.move(rc, brain, rc.getLocation().directionTo(brain.leaderLocation), false);
 					} else {
-						Entity.moveInDirection(rc, rc.getLocation().directionTo(nearestEnemy.location));
+						rc.setIndicatorString(0, "should move away from enemy");
+						Entity.move(rc, brain, rc.getLocation().directionTo(nearestEnemy.location).opposite(), false);
 					}
 				}
 			} else {
 				//Now we just want to stay at optimal move range for all enemies
 				//AvoidMelee move to optimal attack range
+				rc.setIndicatorString(2, String.valueOf(rc.getRoundNum()));
 				Entity.moveOptimalAttackRange(rc, brain, enemies, nearestEnemy);
 			}
 		}
