@@ -19,7 +19,8 @@ public class Brain {
 	
 	public Direction lastDirectionMoved;
 	
-	public RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER, RobotType.SOLDIER};
+	public RobotType[] startBuildArray = {RobotType.SCOUT, RobotType.SOLDIER, RobotType.SOLDIER, RobotType.SOLDIER,
+			RobotType.SOLDIER, RobotType.SOLDIER};
 	public RobotType[] robotsToBuild = {RobotType.SOLDIER, RobotType.VIPER, RobotType.GUARD, RobotType.SCOUT, RobotType.TURRET};
 	public Double[] buildDist = {0.65, 0.35, 0.0, 0.0, 0.0};
 	
